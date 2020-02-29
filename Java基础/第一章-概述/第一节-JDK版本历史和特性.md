@@ -107,7 +107,7 @@ Security Service)、 Kerberos 和 LDAP(Lightweight Directory Access Protocol)的
   JDK路径
 3. path
 
-  系统环境变量，可在任意目录执行可执行文件(先在当前目录搜寻可执行文件) ，在path中加入JAVA_HOME/bin就是为了在任意目录中运行bin文件夹中的<font color=#ad6800>java(jvm)、javac(java编译器)、jar(包)、javadoc(生成文档)、jdb(Java调试器)</font>等可执行文件
+  系统环境变量，可在任意目录执行可执行文件(先在当前目录搜寻可执行文件) ，在path中加入JAVA_HOME/bin就是为了在任意目录中运行bin文件夹中的<font color=#ad6800>java(jvm)、javac(java编译器)、jar(包)、javadoc(生成文档)、jdb(Java调试器)、javap -c className(反编译class)</font>等可执行文件
 
 ## 无第三方依赖包打包
 1. 找到包含所有class文件的目录<font color=#ad6800>在class的package上级目录即可，例如：包名demo下有若干个class，只需要找到demo父级目录即可</font>
