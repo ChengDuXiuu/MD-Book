@@ -140,3 +140,26 @@
 <div title="深挖代码实现"><font color=red>自定义异常类使用模板</font></div>
 
 <div title="深挖代码实现"><font color=red>日志系统</font></div>
+
+
+jeecg-boot多模块开发
+
+1. 新建一个module
+2. 引入common模块
+```
+<dependencies>
+    <dependency>
+        <groupId>org.jeecgframework.boot</groupId>
+        <artifactId>jeecg-boot-base-common</artifactId>
+    </dependency>
+</dependencies>
+```
+3. mvn install
+
+4. system模块中引入
+```
+<dependency>
+	<groupId>org.jeecgframework.boot</groupId>
+	<artifactId>jeecg-boot-module-self</artifactId>
+</dependency>
+```
