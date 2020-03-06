@@ -137,29 +137,43 @@
 
 深挖每个知识点代码以及使用模板
 
-<div title="深挖代码实现"><font color=red>自定义异常类使用模板</font></div>
+<div title="深挖代码实现"><font color=red>implements Comparable<Student>对象s排序</font></div>
+```Java
+package org.jeecg.modules.test.controller;
 
+/**
+ * TODO:<p>  <p/>
+ *
+ * @package: org.jeecg.modules.test.controller
+ * @Author mac
+ * @Date 2020/3/3 8:54 下午
+ * @Version V1.0
+ **/
+public class Student implements Comparable<Student>{
+    private int id;
+    private String name;
+    private int age;
+    private double score;//成绩
+
+    public Student(int id, String name, int age, double score) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.score = score;
+    }
+
+    public Student() {
+    }
+
+    @Override
+    public int compareTo(Student student) {
+        return name.compareTo(student.getName());
+    }
+}
+
+
+调用处
+List<Student> studentList= Arrays.asList(student,student1, student2,student3,student4);
+List<Student> studentList3=studentList.stream().sorted(Comparator.comparing(Student::getAge)).collect(Collectors.toList());//根据年龄自然顺序
+```
 <div title="深挖代码实现"><font color=red>日志系统</font></div>
-
-
-jeecg-boot多模块开发
-
-1. 新建一个module
-2. 引入common模块
-```
-<dependencies>
-    <dependency>
-        <groupId>org.jeecgframework.boot</groupId>
-        <artifactId>jeecg-boot-base-common</artifactId>
-    </dependency>
-</dependencies>
-```
-3. mvn install
-
-4. system模块中引入
-```
-<dependency>
-	<groupId>org.jeecgframework.boot</groupId>
-	<artifactId>jeecg-boot-module-self</artifactId>
-</dependency>
-```
