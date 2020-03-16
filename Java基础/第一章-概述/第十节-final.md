@@ -7,8 +7,8 @@ final使用场景有四种
 - final参数 (和final变量保持一致)
 - final方法 不能被重写且不会被子类覆盖
 
-      private修饰的方法隐式制定final
-      final方法和static方法属于前期绑定，因此不能改变。其余方法都为后期绑定
+>private修饰的方法隐式制定final
+<font color=ff00ff>final方法和static方法属于前期绑定，因此不能改变。其余方法都为后期绑定</font>
 - final类：不能再继承，final类中所有的方法隐式指定final
 #### final类
     不能被继承没有子类，final类中所有的方法隐式指定final
