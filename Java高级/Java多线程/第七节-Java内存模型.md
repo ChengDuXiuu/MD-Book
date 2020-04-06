@@ -1,5 +1,5 @@
 ### Java程序执行流程
-![丢失](../Java高级/资料/Java程序执行流程.png "Java程序执行流程")
+![丢失](/Java高级/资料/Java程序执行流程.png "Java程序执行流程")
 
 1. 首先Java源代码文件(.java后缀)会被Java编译器编译为字节码文件(.class后缀)
 
@@ -11,7 +11,7 @@
 
 ### Java内存模型
 
-![丢失](../Java高级/资料/Java内存模型.png "Java内存模型")
+![丢失](/Java高级/资料/Java内存模型.png "Java内存模型")
 
 <code><font size=3 color=FF00FF>PC程序计数器</font></code>
 
@@ -28,7 +28,7 @@
 * <font color=#ad6800 size=3>栈顶的栈帧叫活动栈，表示当前执行的方法，才可以被CPU执行；</font>
 * <font color=#ad6800 size=3>线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError异常；</font>
 * <font color=#ad6800 size=3>栈扩展时无法申请到足够的内存，就会抛出OutOfMemoryError异常；</font>
-![丢失](../Java高级/资料/方法栈.png "方法栈")
+![丢失](/Java高级/资料/方法栈.png "方法栈")
 
 
 <code><font size=3 color=FF00FF>方法区MethodArea</font></code>
@@ -57,7 +57,7 @@
 
 ### 内存模型工作示意图
 
-![丢失](../Java高级/资料/内存模型工作图.png "内存模型工作图")
+![丢失](/Java高级/资料/内存模型工作图.png "内存模型工作图")
 
 1)	首先类加载器将Java代码加载到方法区
 2)	然后执行引擎从方法区找到main方法

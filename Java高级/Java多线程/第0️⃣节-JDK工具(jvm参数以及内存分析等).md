@@ -26,8 +26,8 @@ JAVA Dump就是虚拟机运行时的快照，将虚拟机运行时的状态和�
 ###1、jps
 
 显示当前所有java进程pid的命令，我们可以通过这个命令来<font color=ad6800>查看到底启动了几个java进程（因为每一个java程序都会独占一个java虚拟机实例）</font>，不过jps有个缺点是只能显示当前用户的进程id，要显示其他用户的还只能用linux的ps命令。
-![丢失](../Java高级/资料/jsp-测试用例.jpg "测试用例")
-![丢失](../Java高级/资料/jps工具.jpg "jps工具")
+![丢失](/Java高级/资料/jsp-测试用例.jpg "测试用例")
+![丢失](/Java高级/资料/jps工具.jpg "jps工具")
 
 
 >执行jps命令，会列出所有正在运行的java进程，其中jps命令也是一个java程序，前面的数字就是对应的进程id，这个id的作用非常大，后面会有相关介绍。
@@ -35,10 +35,10 @@ JAVA Dump就是虚拟机运行时的快照，将虚拟机运行时的状态和�
     jps -help：
 
     jps -l 输出应用程序main.class的完整package名或者应用程序jar文件完整路径名
-![丢失](../Java高级/资料/jsp-l.jpg "jps-l工具")
+![丢失](/Java高级/资料/jsp-l.jpg "jps-l工具")
 
     jps -v 输出传递给JVM的参数(妥妥的验证了一句话Java就是靠参数怼起来的高楼大厦，不论是Tomcat还是jdk主要是和Java相关的底层都是jvm参数)
-![丢失](../Java高级/资料/jps-v.jpg "jps-v工具")
+![丢失](/Java高级/资料/jps-v.jpg "jps-v工具")
 
 
 >jps失效
@@ -240,7 +240,7 @@ JVisualVM比JConsole更强大：支持对CPU、内存允许进行采用、配置
 
 JConsole监控页面示例：
 
-![丢失](../Java高级/资料/jconsole工具.png "jconsole工具")
+![丢失](/Java高级/资料/jconsole工具.png "jconsole工具")
 
 
 
