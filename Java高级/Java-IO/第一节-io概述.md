@@ -995,6 +995,10 @@ JDK 1.4版本以来，JDK发布了全新的I/O类库，简称NIO，是一种同�
 
     Java NIO系统的核心在于：通道(Channel)和缓冲区(Buffer)。通道表示打开到 IO 设备(例如：文件、套接字)的连接。若需要使用 NIO 系统，需要获取用于连接 IO 设备的通道以及用于容纳数据的缓冲区。然后操作缓冲区，对数据进行处理。
 
+</hr>
+
+    NIO2看起来很理想，但是NIO2只支持Jdk1.7+，若你的程序在Java1.6上运行，则无法使用NIO2。另外，Java7的NIO2中没有提供DatagramSocket的支持，所以NIO2只支持TCP程序，不支持UDP程序。
+
 #### 2、 缓冲区
 
     可以存放特定``基本数据类型``的容器，不同的数据类型拥有不同的缓冲区。所有缓冲区都是buffer抽象类的子类。底层是一个数组。
@@ -1196,7 +1200,7 @@ public void ChannelDemo2() throws IOException {
 >使用直接缓冲区赋值数据耗时 39
 
 
-<strong>3、分散(Scatter)和聚集(Gather)</strong>
+<strong>3、分散(Scatter)和聚集(Gather) 可能会有内存泄露(好在jdk7已解决)</strong>
 ```Java
 //分散(Scatter)和聚集(Gather)
 FileChannel fileChannel=FileChannel.open(Paths.get("src/main/resources/resource.txt"), StandardOpenOption.READ);
