@@ -449,7 +449,7 @@ public class WebsocketServer {
                     console.log("发生错误");
                 };
                 CHAT.socket.onmessage = function(e) {
-                    console.log("接收到消息:" + e.data);
+                    console.log("浏览器接收到消息:" + e.data);
                     var recMsg = document.getElementById("recMsg");
                     var html = recMsg.innerHTML;
                     recMsg.innerHTML = html + "<br/>" + e.data;
