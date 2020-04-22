@@ -177,7 +177,7 @@ public class EchoClient {
 }
 
 ```
->![netty-应答服务器](/assets/netty-应答服务器.jpg)
+![netty-应答服务器](../资料/netty-应答服务器.jpg)
 
 ### Netty核心类(围绕上面的应答案例)
 
@@ -224,7 +224,7 @@ Netty是一个非阻塞、事件驱动的网络框架。Netty实际上是使用�
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-    src="/assets/netty单线程.jpg">
+    src="../资料/netty单线程.jpg">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -249,7 +249,7 @@ Netty是一个非阻塞、事件驱动的网络框架。Netty实际上是使用�
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-    src="/assets/netty多线程.jpg">
+    src="../资料/netty多线程.jpg">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -268,7 +268,7 @@ Netty是一个非阻塞、事件驱动的网络框架。Netty实际上是使用�
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-    src="/assets/netty主从多线程.jpg">
+    src="../资料/netty主从多线程.jpg">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;

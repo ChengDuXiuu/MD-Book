@@ -228,7 +228,7 @@ while (scan.hasNext()) {
 ```
 ### io结构图
 
-![io体系结构图](/assets/io体系结构图.jpg)![io体系分类图](/assets/io体系分类图.png)
+![io体系结构图](../资料/io体系结构图.jpg)![io体系分类图](../资料/io体系分类图.png)
 
 ### 对象序列化
 
@@ -1026,9 +1026,9 @@ JDK 1.4版本以来，JDK发布了全新的I/O类库，简称NIO，是一种同�
 ``标记 (mark)与重置 (reset)``
 标记是一个索引，通过 Buffer 中的 mark() 方法指定 Buffer 中一个特定的 position，之后可以通过调用reset() 方法恢复到这个 position.一般用来多次读取相同的数据。
 
-![缓冲区属性](/assets/缓冲区属性.jpg)
+![缓冲区属性](../资料/缓冲区属性.jpg)
 
-![buffer常用方法](/assets/buffer常用方法.jpg)
+![buffer常用方法](../资料/buffer常用方法.jpg)
 
 <font size=4>缓冲区数据操作</font>
 
@@ -1095,9 +1095,9 @@ mark后的position为 2
 
 简单来说，日常程序中使用IO操作``磁盘文件(并不包含网络)``时，都需要将jvm内存数据copy或者被copy到物理机的内存然后润乳磁盘中。这种方式是非直接缓冲区，即尽量在jvm内存中创建缓冲区。另一种方式直接缓冲区则绕过了jvm内存直接在物理机内存中创建缓冲区，省掉了copy步骤。如下图：
 
-![非直接缓冲区](/assets/非直接缓冲区.jpg)
+![非直接缓冲区](../资料/非直接缓冲区.jpg)
 
-![直接缓冲区](/assets/直接缓冲区.jpg)
+![直接缓冲区](../资料/直接缓冲区.jpg)
 
 
 #### 3、 通道(初始化时参数文件或目标的对象)
@@ -1340,7 +1340,7 @@ public void test6(){
 ```
 
 
-![filechannrel常用方法](/assets/filechannrel常用方法.jpg)
+![filechannrel常用方法](../资料/filechannrel常用方法.jpg)
 
 
 #### 4、非阻塞网络通信
@@ -1356,7 +1356,7 @@ public void test6(){
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-    src="/assets/selector常用方法.jpg">
+    src="../资料/selector常用方法.jpg">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -1380,7 +1380,7 @@ SelectionKey：表示 SelectableChannel 和 Selector 之间的注册关系。简
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-    src="/assets/selectionkey.jpg">
+    src="../资料/selectionkey.jpg">
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -1497,7 +1497,7 @@ public class clientTest {
     }
 }
 ```
-> ![nio练习](/assets/nio练习.jpg)
+> ![nio练习](../资料/nio练习.jpg)
 
 <font size=4><strong>2、DatagramChannel</strong></font>
 

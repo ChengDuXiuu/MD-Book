@@ -17,7 +17,7 @@
 （3） 和服务器进行通信（send/recv）
 （4） 关闭套接字（close）
 
-![tcp套接字流程](/assets/tcp套接字流程.jpg)
+![tcp套接字流程](../资料/tcp套接字流程.jpg)
 
 ###ServerSocket 类
 
