@@ -278,7 +278,7 @@ Netty是一个非阻塞、事件驱动的网络框架。Netty实际上是使用�
 
 
 
-### 案例 - 基于websocket的聊天室
+### 案例 - 基于Netty实现websocket服务器
 
 ```java
 package netty.webScket;
@@ -470,3 +470,9 @@ public class WebsocketServer {
 </html>
 
 ```
+
+### 总结
+
+代码模板上传至gist ：https://snippets.cacher.io/snippet/f272b3848ebc7d0e4b68
+
+项目demo可到 https://download.csdn.net/download/sinat_37064286/12361050 下载
