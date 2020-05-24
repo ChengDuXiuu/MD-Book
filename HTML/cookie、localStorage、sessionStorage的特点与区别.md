@@ -3,51 +3,96 @@
 　　Cookie实际上是一小段的文本信息。客户端请求服务器，如果服务器需要记录该用户状态，就使用response向客户端浏览器颁发一个Cookie。客户端浏览器会把Cookie保存起来。当浏览器再请求该网站时，浏览器把请求的网址连同该Cookie一同提交给服务器。服务器检查该Cookie，以此来辨认用户状态。服务器还可以根据需要修改Cookie的内容。由于cookie的安全性不高并且每个domain最多只能有20条cookie，每个cookie长度不能超过4KB。否则会被截掉。，所以一般不把密码保存在cookie中；
 
 ```JavaScript
-//设置固定过期时间的cookies
-function setCookie(name,value){
-    var Days = 30;
-    var exp = new Date();
-    exp.setTime(exp.getTime() + Days*24*60*60*1000);
-    document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+cookie.js
+
+window.config = {
+	// 存活时间
+	Days: 1
+
 }
-//设置自定义过期时间cookie
-function setCookie(name,value,time){
-    var msec = getMsec(time); //获取毫秒
-    var exp = new Date();
-    exp.setTime(exp.getTime() + msec*1);
-    document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+
+//————————————————————————————————————————————————————//
+//
+// 本地缓存
+//
+//————————————————————————————————————————————————————//
+window.Cache = {
+	//设置固定过期时间的cookies
+	setCookie :function(name,value){
+		var Days = 30;
+		var exp = new Date();
+		exp.setTime(exp.getTime() + Days*24*60*60*1000);
+		console.log(exp.toGMTString()+">>>"+escape(value));
+		document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+	},
+	//设置自定义过期时间cookie
+	setCookie :function(name,value,time){
+		var msec = Cache.getMsec(time); //获取毫秒
+		var exp = new Date();
+		exp.setTime(exp.getTime() + msec*1);
+		console.log(exp.toGMTString()+">>>"+escape(value));
+		document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+	},
+	//将字符串时间转换为毫秒,1秒=1000毫秒
+	getMsec :function(DateStr){
+		if(DateStr){
+			var timeNum=DateStr.substring(0,DateStr.length-1)*1; //时间数量
+			var timeStr=DateStr.substring(DateStr.length-1,DateStr.length); //时间单位前缀，如h表示小时
+			if (timeStr=="s"){ //20s表示20秒
+				return timeNum*1000;}
+			else if (timeStr=="h"){ //12h表示12小时
+				return timeNum*60*60*1000;}
+			else if (timeStr=="d"){
+				return timeNum*24*60*60*1000;} //30d表示30天
+		}
+	},
+	//读取cookies
+	getCookie :function(name){
+		var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)"); //正则匹配
+		if(arr=document.cookie.match(reg)){
+			return unescape(arr[2]);
+		}
+		else{
+			return null;
+		}
+	},
+	//删除cookies
+	delCookie :function(name){
+		var exp = new Date();
+		exp.setTime(exp.getTime() - 1);
+		var cval=getCookie(name);
+		if(cval!=null){
+			document.cookie= name + "="+cval+";expires="+exp.toGMTString();
+		}
+	}
 }
-//将字符串时间转换为毫秒,1秒=1000毫秒
-function getMsec(DateStr){
-   var timeNum=str.substring(0,str.length-1)*1; //时间数量
-   var timeStr=str.substring(str.length-1,str.length); //时间单位前缀，如h表示小时
-   if (timeStr=="s"){ //20s表示20秒
-        return timeNum*1000;}
-   else if (timeStr=="h"){ //12h表示12小时
-       return timeNum*60*60*1000;}
-   else if (timeStr=="d"){
-       return timeNum*24*60*60*1000;} //30d表示30天
-}
-//读取cookies
-function getCookie(name){
-    var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)"); //正则匹配
-    if(arr=document.cookie.match(reg)){
-      return unescape(arr[2]);
-    }
-    else{
-     return null;
-    }
-}
-//删除cookies
-function delCookie(name){
-    var exp = new Date();
-    exp.setTime(exp.getTime() - 1);
-    var cval=getCookie(name);
-    if(cval!=null){
-      document.cookie= name + "="+cval+";expires="+exp.toGMTString();
-    }
-}
+
+### test
+Cache.setCookie("key1s","data-value","30d");
 ```
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+    src="资料/cookie结果图.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">cookie效果图</div>
+</center>
+
+#### 存活时长
+
+1. 默认情况下，关闭浏览器Cookie自动删除
+2. 可以通过Cookie中的方法设置Cookie存活时长
+
+格式:
+cookie.setMaxAge(int 秒);
+
+能存储的最大值为: int类型的最大值 !
+-   传入正数    :   表示倒计时的秒数
+-   传入0 :   表示立即删除此Cookie
+-   传入负数    :   默认为-1 , 负数表示会话结束时自动删除!
 
 ### 2、localStorage
 
