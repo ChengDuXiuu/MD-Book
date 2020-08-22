@@ -6,7 +6,7 @@
     类型：string | HTMLElement
     作用：决定之后Vue实例会管理哪一个DOM。可以是js或者jquery获取的dom对象。
 * data:
-    类型：Object | Function （组件当中data必须是一个函数）
+    类型：Object | Function （组件当中data必须是一个return函数,而html中则是一个变量例如vue初体验.md）
     作用：Vue实例对应的数据对象。
 * methods:
     类型：{ [key: string]: Function }
@@ -15,6 +15,9 @@
     过滤器
 * components：
     组件注册
+* rules:
+    属性校验 eg：表单校验
+
 
 
 <center>
