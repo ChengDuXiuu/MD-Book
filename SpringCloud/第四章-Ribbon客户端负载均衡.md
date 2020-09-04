@@ -101,7 +101,7 @@
 
    * 修改客户端访问地址
 
-     > 之前没有集成Eureka时，客户端是直接通过`服务提供`模块的URL来进行服务访问。而在继承Eureka时，我们讲到，Eureka的作用就是`解决手动维护URL的困境`。因此Eureka相当于一个中间件：服务需要被访问则在Eureka Server中进行注册，客户端需要访问则直接从Eureka中获取即可，`获取的并不是Eureka的URL，而是客户端需要访问的服务的服务ID(服务端配置的eureka.instance)。`
+     > 之前没有集成Eureka时，客户端是直接通过`服务提供`模块的URL来进行服务访问。而在继承Eureka时，我们讲到，Eureka的作用就是`解决手动维护URL的困境`。因此Eureka相当于一个中间件：服务需要被访问则在Eureka Server中进行注册，客户端需要访问则直接从Eureka中获取即可，`获取的并不是Eureka的URL，而是客户端需要访问的服务的服务名称(服务端配置的spring.application.name)。`
 
      > 通过服务ID进行访问，由于该服务存在于Eureka集群中，则势必会有一种负载均衡算法(随机、轮训)进行服务`负载均衡调度`
 
@@ -109,7 +109,7 @@
 
        ```java
        //    private static final String REST_URL_PREFIX="http://localhost:8001";//服务提供方固定请求
-           private static final String REST_URL_PREFIX="http://SpringCloud-Provider-8001";//和Eureka结合，需使用 eureka.instance
+           private static final String REST_URL_PREFIX="http://SpringCloud-Provider-8001";//和Eureka结合，需使用 spring.application.name
        ```
 
        
@@ -130,8 +130,76 @@
 
    ![image-20200823005534894](第四章-Ribbon客户端负载均衡.assets/image-20200823005534894.png)
 
-   内存表示我还可以使劲造 ~ ~
+   当其中一个Eureka挡掉后，剩余两个Eureka就会补上。并不影响客户的体验。这个时候发现我们访问的永远只有`服务提供`模块，看不出Ribbon负载均衡的作用。因此下面搭建`服务提供`模块集群，来展现Ribbon负载均衡的实际效果。
 
-   ![image-20200823005612472](第四章-Ribbon客户端负载均衡.assets/image-20200823005612472.png)
+   
 
-   当我们挂掉一个
+5. 再搭建两个`服务提供`模块
+
+   * 新建两个数据库(springcloud02和springcloud03)用以支撑新建的两个服务模块。
+
+     ```sql
+     INSERT INTO `springcloud02`.`dept`(`dname`, `db_source`) VALUES ('开发部', DATABASE());
+     INSERT INTO `springcloud02`.`dept`(`dname`, `db_source`) VALUES ('人事部', DATABASE());
+     INSERT INTO `springcloud02`.`dept`(`dname`, `db_source`) VALUES ('财务部', DATABASE());
+     INSERT INTO `springcloud02`.`dept`(`dname`, `db_source`) VALUES ('市场部', DATABASE());
+     INSERT INTO `springcloud02`.`dept`(`dname`, `db_source`) VALUES ('运维部', DATABASE());
+     ```
+
+   * 新建两个`服务提供`模块
+
+     > 1、修改yml中的server.port、spring.datasource.url、eureka.instance.instance-id、info.app.name。
+     >
+     > 2、修改启动类名称。
+
+     > <font color=ff00aa>注意：</font> spring.application.name万万保持一致。具体可参考上面`修改客户端访问地址`
+
+   * 修改三个`服务提供`模块名称
+     * 修改 spring.application.name名称由原来的springcloud-provider-8001统一修改为springcloud-provider。
+     * 修改REST_URL_PREFIX为springcloud-provider
+
+6. 测试
+
+   * 启动Eureka Server集群、三个服务提供模块、一个客户端模块
+
+     ![image-20200823215319026](第四章-Ribbon客户端负载均衡.assets/image-20200823215319026.png)
+
+     任意一个Eureka服务下均可看到如下所示：
+
+     ![image-20200823215720883](第四章-Ribbon客户端负载均衡.assets/image-20200823215720883.png)
+
+     
+
+   * 负载均衡第一次访问
+
+     ![image-20200823220356325](第四章-Ribbon客户端负载均衡.assets/image-20200823220356325.png)
+
+   * 负载均衡第二次访问
+
+     ![image-20200823220452130](第四章-Ribbon客户端负载均衡.assets/image-20200823220452130.png)
+
+   * 。。。。
+
+   * 内存表示 我还能再战~
+
+     ![image-20200823221316983](第四章-Ribbon客户端负载均衡.assets/image-20200823221316983.png)
+
+## 负载均衡算法
+
+* RoundRobinRule 轮询  (默认)
+* RandomRule 随机
+* AvailabilityFilteringRule 先过滤掉跳闸访问故障的服务，对剩下可用的进行轮
+*  RetryRule 先按照轮询获取服务，如果服务获取失败，则会在指定时间内进行重试
+
+1. 修改默认轮询算法
+
+   在客户端ConfigBean中添加如下代码：
+
+   ```java
+   @Bean
+       public IRule myRuld(){
+           return new RandomRule();
+       }
+   ```
+
+   
