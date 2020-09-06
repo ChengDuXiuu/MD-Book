@@ -95,7 +95,7 @@
 
      
 
-3. 添加子模块 api
+3. 添加子模块==SpringCloud-API== 
 
    ![image-20200818221612169](spring cloud搭建demo.assets/image-20200818221612169.png)
 
@@ -141,7 +141,7 @@
 
    > 该模块只存在一个实体类，不需要单元测试
 
-7. 添加`服务提供`模块
+7. 添加`服务提供`模块==SpringCloud-Provider-800*==
 
    ![image-20200818225206183](spring cloud搭建demo.assets/image-20200818225206183.png)
 
@@ -371,7 +371,7 @@
 
     ![image-20200819212511799](spring cloud搭建demo.assets/image-20200819212511799.png)
 
-12. 添加`服务消费`模块
+12. 添加`服务消费`模块==SpringCloud-Consumer-80==
 
     ![image-20200819213110513](spring cloud搭建demo.assets/image-20200819213110513.png)
 
