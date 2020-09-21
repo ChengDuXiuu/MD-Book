@@ -955,7 +955,7 @@ filters: {
 </script>
 
 </body>
-```    
+```
 
 #### v-model:radio
 

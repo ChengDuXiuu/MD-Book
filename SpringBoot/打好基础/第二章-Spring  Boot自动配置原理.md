@@ -36,7 +36,7 @@ Spring Boot 自动配置，顾名思义，是希望能够自动配置，将我�
 
 壮着胆子，我们来看看 Spring Boot 提供的 [EmbeddedWebServerFactoryCustomizerAutoConfiguration](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/web/embedded/EmbeddedWebServerFactoryCustomizerAutoConfiguration.java) 类，负责创建内嵌的 Tomcat、Jetty 等等 Web 服务器的配置类。代码如下：
 
-```
+```java
 @Configuration // <1.1>
 @ConditionalOnWebApplication // <2.1>
 @EnableConfigurationProperties(ServerProperties.class) // <3.1>
@@ -89,7 +89,7 @@ public class  EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 
 在开始看代码之前，我们先来简单科普下 [Spring JavaConfig](https://docs.spring.io/spring-javaconfig/docs/1.0.0.M4/reference/html/) 的小知识。在 Spring3.0 开始，Spring 提供了 JavaConfig 的方式，允许我们使用 Java 代码的方式，进行 Spring Bean 的创建。示例代码如下：
 
-```
+```java
 @Configuration
 public class DemoConfiguration {
 
@@ -140,7 +140,7 @@ OK，现在我们在回过头看看 EmbeddedWebServerFactoryCustomizerAutoConfig
 
 `<3.1>` 处，使用 [`@EnableConfigurationProperties`](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/properties/EnableConfigurationProperties.java) 注解，让 [ServerProperties](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/web/ServerProperties.java) **配置属性类**生效。在 Spring Boot 定义了 [`@ConfigurationProperties`](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot/src/main/java/org/springframework/boot/context/properties/ConfigurationProperties.java) 注解，用于声明配置属性类，将指定前缀的配置项批量注入到该类中。例如 ServerProperties 代码如下：
 
-```
+```java
 @ConfigurationProperties(prefix = "server", ignoreUnknownFields = true)
 public class ServerProperties
 		implements EmbeddedServletContainerCustomizer, EnvironmentAware, Ordered {
@@ -297,7 +297,7 @@ Spring Boot 内置了非常多的 Starter，方便我们引入不同框架，并
 
 在 [`pom.xml`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/yunai-server-spring-boot-starter/pom.xml) 文件中，引入相关依赖。
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -327,7 +327,7 @@ Spring Boot 内置了非常多的 Starter，方便我们引入不同框架，并
 
 在 [`cn.iocoder.springboot.lab47.yunaiserver.autoconfigure`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/yunai-server-spring-boot-starter/src/main/java/cn/iocoder/springboot/lab47/yunaiserver/autoconfigure/) 包下，创建 [YunaiServerProperties](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/yunai-server-spring-boot-starter/src/main/java/cn/iocoder/springboot/lab47/yunaiserver/autoconfigure/YunaiServerProperties.java) 配置属性类，读取 `yunai.server` 前缀的配置项。代码如下：
 
-```
+```java
 @ConfigurationProperties(prefix = "yunai.server")
 public class YunaiServerProperties {
 
@@ -361,7 +361,7 @@ public class YunaiServerProperties {
 
 在 [`cn.iocoder.springboot.lab47.yunaiserver.autoconfigure`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/yunai-server-spring-boot-starter/src/main/java/cn/iocoder/springboot/lab47/yunaiserver/autoconfigure/) 包下，创建 [YunaiServerAutoConfiguration](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/yunai-server-spring-boot-starter/src/main/java/cn/iocoder/springboot/lab47/yunaiserver/autoconfigure/YunaiServerAutoConfiguration.java) 自动配置类，在项目中存在 `com.sun.net.httpserver.HttpServer` 类时，创建 HttpServer Bean，并启动该服务器。代码如下：
 
-```
+```java
 @Configuration // 声明配置类
 @EnableConfigurationProperties(YunaiServerProperties.class) // 使 YunaiServerProperties 配置属性类生效
 public class YunaiServerAutoConfiguration {
@@ -404,7 +404,7 @@ cn.iocoder.springboot.lab47.yunaiserver.autoconfigure.YunaiServerAutoConfigurati
 
 在 [`pom.xml`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/lab-47-demo/pom.xml) 文件中，引入相关依赖。
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -434,7 +434,7 @@ cn.iocoder.springboot.lab47.yunaiserver.autoconfigure.YunaiServerAutoConfigurati
 
 在 `resource` 目录下，创建 [`application.yaml`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/lab-47-demo/src/main/resources/application.yaml) 配置文件，设置 `yunai.server.port` 配置项来自定义 HttpServer 端口。配置如下：
 
-```
+```yaml
 yunai:
   server:
     port: 8888 # 自定义 HttpServer 端口
@@ -444,7 +444,7 @@ yunai:
 
 创建 [`DemoApplication.java`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-47/lab-47-demo/src/main/java/cn/iocoder/springboot/lab47/demo/DemoApplication.java) 类，配置 `@SpringBootApplication` 注解即可。代码如下：
 
-```
+```java
 @SpringBootApplication
 public class DemoApplication {
 
@@ -459,7 +459,7 @@ public class DemoApplication {
 
 执行 `DemoApplication#main(String[] args)` 方法，启动 Spring Boot 应用。打印日志如下：
 
-```
+```bash
 2020-02-02 13:03:12.156  INFO 76469 --- [           main] c.i.s.lab47.demo.DemoApplication         : Starting DemoApplication on MacBook-Pro-8 with PID 76469 (/Users/yunai/Java/SpringBoot-Labs/lab-47/lab-47-demo/target/classes started by yunai in /Users/yunai/Java/SpringBoot-Labs)
 2020-02-02 13:03:12.158  INFO 76469 --- [           main] c.i.s.lab47.demo.DemoApplication         : No active profile set, falling back to default profiles: default
 2020-02-02 13:03:12.873  INFO 76469 --- [           main] c.i.s.l.y.a.YunaiServerAutoConfiguration : [httpServer][启动服务器成功，端口为:8888]
