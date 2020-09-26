@@ -615,6 +615,103 @@ public CommonResult bindExceptionHandler(HttpServletRequest req, BindException e
 - 将每个约束的错误内容提示，拼接起来，使用 `;` 分隔。
 - 重新请求 `UserController#add(addDTO)` 对应的接口，响应结果如下：![bindExceptionHandler](第四章-Spring Boot参数校验Validation入门.assets/04-20200912231237547.png)
 
+
+
+> 或者是对每个包中产生的异常进行处理
+
+```java
+package com.atguigu.gulimall.product.exception;
+
+import com.atguigu.common.exception.BizCodeEnume;
+import com.atguigu.common.utils.R;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 集中处理所有异常
+ */
+@Slf4j
+//@ResponseBody
+//@ControllerAdvice(basePackages = "com.atguigu.gulimall.product.controller")
+@RestControllerAdvice(basePackages = "com.atguigu.gulimall.product.controller")
+public class GulimallExceptionControllerAdvice {
+
+
+    @ExceptionHandler(value= MethodArgumentNotValidException.class)
+    public R handleVaildException(MethodArgumentNotValidException e){
+        log.error("数据校验出现问题{}，异常类型：{}",e.getMessage(),e.getClass());
+        BindingResult bindingResult = e.getBindingResult();
+
+        Map<String,String> errorMap = new HashMap<>();
+        bindingResult.getFieldErrors().forEach((fieldError)->{
+            errorMap.put(fieldError.getField(),fieldError.getDefaultMessage());
+        });
+        return R.error(BizCodeEnume.VAILD_EXCEPTION.getCode(),BizCodeEnume.VAILD_EXCEPTION.getMsg()).put("data",errorMap);
+    }
+
+    @ExceptionHandler(value = Throwable.class)
+    public R handleException(Throwable throwable){
+
+        log.error("错误：",throwable);
+        return R.error(BizCodeEnume.UNKNOW_EXCEPTION.getCode(),BizCodeEnume.UNKNOW_EXCEPTION.getMsg());
+    }
+
+
+}
+```
+
+```java
+package com.atguigu.common.exception;
+
+/***
+ * 错误码和错误信息定义类
+ * 1. 错误码定义规则为5为数字
+ * 2. 前两位表示业务场景，最后三位表示错误码。例如：100001。10:通用 001:系统未知异常
+ * 3. 维护错误码后需要维护错误描述，将他们定义为枚举形式
+ * 错误码列表：
+ *  10: 通用
+ *      001：参数格式校验
+ *  11: 商品
+ *  12: 订单
+ *  13: 购物车
+ *  14: 物流
+ *
+ *
+ */
+public enum BizCodeEnume {
+    UNKNOW_EXCEPTION(10000,"系统未知异常"),
+    VAILD_EXCEPTION(10001,"参数格式校验失败");
+
+    private int code;
+    private String msg;
+    BizCodeEnume(int code,String msg){
+        this.code = code;
+        this.msg = msg;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+}
+```
+
+
+
+![image-20200921214333046](第四章-Spring Boot参数校验Validation入门.assets/image-20200921214333046.png)
+
 # 5. 自定义约束
 
 > 示例代码对应仓库：[lab-22-validation-01](https://github.com/YunaiV/SpringBoot-Labs/tree/master/lab-22/lab-22-validation-01) 。
