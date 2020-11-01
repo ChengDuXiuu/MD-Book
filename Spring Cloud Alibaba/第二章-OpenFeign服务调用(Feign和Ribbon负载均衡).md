@@ -59,21 +59,43 @@
 
 4. ==服务调用方==调用接口中远程服务提供的方法
 
-	```java
-	@Autowired
-	private CouponFeignService couponFeignService;
-	
-	@RequestMapping("/coupons")
-	public R test(){
-	    MemberEntity memberEntity=new MemberEntity();
-	    memberEntity.setNickname("会员张三");
-	
-	    R membercoupons=couponFeignService.memberCoupons();
-	    return R.ok().put("member", memberEntity).put("coupons", membercoupons.get("coupons"));
-	}
-	```
+  ```java
+  @Autowired
+  private CouponFeignService couponFeignService;
+  
+  @RequestMapping("/coupons")
+  public R test(){
+      MemberEntity memberEntity=new MemberEntity();
+      memberEntity.setNickname("会员张三");
+  
+      R membercoupons=couponFeignService.memberCoupons();
+      return R.ok().put("member", memberEntity).put("coupons", membercoupons.get("coupons"));
+  }
+  ```
+
+  ```java
+  import com.shuai.common.utils.R;
+  import org.springframework.cloud.openfeign.FeignClient;
+  import org.springframework.stereotype.Component;
+  import org.springframework.web.bind.annotation.RequestMapping;
+  
+  // todo 1. 告知 服务提供方 暴露的服务名称
+  @FeignClient("service-provider-coupon")
+  @Component
+  public interface CouponFeignService {
+      // todo 2. 拷贝 服务提供方 的方法完整签名
+      //@RequestMapping("/member/list")
+      // todo 3. 将方法请求路径补全
+      @RequestMapping("gulimallcoupon/coupon/member/list")
+      public R memberCoupons();
+  
+  
+  
+      // todo 4. 想要调用其他的方法，循环 【2 3】 步骤即可
+  }
+  ```
 
 5. 测试
 
-	![image-20200916215000677](第二章-OpenFeign服务调用(Feign和Ribbon负载均衡).assets/image-20200916215000677.png)
+  ![image-20200916215000677](第二章-OpenFeign服务调用(Feign和Ribbon负载均衡).assets/image-20200916215000677.png)
 

@@ -401,7 +401,7 @@ v-text作用和Mustache比较相似：都是用于将数据显示在界面中
 
 之前通过Mustache语法可以在dom中插入一些data数据。但是如过需要对data中数据进行一些处理后再进行插入。Mustache语法就不得劲了。这个时候我们可以通过计算属性computed来操作并返回。
 
-对data数据进行操作后插值，通过methods也可以实现。后买讲这两个区别
+对data数据进行操作后插值，通过methods也可以实现。之后讲这两个区别
 
 ```Java
 <body>

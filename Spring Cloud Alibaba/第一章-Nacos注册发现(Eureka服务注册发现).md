@@ -10,37 +10,40 @@
 
 3. ![image-20200915232432274](/Users/mac/Library/Application Support/typora-user-images/image-20200915232432274.png)
 
-4. 登录页面：http://127.0.0.1:8848/nacos/index.html
-5. 默认账号密码
-	- 账号：nacos
-	- 密码：nacos
+5. 登录页面：http://localhost:8848/nacos/#/login
 
-6. 主界面
+	![image-20201018181338187](第一章-Nacos注册发现(Eureka服务注册发现).assets/image-20201018181338187.png)
 
-	![image-20200915232537215](/Users/mac/Library/Application Support/typora-user-images/image-20200915232537215.png)
+7. 默认账号密码
+  - 账号：nacos
+  - 密码：nacos
 
-8. <加入依赖包>修改 pom.xml 文件(==服务注册方==或者==common模块==)，引入 Nacos Discovery Starter。
+8. 主界面
 
-	```xml
-	<dependency>
-	     <groupId>com.alibaba.cloud</groupId>
-	     <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-	 </dependency>
-	```
+  ![image-20200915232537215](/Users/mac/Library/Application Support/typora-user-images/image-20200915232537215.png)
 
-9. <提供配置文件或者配置类>在==服务提供方==的 application.yml配置文件中配置 Nacos Server 地址以及==服务名==（对外暴露使用）
+9. <加入依赖包>修改 pom.xml 文件(==服务注册方==或者==common模块==)，引入 Nacos Discovery Starter。
 
-	```yaml
-	spring:
-	  cloud:
-	    nacos:
-	      discovery:
-	        server-addr: 127.0.0.1:8848
-	  application:
-	    name: service-provider-coupon      
-	```
+  ```xml
+  <dependency>
+       <groupId>com.alibaba.cloud</groupId>
+       <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+   </dependency>
+  ```
 
-10. <开启功能>使用 @EnableDiscoveryClient 注解开启服务注册与发现功能
+10. <提供配置文件或者配置类>在==服务提供方==的 application.yml配置文件中配置 Nacos Server 地址以及==服务名==（对外暴露使用）
+
+  ```yaml
+  spring:
+    cloud:
+      nacos:
+        discovery:
+          server-addr: 127.0.0.1:8848
+    application:
+      name: service-provider-coupon      
+  ```
+
+11. <开启功能>使用 @EnableDiscoveryClient 注解开启服务注册与发现功能
 
 	```java
 	@SpringBootApplication
@@ -54,7 +57,7 @@
 	}
 	```
 
-11. 测试
+12. 测试
 
 	* 启动Nacos中间件。类似于Eureka Server服务模块
 	* 启动==服务提供方==模块
