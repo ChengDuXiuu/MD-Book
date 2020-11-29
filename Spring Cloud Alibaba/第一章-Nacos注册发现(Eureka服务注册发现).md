@@ -69,3 +69,4 @@
 Eureka两大组件`Eureka Server`和`Eureka Client`都需要自己提供实现模块。
 
 Nacos已提供好注册服务脚本以及可视化界面，只需要往里面注册服务即可
+

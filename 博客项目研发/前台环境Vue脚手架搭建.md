@@ -65,7 +65,7 @@ npm install -g @vue/cli-init
 * 当前项目安装 Element-ui 
 
 	```bash
-	npm install element-ui
+	npm install element-ui --save
 	```
 
 * 引用以及使用
