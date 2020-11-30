@@ -508,6 +508,25 @@ v-text作用和Mustache比较相似：都是用于将数据显示在界面中
 
 </body>
 ```
+#### <font color=ff00aa>``计算属传参：``</font>
+
+```JavaScript
+computed: {
+  columnCom: function () {
+    return function (columns) {
+      if (columns) return columns.split(",");
+    }
+  },
+},
+```
+
+```JavaScript
+<div v-for="column in columnCom(item.column)">
+  <el-button type="primary" plain size="mini" round
+  icon="el-icon-menu">{{ column }}</el-button>
+</div>
+```
+
 #### <font color=ff00aa>``计算属性中的setter和getter：``</font>
 
 每个计算属性中都包含一个getter和setter，上面的例子中只用到了getter。
