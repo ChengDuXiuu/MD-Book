@@ -59,7 +59,7 @@ Spring Data JPA ，是 [Spring Data](https://spring.io/projects/spring-data) 提
 
 在 [`pom.xml`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/pom.xml) 文件中，引入相关依赖。
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -112,7 +112,7 @@ Spring Data JPA ，是 [Spring Data](https://spring.io/projects/spring-data) 提
 
 创建 [`Application.java`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/Application.java) 类，配置 `@SpringBootApplication` 注解即可。代码如下：
 
-```
+```java
 // Application.java
 
 @SpringBootApplication
@@ -124,7 +124,7 @@ public class Application {
 
 在 [`application.yml`](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/resources/application.yaml) 中，添加 JPA 配置，如下：
 
-```
+```yml
 spring:
   # datasource 数据源配置内容
   datasource:
@@ -162,17 +162,17 @@ spring:
 
 在 [`cn.iocoder.springboot.lab13.jpa.dataobject`](https://github.com/YunaiV/SpringBoot-Labs/tree/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/dataobject) 包路径下，创建 [UserDO.java](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/dataobject/UserDO.java) 类，用户 DO 。代码如下：
 
-```
+```java
 // UserDO.java
 
-@Entity
+@Entity //必须加这个注解(这个注解式jpa中自带的用以识别实体类)`
 @Table(name = "users")
 public class UserDO {
 
     /**
      * 用户编号
      */
-    @Id
+    @Id//(必须加ID注解，否则报错Caused by: org.hibernate.AnnotationException: No identifier specified for entity)
     @GeneratedValue(strategy = GenerationType.IDENTITY,  // strategy 设置使用数据库主键自增策略；
             generator = "JDBC") // generator 设置插入完成后，查询最后生成的 ID 填充到该属性中。
     private Integer id;
@@ -199,6 +199,12 @@ public class UserDO {
 }
 ```
 
+`注意：`实体类必须加下面两个注解。
+
+> <font color=ff00aa>@Entity //必须加这个注解(这个注解式jpa中自带的用以识别实体类)</font>
+
+> <font color =ff00aa>@Id//(必须加ID注解，否则报错Caused by: org.hibernate.AnnotationException: No identifier specified for entity)</font>
+
 关于 JPA 的注解的详细说明，胖友后面再看看 [《Spring Data JPA 中常用的注解详解》](https://www.jianshu.com/p/1b759ef26ff3) 文章。我们，继续往下看。
 
 对应的创建表的 SQL 如下：
@@ -218,7 +224,7 @@ CREATE TABLE `users` (
 
 在 [`cn.iocoder.springboot.lab13.mybatis.repository`](https://github.com/YunaiV/SpringBoot-Labs/tree/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository) 包路径下，创建 [UserRepository01](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository01.java) 接口。代码如下：
 
-```
+```java
 // UserRepository01.java
 
 public interface UserRepository01 extends CrudRepository<UserDO, Integer> {
@@ -233,7 +239,7 @@ public interface UserRepository01 extends CrudRepository<UserDO, Integer> {
 
 创建 [UserRepository01Test](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/test/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository01Test.java) 测试类，我们来测试一下简单的 UserRepository01 的每个操作。代码如下：
 
-```
+```java
 // UserRepository01.java
 
 @RunWith(SpringRunner.class)
@@ -289,7 +295,7 @@ public class UserMapperTest {
 
 Spring Data 提供 [`org.springframework.data.repository.PagingAndSortingRepository`](https://github.com/spring-projects/spring-data-commons/blob/master/src/main/java/org/springframework/data/repository/PagingAndSortingRepository.java) 接口，继承 CrudRepository 接口，在 CRUD 操作的基础上，额外提供分页和排序的操作。代码如下：
 
-```
+```java
 // PagingAndSortingRepository.java
 
 public interface PagingAndSortingRepository<T, ID> extends CrudRepository<T, ID> {
@@ -305,7 +311,7 @@ public interface PagingAndSortingRepository<T, ID> extends CrudRepository<T, ID>
 
 在 [`cn.iocoder.springboot.lab13.mybatis.repository`](https://github.com/YunaiV/SpringBoot-Labs/tree/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository) 包路径下，创建 [UserRepository02](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository02.java) 接口。代码如下：
 
-```
+```java
 // UserRepository02.java
 
 public interface UserRepository02 extends PagingAndSortingRepository<UserDO, Integer> {
@@ -319,7 +325,7 @@ public interface UserRepository02 extends PagingAndSortingRepository<UserDO, Int
 
 创建 [UserRepository02Test](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/test/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository02Test.java) 测试类，我们来测试一下简单的 UserRepository02 的每个操作。代码如下：
 
-```
+```java
 // UserRepository02Test.java
 
 @RunWith(SpringRunner.class)
@@ -400,7 +406,7 @@ public class UserRepository02Test {
 
 在 [`cn.iocoder.springboot.lab13.mybatis.repository`](https://github.com/YunaiV/SpringBoot-Labs/tree/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository) 包路径下，创建 [UserRepository03](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository03.java) 接口。代码如下：
 
-```
+```java
 // UserRepository03.java
 
 public interface UserRepository03 extends PagingAndSortingRepository<UserDO, Integer> {
@@ -418,7 +424,7 @@ public interface UserRepository03 extends PagingAndSortingRepository<UserDO, Int
 
 创建 [UserRepository03Test](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/test/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository03Test.java) 测试类，我们来测试一下简单的 UserRepository03 的每个操作。代码如下：
 
-```
+```java
 // UserRepository03.java
 
 @RunWith(SpringRunner.class)
@@ -463,7 +469,7 @@ public class UserRepository03Test {
 
 在 [`cn.iocoder.springboot.lab13.mybatis.repository`](https://github.com/YunaiV/SpringBoot-Labs/tree/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository) 包路径下，创建 [UserRepository04](https://github.com/YunaiV/SpringBoot-Labs/blob/master/lab-13-spring-data-jpa/lab-13-jpa/src/main/java/cn/iocoder/springboot/lab13/jpa/repository/UserRepository04.java) 接口。代码如下：
 
-```
+```java
 // UserRepository04.java
 
 public interface UserRepository04 extends PagingAndSortingRepository<UserDO, Integer> {
