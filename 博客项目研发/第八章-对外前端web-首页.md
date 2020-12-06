@@ -306,7 +306,7 @@
 	ColumnRepository columnRepository;
 	```
 
-## 搜索功能以及轮播图
+## 搜索功能
 
 1. 新建==文章-分栏==、==文章-评论==、==文章-标签==关联表
 
@@ -560,6 +560,7 @@
 	* Home.vue中添加方法
 
 		```JavaScript
+		<BlogList ref="blogList"></BlogList>//子组件添加ref，调用实例
 		data() {
 		  return {
 		    url:{
@@ -576,13 +577,30 @@
 		  getAction(this.url.columnArticleData,{column:this.selectColumn})
 		    .then((res) => {
 		    console.log("分栏下博客数据",res)
+		    let columnArticles=[];
 		    if (res.data.success) {
 		      res.data.result.forEach((item, i) => {
-		        this.specialColumns.push({
-		          name:item.specialName,
-		          id:item.id,
+		        columnArticles.push({
+		          id: item.id,
+		          title: item.title,
+		          avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
+		          description: item.htmlContent.substring(0, 50),
+		          htmlContent: item.htmlContent,
+		          mdContent: item.mdContent,
+		          createTime: item.createTime,
+		          column:item.specialColumn,
+		          collection: item.numCollections,
+		          star: item.numLikes,
+		          message: item.numComments,
 		        })
-		      })
+		      });
+	      this.$refs.blogList.articles=columnArticles;
+		    }else if (res.data.code=="500"){
+		      this.$refs.blogList.articles=columnArticles;
+		      this.$message({
+		        message: res.data.message+' !',
+		        type: 'warning'
+		      });
 		    }
 		  })
 		    .catch((e) => {
@@ -594,5 +612,415 @@
 		  })
 		}
 		```
+	
+	![image-20201202204431763](第八章-对外前端web-首页.assets/image-20201202204431763.png)
+	
+	
+	
+8. 搜索 文章标题模糊查询
+
+	`后端处理`
+
+	* ShiroConfig.java添加
+
+		```java
+		filterChainDefinitionMap.put("/special/blogSpecialColumn/columnArticleDataByTitle", "anon");
+		```
+
+	* BlogSpecialColumnController.java添加方法
+
+		```java
+		 @AutoLog(value = "blog_special_column-获取专栏下所有文章并通过标题名模糊查询")
+			 @ApiOperation(value="blog_special_column-获取专栏下所有文章并通过标题名模糊查询", notes="blog_special_column-获取专栏下所有文章并通过标题名模糊查询")
+			 @GetMapping(value = "/columnArticleDataByTitle")
+			 public Result<?> columnArticleDataByTitle(@RequestParam(name="columnId",required = true) String columnId,@RequestParam(name = "title",required = true) String title){
+				 List<BlogArticle> list=new ArrayList<>();
+				 if (StrUtil.isEmpty(columnId)){
+					 QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+					 QueryWrapper<BlogArticle> wrapper= queryWrapper.like("title", title);
+					 list = blogArticleService.list(wrapper);
+				 }else{
+					 List<ArticleColumn> articleColumnList = articleColumnRepository.findArticleColumnsByColumnId(columnId);
+					 List<String> articleIdList = articleColumnList.stream().map(e -> e.getArticleId()).collect(Collectors.toList());
+					 QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+					 QueryWrapper<BlogArticle> wrapper= queryWrapper.like("title", title).in("id",articleIdList);
+					 list = blogArticleService.list(wrapper);
+				 }
+		
+		
+				 return Result.ok(list);
+			 }
+		```
 
 	
+
+	`前端处理`
+
+	* Home.vue中添加
+
+		```JavaScript
+		🔍按钮添加事件
+		 <el-button slot="append" icon="el-icon-search" @click="blogTitleChange"></el-button>
+		
+		url:{
+		   columnAll:'/special/blogSpecialColumn/listAll',
+		   columnArticleData:'/special/blogSpecialColumn/columnArticleData',
+		   columnArticleDataByTitle:'/special/blogSpecialColumn/columnArticleDataByTitle',
+		},
+		 
+		blogTitleChange(){
+		  console.log(this.selectColumn)
+		  console.log(this.searchArticleTitle)
+		  if (!this.searchArticleTitle) {
+		    this.columnChange();
+		    return false;
+		  }
+		  getAction(this.url.columnArticleDataByTitle,{columnId:this.selectColumn,title:this.searchArticleTitle})
+		    .then((res) => {
+		    console.log("分栏下博客数据",res)
+		    let columnArticles=[];
+		    if (res.data.success) {
+		      res.data.result.forEach((item, i) => {
+		        columnArticles.push({
+		          id: item.id,
+		          title: item.title,
+		          avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
+		          description: item.htmlContent.substring(0, 50),
+		          htmlContent: item.htmlContent,
+		          mdContent: item.mdContent,
+		          createTime: item.createTime,
+		          column:item.specialColumn,
+		          collection: item.numCollections,
+		          star: item.numLikes,
+		          message: item.numComments,
+		        })
+		      });
+		      this.$refs.blogList.articles=columnArticles;
+		    }else if (res.data.code=="500"){
+		      this.$refs.blogList.articles=columnArticles;
+		      this.$message({
+		        message: res.data.message+' !',
+		        type: 'warning'
+		      });
+		    }
+		  })å
+		    .catch((e) => {
+		    this.$message({
+		      message: '分栏下博客数据刷新失败 !',
+		      type: 'warning'
+		    });
+		    console.log('分栏下博客数据刷新失败', e)
+		  })
+		}  
+		```
+
+	![image-20201202220643449](第八章-对外前端web-首页.assets/image-20201202220643449.png)
+
+	> 发现有一个问题：搜索出来的数据并没有进行分页。下面解决这个问题
+
+9. 搜索文章后数据分页处理
+
+	`后台代码`
+
+	* 修改columnArticleDataByTitle方法
+
+		```java
+		     @AutoLog(value = "blog_special_column-获取专栏下所有文章并通过标题名模糊查询")
+		    @ApiOperation(value="blog_special_column-获取专栏下所有文章并通过标题名模糊查询", notes="blog_special_column-获取专栏下所有文章并通过标题名模糊查询")
+		    @GetMapping(value = "/columnArticleDataByTitle")
+		    public Result<?> columnArticleDataByTitle(@RequestParam(name="columnId",required = true) String columnId,@RequestParam(name = "title",required = true) String title){
+		       List<BlogArticle> list=new ArrayList<>();
+		       IPage<BlogArticle> pageList=null;
+		       Page<BlogArticle> page = new Page<BlogArticle>(1,5);
+		       if (StrUtil.isEmpty(columnId)){
+		          QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+		          QueryWrapper<BlogArticle> wrapper= queryWrapper.like("title", title);
+		          pageList = blogArticleService.page(page, wrapper);
+		//        list = blogArticleService.list(wrapper);
+		       }else{
+		          List<ArticleColumn> articleColumnList = articleColumnRepository.findArticleColumnsByColumnId(columnId);
+		          List<String> articleIdList = articleColumnList.stream().map(e -> e.getArticleId()).collect(Collectors.toList());
+		          QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+		          QueryWrapper<BlogArticle> wrapper= queryWrapper.like("title", title).in("id",articleIdList);
+		          pageList = blogArticleService.page(page, wrapper);
+		//        list = blogArticleService.list(wrapper);
+		       }
+		
+		       return Result.ok(pageList);
+		    }
+		```
+
+	`前台代码`
+
+	* Home.vue中的blogTitleChange方法
+
+		```JavaScript
+		blogTitleChange(){
+		  if (!this.searchArticleTitle) {
+		    this.columnChange();
+		    return false;
+		  }
+		  getAction(this.url.columnArticleDataByTitle,{columnId:this.selectColumn,title:this.searchArticleTitle})
+		    .then((res) => {
+		      console.log("分栏下博客数据",res)
+		      let columnArticles=[];
+		      if (res.data.success) {
+		        //成功后修改分页数据
+		        this.$refs.blogList.total = res.data.result.total;
+		        this.$refs.blogList.currentPage = res.data.result.current;
+		        this.$refs.blogList.pageSize = res.data.result.size;
+		        res.data.result.records.forEach((item, i) => {
+		          columnArticles.push({
+		            id: item.id,
+		            title: item.title,
+		            avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
+		            description: item.htmlContent.substring(0, 50),
+		            htmlContent: item.htmlContent,
+		            mdContent: item.mdContent,
+		            createTime: item.createTime,
+		            column:item.specialColumn,
+		            collection: item.numCollections,
+		            star: item.numLikes,
+		            message: item.numComments,
+		          })
+		        });
+		        this.$refs.blogList.articles=columnArticles;
+		      }else if (res.data.code=="500"){
+		        this.$refs.blogList.articles=columnArticles;
+		        this.$message({
+		          message: res.data.message+' !',
+		          type: 'warning'
+		        });
+		      }
+		    })
+		    .catch((e) => {
+		      this.$message({
+		        message: '分栏下博客数据刷新失败 !',
+		        type: 'warning'
+		      });
+		      console.log('分栏下博客数据刷新失败', e)
+		    })
+		}
+		```
+
+	![image-20201202223210992](第八章-对外前端web-首页.assets/image-20201202223210992.png)
+
+	> 还有问题，点击下一页，又恢复之前的样子了。原来是分页插件调用了@current-change=getArticles 方法导致。大致思路就是弄个一变量flag来控制走的方法，如果点击搜索后则flag为false，分页方法走我们columnArticleDataByTitle方法，
+
+	
+
+10. 搜索文章后 分页处理
+
+	`后台代码`
+
+	* columnArticleDataByTitle方法修改，适用于分页以及参数调整
+
+		```java
+		 @AutoLog(value = "blog_special_column-获取专栏下所有文章并通过标题名模糊查询")
+		    @ApiOperation(value="blog_special_column-获取专栏下所有文章并通过标题名模糊查询", notes="blog_special_column-获取专栏下所有文章并通过标题名模糊查询")
+		    @GetMapping(value = "/columnArticleDataByTitle")
+		    public Result<?> columnArticleDataByTitle(@RequestParam(name="columnId",required = true) String columnId,
+		                                    @RequestParam(name = "title",required = true) String title,
+		                                    @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+		                                    @RequestParam(name="pageSize", defaultValue="5") Integer pageSize){
+		       List<BlogArticle> list=new ArrayList<>();
+		       IPage<BlogArticle> pageList=null;
+		       Page<BlogArticle> page = new Page<BlogArticle>(pageNo,pageSize);
+		       if (StrUtil.isEmpty(columnId)){
+		          QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+		          QueryWrapper<BlogArticle> wrapper= queryWrapper.like("title", title);
+		          pageList = blogArticleService.page(page, wrapper);
+		//        list = blogArticleService.list(wrapper);
+		       }else{
+		          List<ArticleColumn> articleColumnList = articleColumnRepository.findArticleColumnsByColumnId(columnId);
+		          List<String> articleIdList = articleColumnList.stream().map(e -> e.getArticleId()).collect(Collectors.toList());
+		          QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+		          QueryWrapper<BlogArticle> wrapper= queryWrapper.like("title", title).in("id",articleIdList);
+		          pageList = blogArticleService.page(page, wrapper);
+		//        list = blogArticleService.list(wrapper);
+		       }
+		
+		       return Result.ok(pageList);
+		    }
+		```
+
+	`前端代码`
+
+	* 修改Home.vue。获取到搜索文章数据后进行组件数据传递
+
+		```JavaScript
+		//成功后修改分页数据
+		this.$refs.blogList.total = res.data.result.total;
+		this.$refs.blogList.currentPage = res.data.result.current;
+		this.$refs.blogList.pageSize = res.data.result.size;
+		this.$refs.blogList.flag = false;//控制方法
+		this.$refs.blogList.tempUrl = this.url.columnArticleDataByTitle;
+		this.$refs.blogList.tempColumnId = this.selectColumn;
+		this.$refs.blogList.tempTitle = this.searchArticleTitle;
+		```
+
+	* BlogList子组件新增data和方法
+
+		```JavaScript
+		data() {
+		  return {
+		    url: {
+		      articleListAll: '/article/blogArticle/listAll',
+		      articleList: '/article/blogArticle/list',
+		    },
+		    articles: [],
+		    currentPage: 1,
+		    total: 0,
+		    pageSize: 5,
+		    flag:true,
+		    tempUrl:'',
+		    tempColumnId: '',
+		    tempTitle: '',
+		  }
+		},
+		getArticlesBySearch(pageNo) {
+		  console.log("走了getArticlesBySearch",pageNo)
+		  this.articles = [];
+		  getAction(this.tempUrl, {pageNo: pageNo, pageSize: this.pageSize,columnId:this.tempColumnId,title:this.tempTitle})
+		    .then((res) => {
+		    console.log(res)
+		    if (res.data.success) {
+		      // this.articles=res.data.result.records;
+		      this.total = res.data.result.total;
+		      this.currentPage = res.data.result.current;
+		      this.pageSize = res.data.result.size;
+		      res.data.result.records.forEach((item, i) => {
+		        this.articles.push({
+		          id: item.id,
+		          title: item.title,
+		          avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
+		          description: item.htmlContent.substring(0, 50),
+		          htmlContent: item.htmlContent,
+		          mdContent: item.mdContent,
+		          createTime: item.createTime,
+		          column:item.specialColumn,
+		          collection: item.numCollections,
+		          star: item.numLikes,
+		          message: item.numComments,
+		        })
+		      })
+		    }
+		  })
+		    .catch((e) => {
+		    this.$message({
+		      message: '刷新失败 !',
+		      type: 'warning'
+		    });
+		    console.log('刷新失败', e)
+		  })
+		},  
+		```
+
+	* BlogList子组件修改方法getArticles
+
+		```JavaScript
+		getArticles(pageNo) {
+		  if (this.flag){
+		    this.articles = [];
+		    getAction(this.url.articleList, {pageNo: pageNo, pageSize: this.pageSize})
+		      .then((res) => {
+		        console.log(res)
+		        if (res.data.success) {
+		          // this.articles=res.data.result.records;
+		          this.total = res.data.result.total;
+		          this.currentPage = res.data.result.current;
+		          this.pageSize = res.data.result.size;
+		          res.data.result.records.forEach((item, i) => {
+		            this.articles.push({
+		              id: item.id,
+		              title: item.title,
+		              avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
+		              description: item.htmlContent.substring(0, 50),
+		              htmlContent: item.htmlContent,
+		              mdContent: item.mdContent,
+		              createTime: item.createTime,
+		              column:item.specialColumn,
+		              collection: item.numCollections,
+		              star: item.numLikes,
+		              message: item.numComments,
+		            })
+		          })
+		        }
+		      })
+		      .catch((e) => {
+		        this.$message({
+		          message: '刷新失败 !',
+		          type: 'warning'
+		        });
+		        console.log('刷新失败', e)
+		      })
+		  }else{
+		    this.getArticlesBySearch(pageNo);
+		  }
+		},
+		```
+
+## 轮播图
+
+```JavaScript
+<div class="grid-content bg-purple">
+  <el-carousel :interval="3000" type="card" height="300px">
+    <el-carousel-item v-for="item in bigScreen.images"
+                      :key="item.name" :name="item.name">
+      <img style="width:100%;height:100%;" :src="item.url"/>
+    </el-carousel-item>
+  </el-carousel>
+</div>
+data(){
+  return {
+     bigScreen: {
+          images: [
+            {
+              name: 'bigScreen01',
+              url: '../../static/ScreenImage/screen01.jpg'
+            },
+            {
+              name: 'bigScreen02',
+              url: '../../static/ScreenImage/screen02.jpg'
+            },
+          ]
+        },
+  }
+}
+```
+
+
+
+## 热门文章实现
+
+`后端处理`
+
+1. ShiroConfig.java添加
+
+	```java
+	filterChainDefinitionMap.put("/article/blogArticle/listTop5", "anon");
+	```
+
+2. BlogArticleController类新增方法
+
+	```java
+	@AutoLog(value = "blog_article-查询文章top5")
+	 @ApiOperation(value="blog_article-查询文章top5", notes="blog_article-查询文章top5")
+	 @GetMapping(value = "/listAll")
+	public Result<?> listTop5(){
+	   QueryWrapper<BlogArticle> queryWrapper=new QueryWrapper<>();
+	   QueryWrapper<BlogArticle> wrapper=queryWrapper.orderByAsc("visits").last("limit 5");
+	   List<BlogArticle> blogArticles = blogArticleService.list(wrapper);
+	   return Result.ok(blogArticles);
+	}
+	```
+
+
+
+
+
+
+
+
+
+`前端处理`
