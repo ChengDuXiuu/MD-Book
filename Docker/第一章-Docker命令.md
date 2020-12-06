@@ -10,7 +10,7 @@
 
 	   ```bash
 	yum install -y docker
-	   ```
+	```
 
 
 
@@ -316,18 +316,3 @@ Tips：
 
  [root@hadoop-104 ~]# 
 
-##  
-
-## 设置启动docker时，即运行mysql
-
-##  
-
-## 进入容器查看配置：
-
-##  
-
-## 修改配置
-
-
-
- 
