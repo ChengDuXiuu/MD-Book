@@ -12,11 +12,11 @@
 
 2. 引入element-ui插件
 
-	* <img src="../../../../../mac资料/Respository/MD-Book/博客项目研发/第一章-环境搭建.assets/image-20200810210251628.png" alt="image-20200810210251628" style="zoom:50%;"/>
+	* <img src="../../../../../mac/Respository/MD-Book/博客项目研发/第一章-环境搭建.assets/image-20200810210251628.png" alt="image-20200810210251628" style="zoom:50%;"/>
 
-	* <img src="../../../../../mac资料/Respository/MD-Book/博客项目研发/第一章-环境搭建.assets/image-20200810210251628.png" alt="image-20200810210251628" style="zoom:50%;" />
+	* <img src="../../../../../mac/Respository/MD-Book/博客项目研发/第一章-环境搭建.assets/image-20200810210251628.png" alt="image-20200810210251628" style="zoom:50%;" />
 
-	* <img src="../../../../../mac资料/Respository/MD-Book/博客项目研发/第一章-环境搭建.assets/image-20200810210251628.png" alt="image-20200810210251628" style="zoom:50%;" />
+	* <img src="../../../../../mac/Respository/MD-Book/博客项目研发/第一章-环境搭建.assets/image-20200810210251628.png" alt="image-20200810210251628" style="zoom:50%;" />
 
 		* ![image-20200809214104647](vue脚手架.assets/image-20200809214104647.png)
 

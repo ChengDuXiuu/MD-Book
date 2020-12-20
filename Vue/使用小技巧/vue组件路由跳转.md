@@ -1,4 +1,4 @@
-1. 在components目录中新增vue文件
+1. Ll在components目录中新增vue文件
 
 	```vue
 	<template>

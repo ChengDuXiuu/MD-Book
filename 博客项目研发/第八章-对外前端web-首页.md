@@ -95,7 +95,7 @@
                     <el-row :gutter="20">
                       <el-col :span="16" style="padding-right: 0px;padding-left: 0px;text-align: justify"><div class="grid-content bg-purple" style="position:relative;height: 150px">
                         <h3 style="text-align:left">
-                          <router-link :to="{name:'BlogDetail',params:{blogId:item.id}}">
+                          <router-link target="_blank" :to="{name:'BlogDetail',params:{blogId:item.id}}">
                             {{ item.title }}
                           </router-link>
                         </h3>
@@ -1017,10 +1017,235 @@ data(){
 
 
 
-
-
-
-
-
-
 `前端处理`
+
+1. BlogList.vue中新增el-card
+
+	```JavaScript
+	<!--热门文章-->
+	<el-card shadow="hover" style="width: 300px;height:300px" name="hotBlog">
+	  <div style="text-align: left"><h3>热门文章</h3></div>
+	  <el-divider></el-divider>
+	  <div v-for="item in articleTop5" style="text-align: left">
+	    <el-row :gutter="24" style="margin-top: 0px;margin-bottom: 0px">
+	      <el-col :span="18"><div class="grid-content bg-purple">
+	        <a>{{ item.title }}</a>
+	      </div></el-col>
+	      <el-col :span="6"><div class="grid-content bg-purple">
+	        <span>{{ item.visits }}</span>
+	        <i class="el-icon-star-off" style="display:inline"></i>
+	      </div></el-col>
+	    </el-row>
+	  </div>
+	</el-card>
+	```
+
+2. 新增data
+
+	```javascript
+	url: {
+	          articleListAll: '/article/blogArticle/listAll',
+	          articleList: '/article/blogArticle/list',
+	          articleTop5: '/article/blogArticle/listTop5',
+	        },
+	articleTop5:[],
+	```
+
+3. 新增方法
+
+	```javascript
+	  //获取最新评论top5
+	getArticleTop5() {
+	  getAction(this.url.articleTop5)
+	    .then((res) => {
+	    console.log("文章Top5",res)
+	    if (res.data.success) {
+	      res.data.result.forEach((item, i) => {
+	        this.articleTop5.push({
+	          title:item.title,
+	          visits:item.visits,
+	        })
+	      })
+	    }
+	  })
+	    .catch((e) => {
+	    this.$message.warn('刷新失败')
+	    console.log('刷新失败', e)
+	  })
+	},
+	```
+
+4. created函数中添加
+
+	```
+	this.getArticleTop5();
+	```
+
+## 标签云实现
+
+`后台处理:`
+
+1. ShiroConfig.java添加
+
+	```java
+	filterChainDefinitionMap.put("/labels/blogLabels/listAll", "anon");
+	```
+
+
+
+
+`前台处理`
+
+0. 因为使用了a-tag 因此在main.js中加入
+
+	```js
+	//按需引入ant-design-vue
+	import { Button,Icon,Tag } from "ant-design-vue";
+	import 'ant-design-vue/lib/button/style/css'
+	import 'ant-design-vue/lib/icon/style/css'
+	import 'ant-design-vue/lib/tag/style/css'
+	// Vue.component(Table.name, Table)
+	// Vue.component(Tag.name, Tag)
+	Vue.use(Button)
+	Vue.use(Icon)
+	Vue.use(Tag)
+	```
+
+1. BlogList.vue中新增el-card
+
+	```JavaScript
+	<!--标签云-->
+	  <el-card shadow="hover" style="width: 300px;height:300px" name="hotBlog">
+	    <div style="text-align: left"><h3>标签云</h3></div>
+	      <el-divider></el-divider>
+	<a-tag :color="randomColor()" v-for="tag in labels" style="margin-right: 15px;margin-bottom: 10px;padding: 5px 10px">
+	  {{ tag }}
+	    </a-tag>
+	</el-card>
+	```
+
+2. 新增data
+
+	```javascript
+	url: {
+	articleListAll: '/article/blogArticle/listAll',
+	articleList: '/article/blogArticle/list',
+	articleTop5: '/article/blogArticle/listTop5',
+	labels: '/labels/blogLabels/listAll',
+	},
+	labels:[],
+	```
+
+3. 新增js全局变量
+
+	```js
+	const colorMap = new Map([//DarkVoilet
+	  [0, 'f7acbc'],
+	  [1, 'ef5b9c'],
+	  [2, 'f05b72'],
+	  [3, 'f8aba6'],
+	  [4, 'f58f98'],
+	  [5, 'bd6758'],
+	  [6, '660066'],
+	  [7, '660000'],
+	  [8, '6600FF'],
+	  [9, '666633'],
+	  [10, '990066'],
+	  [11, '9900FF'],
+	  [12, '996633'],
+	  [13, '990000'],
+	  [14, '9966FF'],
+	  [15, '9999CC'],
+	  [16, 'FF3333'],
+	  [17, 'FF6699'],
+	  [18, 'FF66FF'],
+	  [19, 'FFFF99'],
+	  [20, '680000'],
+	  [21, '686868'],
+	  [22, '7fb80e'],
+	
+	  [23, 'bed742'],
+	  [24, 'b7ba6b'],
+	  [25, '769149'],
+	  [26, '6d8346'],
+	  [27, 'cde6c7'],
+	  [28, '1d953f'],
+	  [29, '77ac98'],
+	  [30, '007d65'],
+	  [31, '45b97c'],
+	  [32, '225a1f'],
+	  [33, '2b6447'],
+	  [34, '005831'],
+	  [35, '006c54'],
+	  [36, '274d3d'],
+	  [37, '65c294'],
+	  [38, '00ae9d'],
+	  [39, '90d7ec'],
+	  [40, '2468a2'],
+	  [41, '1b315e'],
+	  [42, 'decb00'],
+	  [43, '596032'],
+	  [44, '5f5d46'],
+	  [45, 'ffd400'],
+	  [46, 'b69968'],
+	  [47, '6d5826'],
+	  [48, 'ba8448'],
+	  [49, 'e0861a'],
+	  [50, 'c88400'],
+	  [51, 'fab27b'],
+	  [52, 'f47920'],
+	  [53, 'fedcbd'],
+	  [54, 'f36c21'],
+	  [55, 'b7704f'],
+	  [56, 'c99979'],
+	  [57, '444693'],
+	  [58, '2b4490'],
+	  [59, '224b8f'],
+	  [60, '46485f'],
+	  [61, '6a6da9'],
+	  [62, '494e8f'],
+	  [63, '9b95c9'],
+	  [64, '6950a1'],
+	  [65, '594c6d'],
+	  [66, '6f599c'],
+	  [67, '401c44'],
+	  [68, 'c77eb5'],
+	  [69, 'f173ac'],
+	  [70, '4f5555'],
+	  [71, '563624'],
+	  [72, '6c4c49'],
+	  [73, '3c3645'],
+	]);
+	```
+
+4. 新增方法
+
+	```javascript
+	//获取所有标签
+	getLabels(){
+	  getAction(this.url.labels)
+	    .then((res) => {
+	    console.log("labels",res)
+	    if (res.data.success) {
+	      res.data.result.forEach((item, i) => {
+	        this.labels.push(item.labelName)
+	      })
+	    }
+	  })
+	    .catch((e) => {
+	    this.$message.warn('刷新失败')
+	    console.log('刷新失败', e)
+	  })
+	}
+	randomColor() {
+	    return "#"+colorMap.get(Math.round(Math.random()*73));
+	},
+	```
+
+5. created函数中添加
+
+	```
+	this.getLabels();
+	```
+
+6. ![](第八章-对外前端web-首页.assets/image-20201214214018781.png)
