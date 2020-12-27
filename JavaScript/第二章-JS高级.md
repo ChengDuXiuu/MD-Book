@@ -270,3 +270,55 @@ console.log(pro1.printInfo==pro2.printInfo);
 
 > 创建对象的方法有多重，工具对象用==字面量==。其他用==构造函数==，如果对象中有函数则使用==原型==来指向。
 
+
+
+
+
+## 回调函数
+
+> ES6之前解决获取异步函数中值问题。ES6之后可以使用Promise处理
+
+```javascript
+//第一版 ：普通版
+function getData() {
+    setTimeout(function () {
+        var name="异步";
+        console.log(name);
+    },1000);
+    return name;//ReferenceError: name is not defined
+}
+// getData();//获取不到
+
+// 第二版：使用回调
+function getData2(callback) {
+    setTimeout(function () {
+        var name="异步";
+        callback(name);
+    },1000);
+}
+getData2(function (name) {
+    console.log(name);
+})
+
+//第三版：ES6中Promise来处理异步
+//resolve:成功后的回调，  reject：失败后的回调
+var pro=new Promise(function (resolve,reject) {
+    try{
+        setTimeout(function () {
+            var name="异步";
+            resolve(name);
+        },1000);
+        throw "手动抛出异常！";
+    }catch (e) {
+        reject(e);
+    }
+});
+pro.then((data)=>{
+    console.log(`使用Promise成功返回数据为 ： ${data}`);
+}).catch((data)=>{
+    console.log(`使用Promise失败返回数据为 ： ${data}`);
+})
+```
+
+![image-20201226233921301](第二章-JS高级.assets/image-20201226233921301.png)
+
