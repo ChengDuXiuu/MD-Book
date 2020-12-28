@@ -510,37 +510,33 @@
 	
 * 暴露模块
 	
-		```javascript
-		export
+	```javascript
+	export
 	```
+	```javascript
+	export default
+	// export-default.js
+	export default function () {
+	  console.log('foo');
+	}
 	
-	* export default
+	`` 其他模块加载该模块时，import命令可以为该匿名函数指定任意名字。
 	
-	  ```javascript
-	  // export-default.js
-	  export default function () {
-	    console.log('foo');
-	  }
-	  
-	  `` 其他模块加载该模块时，import命令可以为该匿名函数指定任意名字。
-	  
-	  // import-default.js
-	  import customName from './export-default';
-	  customName(); // 'foo'
-	  ```
+	// import-default.js
+	import customName from './export-default';
+	customName(); // 'foo'
+	```
 	
 * 引入模块
 	
-		```javascript
-		import
-	   ~~~ import命令输入的`变量`都是只读的，因为它的本质是输入接口。也就是说，不允许在加载模块的脚本里面，改写接口变量。`而如果导入对象则修改对象属性是可以的`
+	```javascript
+	import
+	~~~ import命令输入的`变量`都是只读的，因为它的本质是输入接口。也就是说，不允许在加载模块的脚本里面，改写接口变量。`而如果导入对象则修改对象属性是可以的`
 	```
-	
-	* 整体导入
-	
-	  ```javascript
-	  import * as circle from './circle';
-	  ```
+	```javascript
+	import * as circle from './circle';
+	~~~ 整体导入
+	```
 
 `实现`
 	
@@ -570,182 +566,166 @@
 	
 2. 编辑文件
 	
-		```javascript
-		//.babelrc  
-		{
-		  "presets": ["es2015"]
-		}
-		
-		//package.json
-		{
-		  "name": "08-ES6-Babel-Browerify",
-		  "version": "1.0.0",
-		}
-		
-		//module1.js 
-		// 暴露模块   分别暴露
-		export function foo() {
-		    console.log("foo() module1");
-		}
-		
-		export function bar() {
-		    console.log("foo() module1");
-		}
-		
-		export let arr = [1,5,3,9];
-		  
-		//module2.js
-		// 暴露模块   统一暴露
-		function foo() {
-		    console.log("foo() modul2");
-		}
-		
-		function bar() {
-		    console.log("foo() module2");
-		}
-		
-		let arr = [1,5,3,9,6];
-		
-		export {foo,bar,arr};
-		 
-		  
-		//module3.js
-		  
-		  
-		
-		//main.js
-		//引入其他模块
-		// import module1 from './module1';
-		// import module2 from './module2';
-		// console.log(module1,module2);
-		
-		//如果使用上面方式，则无法使用module1和module2中任何数据。必须使用解构赋值方式进行获取
-		import {foo,bar,arr} from './module1';
-		import {foo2,bar2,arr2} from './module2';
-		
-		foo();
-		bar();
-		console.log(arr);
-		
-		foo2();
-		bar2();
-		console.log(arr2);
+	```javascript
+	//.babelrc  
+	{
+	  "presets": ["es2015"]
+	}
+	
+	//package.json
+	{
+	  "name": "08-ES6-Babel-Browerify",
+	  "version": "1.0.0",
+	}
+	
+	//module1.js 
+	// 暴露模块   分别暴露
+	export function foo() {
+	    console.log("foo() module1");
+	}
+	
+	export function bar() {
+	    console.log("foo() module1");
+	}
+	
+	export let arr = [1,5,3,9];
+	  
+	//module2.js
+	// 暴露模块   统一暴露
+	function foo() {
+	    console.log("foo() modul2");
+	}
+	
+	function bar() {
+	    console.log("foo() module2");
+	}
+	
+	let arr = [1,5,3,9,6];
+	
+	export {foo,bar,arr};
 	```
 	
-		```html
-		//index.html
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-		    <meta charset="UTF-8">
-		    <title>Title</title>
-		</head>
-		<body>
-		<script type="text/javascript" src="./modules/main.js"></script>
-		
-		</body>
-		  
-		</html>
+	```javascript
+	//main.js
+	//引入其他模块
+	// import module1 from './module1';
+	// import module2 from './module2';
+	// console.log(module1,module2);
+	
+	//如果使用上面方式，则无法使用module1和module2中任何数据。必须使用解构赋值方式进行获取
+	import {foo,bar,arr} from './module1';
+	import {foo2,bar2,arr2} from './module2';
+	
+	foo();
+	bar();
+	console.log(arr);
+	
+	foo2();
+	bar2();
+	console.log(arr2);
 	```
+	```html
+	//index.html
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	</head>
+	<body>
+	<script type="text/javascript" src="./modules/main.js"></script>
 	
+	</body>
 	
+	</html>
 	```
 	
 3. 安装babel-cli、babel-preset-es2015和browserify
 	
-		```bash
-		npm install babel-cli browserify
-		npm install babel-preset-es2015 --save-dev
+	```bash
+	npm install babel-cli browserify
+	npm install babel-preset-es2015 --save-dev
 	```
-	
-	
 	
 4. 运行index.html
 	
 	> 浏览器提示：main.js:2 Uncaught SyntaxError: Cannot use import statement outside a module
 	
 5. 使用Babel将ES6转ES5
-	
-		```bash
-		node_modules/.bin/babel modules -d modules/build # 将modules下所有js都转化到modules/build目录下
-	```
-	
-	![image-20201220012715248](第一章-JS模块化.assets/image-20201220012715248.png)
-	
+
+   ```bash
+   node_modules/.bin/babel modules -d modules/build # 将modules下所有js都转化到modules/build目录下
+   ```
+   ![image-20201220012715248](第一章-JS模块化.assets/image-20201220012715248.png)
+
 6. 使用browserify将es5语法js文件打包为浏览器可识别js
-	
-		```bash
-		node_modules/.bin/browserify modules/build/main.js -o ./modules/target/build.js
-	```
-	
+
+   ```bash
+   node_modules/.bin/browserify modules/build/main.js -o ./modules/target/build.js
+   ```
+
 7. 修改index.html 为打包后的build.js
-	
-		```html
-		<script type="text/javascript" src="./modules/target/build.js"></script>
-	```
-	
+
+   ```html
+   <script type="text/javascript" src="./modules/target/build.js"></script>
+   ```
+
 8. 执行
-	
-	![image-20201220014045285](第一章-JS模块化.assets/image-20201220014045285.png)
-	
+
+  ![image-20201220014045285](第一章-JS模块化.assets/image-20201220014045285.png)
+
 9. 使用module1和module2需要用到解构赋值方式，有没有其他方式更轻松方式获取模块中数据？使用默认暴露模式
-	
-	* 编辑module3.js
-	
-			```javascript
-			//暴露模块  默认暴露：暴露什么数据就收到什么数据并且只能暴露一次
-			//语法 export default value;
-			export default {
-			    msg:'我是默认暴露',
-			    foo(){
-			        console.log(this.msg);
-			    }
-			}
-		```
-	
-	* main.js新增
-	
-			```javascript
-			import module3 from './module3';
-			module3.foo();
-		```
-	
-	* 重新==转化==、==编辑打包==结果如下:
-	
-		![image-20201220015531809](第一章-JS模块化.assets/image-20201220015531809.png)
-	
-		
-	
+
+  * 编辑module3.js
+
+    ```javascript
+    //暴露模块  默认暴露：暴露什么数据就收到什么数据并且只能暴露一次
+    //语法 export default value;
+    export default {
+        msg:'我是默认暴露',
+        foo(){
+            console.log(this.msg);
+        }
+    }
+    ```
+
+  * main.js新增
+
+    ```javascript
+    import module3 from './module3';
+    module3.foo();
+    ```
+
+  * 重新==转化==、==编辑打包==结果如下:
+
+  	![image-20201220015531809](第一章-JS模块化.assets/image-20201220015531809.png)
+
+  	
+
 10. 如何使用第三方依赖呢？
-	
-	* 下载第三放模块 这里使用jQuery
-	
-			```bash
-			npm install jquery@1.12.4
-		```
-	
-	* 在main.js中新增
-	
-			```javascript
-			import $ from 'jquery'
-			$('body').css('background','green')
-		```
-	
-	* 重新==转化==、==编辑打包==结果如下:
-	
-		![image-20201220020814141](第一章-JS模块化.assets/image-20201220020814141.png)
-	
-		​	
+
+   * 下载第三放模块 这里使用jQuery
+
+     ```bash
+     npm install jquery@1.12.4
+     ```
+
+   * 在main.js中新增
+
+     ```javascript
+     import $ from 'jquery'
+     $('body').css('background','green')
+     ```
+
+   * 重新==转化==、==编辑打包==结果如下:
+
+   	![image-20201220020814141](第一章-JS模块化.assets/image-20201220020814141.png)
+
+   	​	
 
 ## Babel
 
  [Babel](https://babeljs.io/) 是一个广泛使用的 ES6 转码器，可以将 ES6 代码转为 ES5 代码，从而在老版本的浏览器执行。这意味着，你可以用 ES6 的方式编写程序，又不用担心现有环境是否支持。 
-
-
-
-
-
-
 
 ### 配置文件.babelrc
 

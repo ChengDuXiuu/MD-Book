@@ -114,52 +114,49 @@
 
   * for...of 用于遍历一个迭代器，如数组：
 
-  	```javascript
-  let letters = ['a', 'b', 'c'];
-  	letters.size = 3;
-  	for (let letter of letters) {
-  	  console.log(letter);
-  	}
-  	// 结果: a, b, c
-  	```
-
+```javascript
+let letters = ['a', 'b', 'c'];
+letters.size = 3;
+for (let letter of letters) {
+  console.log(letter);
+}
+// 结果: a, b, c
+```
   * for...in 用来遍历对象中的属性：
 
-  	```jsx
-   let stus = ["Sam", "22", "男"];
-  	 for (let stu in stus) {
-     console.log(stus[stu]);
-  	  }
-  	// 结果: Sam, 22, 男
-  	```
-
-  	
-
+```jsx
+let stus = ["Sam", "22", "男"];
+for (let stu in stus) {
+console.log(stus[stu]);
+}
+// 结果: Sam, 22, 男
+```
 9. 属性和方法简写
 
   * 属性
 
   * 方法
 
-  	```javascript
-  	let url = 'http://kylebing.cn/dontstarve'
-  	$.ajax({
-  	    url: url,
-  	    success: function (data) {
-  	        console.log(data)
-  	    }
-  	})
-  	等同于
-  	let url = 'http://kylebing.cn/dontstarve'
-  	$.ajax({
-  	    url,    // 属性名和变量为相同时，直接写一个，跟 url: url 相同
-  	    
-  	    success(data){   // 匿名方法的时候，可以直接写成这样。跟 success: function(data){} 相同。
-  	        console.log(data)
-  	    }
-  	})
-  	
-  	```
+~~~javascript
+let url = 'http://kylebing.cn/dontstarve'
+$.ajax({
+    url: url,
+    success: function (data) {
+        console.log(data)
+    }
+})
+等同于
+let url = 'http://kylebing.cn/dontstarve'
+$.ajax({
+    url,    // 属性名和变量为相同时，直接写一个，跟 url: url 相同
+    
+    success(data){   // 匿名方法的时候，可以直接写成这样。跟 success: function(data){} 相同。
+        console.log(data)
+    }
+})
+
+```
+~~~
 
 10. 类
 
