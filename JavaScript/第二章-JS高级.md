@@ -103,7 +103,7 @@
 	st1.printInfo();
 	st2.printInfo();
 	```
-
+	
 	![image-20201222225842093](第二章-JS高级.assets/image-20201222225842093.png)
 
 
