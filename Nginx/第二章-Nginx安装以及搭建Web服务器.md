@@ -38,6 +38,8 @@ brew info nginx  #查看nginx信息
 nginx  #启动
 nginx -s reload  #重启
 ps -ef|grep nginx  #关闭
+nginx -t #配置文件代码检查
+systemctl status nginx -l  #查看nginx错误信息
 ```
 
 
