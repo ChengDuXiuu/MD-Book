@@ -19,7 +19,7 @@ nginx-service.exe stop
 
 
 
-`linux下安装`
+`linux下安装(Mac)`
 
 *   源码编译
 
@@ -29,7 +29,16 @@ nginx-service.exe stop
 
     给定通用配置(建议此安装方式)
 
-
+```bash
+brew update  #更新brew
+brew search nginx  #搜索nginx
+brew install nginx  #安装nginx
+nginx -v  #查看版本
+brew info nginx  #查看nginx信息
+nginx  #启动
+nginx -s reload  #重启
+ps -ef|grep nginx  #关闭
+```
 
 
 

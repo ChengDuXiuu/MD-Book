@@ -14,23 +14,23 @@
 
 	> 减少了Global上的变量数目，但由于是对象可以通过obj.属性操作，一点都不安全
 
-	* 全局函数模式
+* 全局函数模式
 
-		```javascript
-		//module1.js
-		// 全局函数模式、将不同的功能封装成不同的全局函数
-		let msg="module1"
-		
-		function foo(){
-		    console.log("foo()",msg);
-		}
-		
-		function bar() {
-		    console.log("bar()",msg);
-		}
-		```
+	```javascript
+	//module1.js
+	// 全局函数模式、将不同的功能封装成不同的全局函数
+	let msg="module1"
+	
+	function foo(){
+	  console.log("foo()",msg);
+	}
+	
+	function bar() {
+	  console.log("bar()",msg);
+	}
+	```
 
-		```html
+	```javascript
 		//test1.html
 		<script type="text/javascript" src="module1.js"></script>
 		<script>
@@ -41,25 +41,25 @@
 		foo()
 		bar()
 		</script>
-		```
+	```
 
-		![image-20201219175242457](第一章-JS模块化.assets/image-20201219175242457.png)
+	![image-20201219175242457](第一章-JS模块化.assets/image-20201219175242457.png)
 
-	* 命名空间模式
+* 命名空间模式
 
-		```javascript
-		// module2.js
-		// 命名空间模式、使用对象进行简单封装
-		
-		let obj={
-		    msg:'module2',
-		    foo(){
-		        console.log("foo()",this.msg);
-		    }
-		}
-		```
+	```javascript
+	// module2.js
+	// 命名空间模式、使用对象进行简单封装
+	
+	let obj={
+	  msg:'module2',
+	  foo(){
+	    console.log("foo()",this.msg);
+	  }
+	}
+	```
 
-		```html
+	```javascript
 		<script type="text/javascript" src="module2.js"></script>
 		<script>
 		obj.foo();
@@ -67,11 +67,11 @@
 		obj.msg="update";
 		obj.foo();
 		</script>
-		```
+	```
 
-		![image-20201219180127010](第一章-JS模块化.assets/image-20201219180127010.png)
+	​	![image-20201219180127010](第一章-JS模块化.assets/image-20201219180127010.png)
 
-		
+
 
 3. 匿名闭包：IIFE模式
 
@@ -96,6 +96,7 @@
 	    window.module3={foo:foo()}//给window对象挂载module3属性
 	})(window)
 	// 上面形式：访问可通过module3.foo();
+	
 	
 	```
 
@@ -124,11 +125,10 @@
 	    window.module4=foo; //module4属性直接指向函数foo
 	    $('body').css('background','red');//修改页面背景色
 	})(window,jQuery);
-	
-	
 	```
 
-	```html
+	```javascript
+	​```html
 	<script type="text/javascript" src="jQuery2.24.js"></script>
 	<script type="text/javascript" src="module4.js"></script>
 	<script>
@@ -165,21 +165,25 @@
 
   * 暴露模块
 
-  	1. module.exports = value
+  ```javascript
+  1. module.exports = value
+  
+  2. exports.xxx = value
+  ```
 
-  	2. exports.xxx = value
-
-  		> 暴露的本质：都是暴露exports
+  > 暴露的本质：都是暴露exports
 
   * 引入模块
 
-  	1. 自定义模块
-
-  		require(xxx) xxx为==模块文件路径==
-
-  	2. 第三方模块
-
-  		require(xxx) xxx为==模块名==
+  ```javascript
+  1. 自定义模块
+  
+  	require(xxx) xxx为==模块文件路径==
+  
+  2. 第三方模块
+  
+  	require(xxx) xxx为==模块名==
+  ```
 
   `实现`
 
@@ -191,7 +195,7 @@
 
   		* 创建文件
 
-  			![image-20201219190037655](第一章-JS模块化.assets/image-20201219190037655.png)
+  		![image-20201219190037655](第一章-JS模块化.assets/image-20201219190037655.png)
 
   		* 在05-CommonJS-Node目录下使用npm安装uniq第三方模块
 
@@ -203,47 +207,47 @@
 
   			```javascript
   			//module1.js
-  			// modeule.exports = obj 暴露一个对象
-  			module.exports = {
-  			    msg: 'module1',
-  			    foo() {
-  			        console.log("foo()",this.msg);
-  			    }
-  			}
-  			//module2.js
-  			// modeule.exports = function(){} 暴露一个函数
-  			module.exports = function () {
-  			    console.log("function()",'module2');
-  			}
-  			//会覆盖上面的内容
-  			module.exports = function () {
-  			    console.log("function()",'module2-update');
-  			}
-  			//module3.js
-  			// exports.xxx = value
-  			exports.foo = function () {
-  			    console.log("f00()",'module3');
-  			}
-  			
-  			exports.bar = function () {
-  			    console.log("bar()",'module3');
-  			}
+  					// modeule.exports = obj 暴露一个对象
+  					module.exports = {
+  					    msg: 'module1',
+  					    foo() {
+  					        console.log("foo()",this.msg);
+  					    }
+  					}
+  					//module2.js
+  					// modeule.exports = function(){} 暴露一个函数
+  					module.exports = function () {
+  					    console.log("function()",'module2');
+  					}
+  					//会覆盖上面的内容
+  					module.exports = function () {
+  					    console.log("function()",'module2-update');
+  					}
+  					//module3.js
+  					// exports.xxx = value
+  					exports.foo = function () {
+  					    console.log("f00()",'module3');
+  					}
+  					
+  					exports.bar = function () {
+  					    console.log("bar()",'module3');
+  					}
   			```
 
   			```javascript
   			//app.js
-  			let module1=require('./modules/module1')
-  			let module2=require('./modules/module2')
-  			let module3=require('./modules/module3')
-  			
-  			//使用module1
-  			console.log(module1.msg);
-  			module1.foo();
-  			//使用module2
-  			module2();
-  			//使用module3
-  			module3.foo();
-  			module3.bar();
+  					let module1=require('./modules/module1')
+  					let module2=require('./modules/module2')
+  					let module3=require('./modules/module3')
+  					
+  					//使用module1
+  					console.log(module1.msg);
+  					module1.foo();
+  					//使用module2
+  					module2();
+  					//使用module3
+  					module3.foo();
+  					module3.bar();
   			```
 
   		* 执行app.js
@@ -260,11 +264,11 @@
   			//module3.js
   			// exports.xxx = value
   			exports.foo = function () {
-  			    console.log("f00()",'module3');
+  			  console.log("f00()",'module3');
   			}
   			
   			exports.bar = function () {
-  			    console.log("bar()",'module3');
+  			  console.log("bar()",'module3');
   			}
   			//新增变量
   			exports.arr=['1','4','5','1','4','9','5'];
@@ -272,26 +276,28 @@
 
   			```javascript
   			//app.js
-  			//引入第三方模块
-  			let uniq = require('uniq')
-  			let module1=require('./modules/module1')
-  			let module2=require('./modules/module2')
-  			let module3=require('./modules/module3')
-  			
-  			//使用module1
-  			console.log(module1.msg);
-  			module1.foo();
-  			//使用module2
-  			module2();
-  			//使用module3
-  			module3.foo();
-  			module3.bar();
-  			//使用第三方模块
-  			let result=uniq(module3.arr);
-  			console.log(result);
+  					//引入第三方模块
+  					let uniq = require('uniq')
+  					let module1=require('./modules/module1')
+  					let module2=require('./modules/module2')
+  					let module3=require('./modules/module3')
+  					
+  					//使用module1
+  					console.log(module1.msg);
+  					module1.foo();
+  					//使用module2
+  					module2();
+  					//使用module3
+  					module3.foo();
+  					module3.bar();
+  					//使用第三方模块
+  					let result=uniq(module3.arr);
+  					console.log(result);
   			```
 
   			![image-20201219191641482](第一章-JS模块化.assets/image-20201219191641482.png)
+
+  		
 
   * 浏览器端使用
 
@@ -311,11 +317,12 @@
   			node_modules/.bin/browserify app.js -o ./target/build.js
   			```
 
-  			> 使用命令时需要加上browserify安装路径，否则提示无效命令。
+  			> 使用命令时需要加上browserify安装路径，否则提示无效命令
 
   			![image-20201219193012151](第一章-JS模块化.assets/image-20201219193012151.png)
 
-  	
+
+  ​	
 
 * AMD   - - RequireJS
 
@@ -328,24 +335,24 @@
 
   * 暴露模块
 
-  	```javascript
-  	// 暴露没有依赖的模块
-  	define(function({
-  		return 模块
-  	}))
-  	//暴露有依赖的模块
-  	define(['module1','module2'],function(m1,m2){
-  	  return 模块
-  	})
-  	```
+  ```javascript
+  // 暴露没有依赖的模块
+  define(function({
+  	return 模块
+  }))
+  //暴露有依赖的模块
+  define(['module1','module2'],function(m1,m2){
+    return 模块
+  })
+  ```
 
   * 引入模块
 
-  	```javascript
-  	require['module1','module2'],function(m1,m2){
-  	  使用m1/m2
-  	})
-  	```
+  ```javascript
+  require['module1','module2'],function(m1,m2){
+    使用m1/m2
+  })
+  ```
 
   `实现`
 
@@ -359,53 +366,54 @@
 
   		```javascript
   		//dataService.js
-  		//定义一个没有依赖的模块
-  		(function (window) {
-  		    let name="dataService.js";
-  		    function getName() {
-  		        return name;
-  		    }
-  		    window.dataService={getName};
-  		})(window)
-  		
-  		//alerter.js
-  		//定义一个有依赖的模块:依赖dataService.js
-  		(function (window,dataService) {
-  		    let name="alerter.js";
-  		    function showMsg() {
-  		        console.log(name,"依赖>>" + dataService.getName())
-  		    }
-  		    window.alerter={showMsg};
-  		})(window,dataService)
-  		
-  		//app.js
-  		//主模块
-  		(function (alerter) {
-  		    alerter.showMsg();
-  		})(alerter)
-  		
+  			//定义一个没有依赖的模块
+  			(function (window) {
+  			    let name="dataService.js";
+  			    function getName() {
+  			        return name;
+  			    }
+  			    window.dataService={getName};
+  			})(window)
+  			
+  			//alerter.js
+  			//定义一个有依赖的模块:依赖dataService.js
+  			(function (window,dataService) {
+  			    let name="alerter.js";
+  			    function showMsg() {
+  			        console.log(name,"依赖>>" + dataService.getName())
+  			    }
+  			    window.alerter={showMsg};
+  			})(window,dataService)
+  			
+  			//app.js
+  			//主模块
+  			(function (alerter) {
+  			    alerter.showMsg();
+  			})(alerter)
   		```
 
   		```html
-  		<!DOCTYPE html>
-  		<html lang="en">
-  		<head>
-  		    <meta charset="UTF-8">
-  		    <title>Title</title>
-  		</head>
-  		<body>
-  		<!--注意先后顺序-->
-  		<script type="text/javascript" src="./JS/dataService.js"></script>
-  		<script type="text/javascript" src="./JS/alerter.js"></script>
-  		<script type="text/javascript" src="./app.js"></script>
-  		
-  		</body>
-  		</html>
+  			<!DOCTYPE html>
+  			<html lang="en">
+  			<head>
+  			    <meta charset="UTF-8">
+  			    <title>Title</title>
+  			</head>
+  			<body>
+  			<!--注意先后顺序-->
+  			<script type="text/javascript" src="./JS/dataService.js"></script>
+  			<script type="text/javascript" src="./JS/alerter.js"></script>
+  			<script type="text/javascript" src="./app.js"></script>
+  			
+  			</body>
+  			</html>
   		```
 
   	3. 结果
 
   		![image-20201219200353952](第一章-JS模块化.assets/image-20201219200353952.png)
+
+  
 
   * 使用规范(RequireJS)实现
 
@@ -417,66 +425,65 @@
 
   		```javascript
   		//require.js
-  		百度下载即可
-  		
-  		//jquery-3.5.1.js
-  		百度下载即可
-  		
-  		//dataService.js
-  		//定义一个没有依赖的模块
-  		define(function () {
-  		    let name='dataService.js';
-  		    function getName() {
-  		        return name;
-  		    }
-  		    //暴露模块
-  		    return {getName};
-  		})
-  		
-  		//alerter.js
-  		//定义一个有依赖的模块:依赖dataService.js和第三方模块jQuery
-  		//定义一个有依赖的模块:依赖dataService.js
-  		define(['dataService','jquery'],function (dataService,$) {
-  		    let msg='alerter.js';
-  		    function showMsg() {
-  		        console.log(msg,dataService.getName());
-  		    }
-  		    $('body').css('background','red');
-  		    //暴露模块
-  		    return {showMsg};
-  		})
-  		
-  		
-  		//main.js
-  		(function () {
-  		    requirejs.config({
-  		        // baseUrl: 'js/libs',//基本路径,省掉页面js模块先后引入
-  		        paths: { //当解析模块文件发现依赖模块则在该配置中寻找
-  		            dataService: './modules/dataService',
-  		            alerter: './modules/alerter',
-  		            jquery: './libs/jquery-3.5.1'//jquery遇到AMD规范必须使用小写jquery，因为jQuery默认支持AMD
-  		        }
-  		    })
-  		    requirejs(['alerter'],function (alerter) {
-  		        alerter.showMsg();
-  		    })
-  		})()
-  		
+  			百度下载即可
+  			
+  			//jquery-3.5.1.js
+  			百度下载即可
+  			
+  			//dataService.js
+  			//定义一个没有依赖的模块
+  			define(function () {
+  			    let name='dataService.js';
+  			    function getName() {
+  			        return name;
+  			    }
+  			    //暴露模块
+  			    return {getName};
+  			})
+  			
+  			//alerter.js
+  			//定义一个有依赖的模块:依赖dataService.js和第三方模块jQuery
+  			//定义一个有依赖的模块:依赖dataService.js
+  			define(['dataService','jquery'],function (dataService,$) {
+  			    let msg='alerter.js';
+  			    function showMsg() {
+  			        console.log(msg,dataService.getName());
+  			    }
+  			    $('body').css('background','red');
+  			    //暴露模块
+  			    return {showMsg};
+  			})
+  		```
+
+  		```javascript
+  			//main.js
+  			(function () {
+  			    requirejs.config({
+  			        // baseUrl: 'js/libs',//基本路径,省掉页面js模块先后引入
+  			        paths: { //当解析模块文件发现依赖模块则在该配置中寻找
+  			            dataService: './modules/dataService',
+  			            alerter: './modules/alerter',
+  			            jquery: './libs/jquery-3.5.1'//jquery遇到AMD规范必须使用小写jquery，因为jQuery默认支持AMD
+  			        }
+  			    })
+  			    requirejs(['alerter'],function (alerter) {
+  			        alerter.showMsg();
+  			    })
+  			})()
   		```
 
   		```html
-  		<!DOCTYPE html>
-  		<html lang="en">
-  		<head>
-  		    <meta charset="UTF-8">
-  		    <title>Title</title>
-  		</head>
-  		<body>
-  		<!--引入require.js 并指定js主文件的入口-->
-  		<script data-main="js/main.js" src="js/libs/require.js"></script>
-  		</body>
-  		</html>
-  		
+  			<!DOCTYPE html>
+  			<html lang="en">
+  			<head>
+  			    <meta charset="UTF-8">
+  			    <title>Title</title>
+  			</head>
+  			<body>
+  			<!--引入require.js 并指定js主文件的入口-->
+  			<script data-main="js/main.js" src="js/libs/require.js"></script>
+  			</body>
+  			</html>
   		```
 
   		
@@ -490,30 +497,30 @@
 	`说明：`
 
 	* 依赖模块需要编译打包处理。
-	
+
 	* 应用最广泛
-	
-	*  ES6 在语言标准的层面上，实现了模块功能，而且实现得相当简单，完全可以取代 CommonJS 和 AMD 规范，成为`浏览器和服务器`通用的模块解决方案。 
-	
+
+	* ES6 在语言标准的层面上，实现了模块功能，而且实现得相当简单，完全可以取代 CommonJS 和 AMD 规范，成为`浏览器和服务器`通用的模块解决方案。 
+
 	* ES6 模块化`采用静态编译`，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。 例如：ES6可以只加载特定模块中需要的的函数。而CommonJS和AMD全部导入后获取需要的函数。
-	
+
 	* ES6`export`语句输出的接口，与其对应的值是动态绑定关系，即通过该接口，可以取到模块内部的值。 当内部的值发生变化后，对应的接口也会变化
-	
-	  ```javascript
-	  export var foo = 'bar';
-	  setTimeout(() => foo = 'baz', 500);
-	  ```
-	
-	  > 上面代码输出变量`foo`，值为`bar`，500 毫秒之后变成`baz`。`与CommonJS完全不同，CommonJS输出接口是值的缓冲`。ES6对应Java中的`引用传递`而CommonJS对应Java中的`值传递`
+
+		```>javascript
+		export var foo = 'bar';
+		  setTimeout(() => foo = 'baz', 500);
+		```
+
+		> 上面代码输出变量`foo`，值为`bar`，500 毫秒之后变成`baz`。`与CommonJS完全不同，CommonJS输出接口是值的缓冲`。ES6对应Java中的`引用传递`而CommonJS对应Java中的`值传递`
 
 `基本语法`
 	
 * 暴露模块
-	
+
 	```javascript
 	export
-	```
-	```javascript
+	​```
+	​```javascript
 	export default
 	// export-default.js
 	export default function () {
@@ -526,23 +533,27 @@
 	import customName from './export-default';
 	customName(); // 'foo'
 	```
+
 	
+
 * 引入模块
-	
+
 	```javascript
 	import
 	~~~ import命令输入的`变量`都是只读的，因为它的本质是输入接口。也就是说，不允许在加载模块的脚本里面，改写接口变量。`而如果导入对象则修改对象属性是可以的`
-	```
-	```javascript
+	​```
+	​```javascript
 	import * as circle from './circle';
 	~~~ 整体导入
 	```
+
+	
 
 `实现`
 	
 
 * 浏览器端
-	
+
 	1. 使用Babel将ES6编译为ES5代码(下面支持情况并不是完全百分之百支持！)
 	
 			| Browser | Version | Date     |
@@ -554,18 +565,19 @@
 		| Opera   | 55      | Aug 2017 |
 	
 	2. 使用Browserify编译打包js
-	
-		
-	
+
+
+​		
+​	
 
 `实现步骤`
 	
 1. 创建文件
-	
+
 	![image-20201220010926745](第一章-JS模块化.assets/image-20201220010926745.png)
-	
+
 2. 编辑文件
-	
+
 	```javascript
 	//.babelrc  
 	{
@@ -604,7 +616,7 @@
 	
 	export {foo,bar,arr};
 	```
-	
+
 	```javascript
 	//main.js
 	//引入其他模块
@@ -624,6 +636,7 @@
 	bar2();
 	console.log(arr2);
 	```
+
 	```html
 	//index.html
 	<!DOCTYPE html>
@@ -639,18 +652,18 @@
 	
 	</html>
 	```
-	
+
 3. 安装babel-cli、babel-preset-es2015和browserify
-	
+
 	```bash
 	npm install babel-cli browserify
 	npm install babel-preset-es2015 --save-dev
 	```
-	
+
 4. 运行index.html
-	
+
 	> 浏览器提示：main.js:2 Uncaught SyntaxError: Cannot use import statement outside a module
-	
+
 5. 使用Babel将ES6转ES5
 
    ```bash
@@ -720,9 +733,7 @@
 
    * 重新==转化==、==编辑打包==结果如下:
 
-   	![image-20201220020814141](第一章-JS模块化.assets/image-20201220020814141.png)
-   	
-   	​	
+	![image-20201220020814141](第一章-JS模块化.assets/image-20201220020814141.png)
 
 ## Babel
 

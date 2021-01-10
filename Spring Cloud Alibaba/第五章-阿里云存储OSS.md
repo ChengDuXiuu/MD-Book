@@ -47,14 +47,14 @@
 
 1. 加入依赖
 
-	```xml
-	<!--阿里云存储服务-->
-	<dependency>
-	    <groupId>com.aliyun.oss</groupId>
-	    <artifactId>aliyun-sdk-oss</artifactId>
-	    <version>3.10.2</version>
-	</dependency>
-	```
+```xml
+<!--阿里云存储服务-->
+<dependency>
+    <groupId>com.aliyun.oss</groupId>
+    <artifactId>aliyun-sdk-oss</artifactId>
+    <version>3.10.2</version>
+</dependency>
+```
 
 2. 根据官网给出的案例进行测试
 
@@ -64,15 +64,16 @@
 
 4. 修改代码中的
 
-	```java
-	// Endpoint以杭州为例，其它Region请按实际情况填写。 endpoint 为Bucket 的外网访问地址
-	String endpoint = "oss-cn-beijing.aliyuncs.com";
-	 // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
-	String accessKeyId = "LTAI4G6NvVQoR4E8rbYKVabCW";
-	String accessKeySecret = "O7sRW85fwf25tkuW5mf9QvbpE8EaRX1";
-	```
+```java
+// Endpoint以杭州为例，其它Region请按实际情况填写。 endpoint 为Bucket 的外网访问地址
+String endpoint = "oss-cn-beijing.aliyuncs.com";
+ // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
+String accessKeyId = "LTAI4G6NvVQoR4E8rbYKVabCW";
+String accessKeySecret = "O7sRW85fwf25tkuW5mf9QvbpE8EaRX1";
+```
 
-	
+
+​	
 
 5. ![image-20200920212823820](第五章-阿里云存储OSS.assets/image-20200920212823820.png)
 
@@ -86,28 +87,28 @@
 
 9. 最后的代码
 
-	```java
-	@Test
-	    public void testUpload() throws FileNotFoundException {
-	        // Endpoint以杭州为例，其它Region请按实际情况填写。 endpoint 为Bucket 的外网访问地址
-	        String endpoint = "oss-cn-beijing.aliyuncs.com";
-	         // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
-	        String accessKeyId = "LTAI4G6NvVQoR4ErbYKVabCW";
-	        String accessKeySecret = "O7sRW85fwf25tkuWmf9QvbpE8EaRX1";
-	
-	        // 创建OSSClient实例。
-	//        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-	
-	        // 上传文件流。
-	        InputStream inputStream = new FileInputStream("/Users/mac/Documents/Image/f28c9030d05b430f20f3940f5fa3d2cb.jpg");
-	        ossClient.putObject("gulimall-shuai", "test1.jpg", inputStream);
-	
-	        // 关闭OSSClient。
-	        ossClient.shutdown();
-	
-	        System.out.println("上传完成");
-	    }
-	```
+```java
+@Test
+    public void testUpload() throws FileNotFoundException {
+        // Endpoint以杭州为例，其它Region请按实际情况填写。 endpoint 为Bucket 的外网访问地址
+        String endpoint = "oss-cn-beijing.aliyuncs.com";
+         // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
+        String accessKeyId = "LTAI4G6NvVQoR4ErbYKVabCW";
+        String accessKeySecret = "O7sRW85fwf25tkuWmf9QvbpE8EaRX1";
+
+        // 创建OSSClient实例。
+//        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+
+        // 上传文件流。
+        InputStream inputStream = new FileInputStream("/Users/mac/Documents/Image/f28c9030d05b430f20f3940f5fa3d2cb.jpg");
+        ossClient.putObject("gulimall-shuai", "test1.jpg", inputStream);
+
+        // 关闭OSSClient。
+        ossClient.shutdown();
+
+        System.out.println("上传完成");
+    }
+```
 
 10. 测试
 
@@ -147,49 +148,54 @@
 	</dependency>
 	```
 
-	
 
-2. ```yaml
-	alibaba:
-	  cloud:
-	    access-key: LTAI4G6NvVQoR74ErbYKVabCW
-	    secret-key: O7sRW85fwf255tkuWmf9QvbpE8EaRX1
-	    oss:
-	      endpoint: oss-cn-beijing.aliyuncs.com
-	```
+​	
 
-3. ```java
-	@Autowired
-	    OSSClient ossClient;//注入阿里云存储 对象
-	    /*
-	     * TODO <p> 测试阿里云文件上传功能</p>
-	     * @author mac
-	     * @date 2020/9/20 5:49 下午
-	     * @param null
-	     * @return
-	     * @see #
-	     */
-	    @Test
-	    public void testUpload() throws FileNotFoundException {
-	//        // Endpoint以杭州为例，其它Region请按实际情况填写。 endpoint 为Bucket 的外网访问地址
-	//        String endpoint = "oss-cn-beijing.aliyuncs.com";
-	//         // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
-	//        String accessKeyId = "LTAI4G6NvVQoR4ErbYKVabCW";
-	//        String accessKeySecret = "O7sRW85fwf25tkuWmf9QvbpE8EaRX1";
-	
-	        // 创建OSSClient实例。
-	//        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-	
-	        // 上传文件流。
-	        InputStream inputStream = new FileInputStream("/Users/mac/Documents/Image/f28c9030d05b430f20f3940f5fa3d2cb.jpg");
-	        ossClient.putObject("gulimall-shuai", "test1.jpg", inputStream);
-	
-	        // 关闭OSSClient。
-	        ossClient.shutdown();
-	
-	        System.out.println("上传完成");
-	    }
-	```
+2. 
+
+```yaml
+alibaba:
+  cloud:
+    access-key: LTAI4G6NvVQoR74ErbYKVabCW
+    secret-key: O7sRW85fwf255tkuWmf9QvbpE8EaRX1
+    oss:
+      endpoint: oss-cn-beijing.aliyuncs.com
+```
+
+3. 
+
+```java
+@Autowired
+    OSSClient ossClient;//注入阿里云存储 对象
+    /*
+     * TODO <p> 测试阿里云文件上传功能</p>
+     * @author mac
+     * @date 2020/9/20 5:49 下午
+     * @param null
+     * @return
+     * @see #
+     */
+    @Test
+    public void testUpload() throws FileNotFoundException {
+//        // Endpoint以杭州为例，其它Region请按实际情况填写。 endpoint 为Bucket 的外网访问地址
+//        String endpoint = "oss-cn-beijing.aliyuncs.com";
+//         // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
+//        String accessKeyId = "LTAI4G6NvVQoR4ErbYKVabCW";
+//        String accessKeySecret = "O7sRW85fwf25tkuWmf9QvbpE8EaRX1";
+
+        // 创建OSSClient实例。
+//        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+
+        // 上传文件流。
+        InputStream inputStream = new FileInputStream("/Users/mac/Documents/Image/f28c9030d05b430f20f3940f5fa3d2cb.jpg");
+        ossClient.putObject("gulimall-shuai", "test1.jpg", inputStream);
+
+        // 关闭OSSClient。
+        ossClient.shutdown();
+
+        System.out.println("上传完成");
+    }
+```
 
 4. ![image-20200920213652069](第五章-阿里云存储OSS.assets/image-20200920213652069.png)
 
@@ -436,7 +442,7 @@
 	        return R.ok().put("data",respMap);
 	    }
 	```
-	
+
 10. 测试
 
 	![image-20200920223632849](第五章-阿里云存储OSS.assets/image-20200920223632849.png)

@@ -4,17 +4,18 @@
 
 3. bin目录下启动，Mac｜Linux默认为集群默认，启动加（-m standalone）改为单机模式
 
-	```bash
-	sh startup.sh -m standalone
-	```
+```bash
+sh startup.sh -m standalone
+```
 
 3. ![image-20200915232432274](/Users/mac/Library/Application Support/typora-user-images/image-20200915232432274.png)
 
-5. 登录页面：http://localhost:8848/nacos/#/login
+4. 登录页面：http://localhost:8848/nacos/#/login
 
 	![image-20201018181338187](第一章-Nacos注册发现(Eureka服务注册发现).assets/image-20201018181338187.png)
 
-7. 默认账号密码
+5. 默认账号密码
+
   - 账号：nacos
   - 密码：nacos
 

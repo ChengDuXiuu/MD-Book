@@ -170,7 +170,7 @@ new Promise((resolve, reject) => {
 }).then(res => {
     console.log(res, '第三层的10行处理代码');
 })
- ```
+```
 
 
 ### 多个请求全部成功后执行处理
