@@ -9,7 +9,7 @@
 
 ## JS异步编程
 
-JS是单线程同步执行的，即所有的任务只能一个一个去处理，如果某一个任务耗时很长，那么浏览器就会处于假死状态。
+`JS是+单线程同步执行`的，即所有的任务只能一个一个去处理，如果某一个任务耗时很长，那么浏览器就会处于假死状态。
 
 为了解决这个问题，JavaScript将任务的执行模式分类`同步模式`和`异步模式`
 
@@ -20,17 +20,40 @@ JS是单线程同步执行的，即所有的任务只能一个一个去处理，
 *    回调函数： 
 
     ```javascript
-    f1();
-    f2();
-    
-    function f1(callback){
-        setTimeout(function(){
-            callback();
-        })
+    //回调函数模拟ajax
+    // $.ajax({
+    //     url:'xxxxx',
+    //     type:'get',
+    //     dataType:'json',
+    //     success:function () {
+    //
+    //     },
+    //     fail:function () {
+    //
+    //     }
+// })
+    function ajax(paramObj) {
+        console.log("模拟网络请求数据。。。。。请求路径：",paramObj.url);
+        let success=paramObj.success;
+        let fail=paramObj.fail;
+        if (paramObj.flag){//请求成功
+            success({data:'success---data'});
+        }else{//请求失败
+            fail({data:'failed---data'});
+        }
     }
     
-    f1(f2);
+    ajax({
+        url:'xxxx',
+        flag:false,//true false
+        success:function (data) {
+            console.log(data);
+        },
+        fail:function (data) {
+            console.log(data);
+        }
+    })
     ```
-
+    
     
 
