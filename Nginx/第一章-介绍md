@@ -52,3 +52,50 @@
 ## 主要应用场景
 
 ![1610025476524](第一章-介绍md.assets/1610025476524.png)
+
+
+
+## Nginx平台-OpenResty
+
+ OpenResty ®是一个成熟的网络平台，整合了我们的加强版 [Nginx的](http://openresty.org/en/nginx.html)核心，我们的加强版[LuaJIT](https://github.com/openresty/luajit2)，许多浓墨重彩Lua库，大量的高品质[第三方的Nginx模块](http://openresty.org/en/components.html)，并且大部分外部依赖的。它旨在帮助开发人员轻松构建可伸缩的Web应用程序，Web服务和动态Web网关。 
+
+
+
+*   下载
+
+    http://openresty.org/en/download.html（win64版本即可）
+
+*   启动
+
+    >   解压缩后进入根目录执行nginx.exe
+
+*   访问
+
+    http://localhost/
+
+    ![1610539853059](第一章-介绍md.assets/1610539853059.png)
+
+`命令：`
+
+````bash
+#进入解压缩后根目录
+--启动
+根目录/nginx
+--停止
+根目录/nginx -s stop
+--重启
+根目录/nginx -s reload
+--检验nginx配置是否正确
+根目录/nginx -t
+````
+
+
+
+
+
+
+
+
+
+
+

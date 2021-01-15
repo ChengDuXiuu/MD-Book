@@ -73,38 +73,41 @@
 
 * 面向过程
 
-	```javascript
-	//面向过程
-	let stu1={name:'stu1',age:'15',score:'98'};
-	let stu2={name:'stu1',age:'15',score:'98'};
-	console.log(stu1.name,stu1.age,stu1.score);
-	console.log(stu2.name,stu2.age,stu2.score);
-	```
+    ````javascript
+    //面向过程
+    let stu1={name:'stu1',age:'15',score:'98'};
+    let stu2={name:'stu1',age:'15',score:'98'};
+    console.log(stu1.name,stu1.age,stu1.score);
+    console.log(stu2.name,stu2.age,stu2.score);
+    ````
+
+    
 
 * 面向对象
 
-	```javascript
-	/面向对象
-	//1. 找到对象 ：学生       学生属性有name、age、score。方法有打印自己信息
-	//2. 创建一个模板（实例instance）在JavaScript中创建对象的模板是构造函数。其他语言中是类
-	function student(name,age,score) {
-	    this.name=name;
-	    this.age=age;
-	    this.score=score;
-	
-	    this.printInfo=function () {
-	        console.log(this.name,this.age,this.score);
-	    }
-	}
-	//3. 构建实例
-	let st1=new student("stu1",15,'89');
-	let st2=new student("stu2",15,'89');
-	
-	st1.printInfo();
-	st2.printInfo();
-	```
-	
-	![image-20201222225842093](第二章-JS高级.assets/image-20201222225842093.png)
+    ````javascript
+    /面向对象
+    //1. 找到对象 ：学生       学生属性有name、age、score。方法有打印自己信息
+    //2. 创建一个模板（实例instance）在JavaScript中创建对象的模板是构造函数。其他语言中是类
+    function student(name,age,score) {
+        this.name=name;
+        this.age=age;
+        this.score=score;
+    
+        this.printInfo=function () {
+            console.log(this.name,this.age,this.score);
+        }
+    }
+    //3. 构建实例
+    let st1=new student("stu1",15,'89');
+    let st2=new student("stu2",15,'89');
+    
+    st1.printInfo();
+    st2.printInfo();
+    ````
+
+    ![image-20201222225842093](第二章-JS高级.assets/image-20201222225842093.png)
+
 
 
 
@@ -199,29 +202,31 @@ if (fea1 instanceof father){
 
 * 解决printInfo存储多份问题
 
-	```javascript
-	// todo 解决printInfo存储多份问题
-	function mom(name,age,score) {
-	    this.name=name;
-	    this.age=age;
-	    this.score=score;
-	
-	    this.printInfo=printInfo;
-	}
-	
-	// 将函数变为全局函数
-	function printInfo() {
-	    console.log(this.name,this.age,this.score);
-	}
-	
-	let mom1=new mom("mom1",45,78);
-	let mom2=new mom("mom2",45,78);
-	
-	mom1.printInfo();
-	mom2.printInfo();
-	
-	console.log(mom1.printInfo==mom2.printInfo);
-	```
+    ````javascript
+    // todo 解决printInfo存储多份问题
+    function mom(name,age,score) {
+        this.name=name;
+        this.age=age;
+        this.score=score;
+    
+        this.printInfo=printInfo;
+    }
+    
+    // 将函数变为全局函数
+    function printInfo() {
+        console.log(this.name,this.age,this.score);
+    }
+    
+    let mom1=new mom("mom1",45,78);
+    let mom2=new mom("mom2",45,78);
+    
+    mom1.printInfo();
+    mom2.printInfo();
+    
+    console.log(mom1.printInfo==mom2.printInfo);
+    ````
+
+    
 
 ​		![image-20201222234607134](第二章-JS高级.assets/image-20201222234607134.png)
 
