@@ -112,8 +112,10 @@
     --tail 	 数字	显示最后多少条
 
 # 8. 容器 <->拷贝文件<->主机
-	docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH|-
-	docker cp [OPTIONS] SRC_PATH|- CONTAINER:DEST_PATH
+	docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH
+	docker cp [OPTIONS] SRC_PATH CONTAINER:DEST_PATH
+	
+	eg:docker cp c314:/usr/local/tomcat/webapps.dist/ /root/tomcat/webapps
 ~~~
 
 #### 6.3.2 进阶命令(容器内数据交互)

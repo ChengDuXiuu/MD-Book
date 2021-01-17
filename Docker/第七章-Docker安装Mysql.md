@@ -44,31 +44,33 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 
 3. 删除之前容器
 
-	```bash
+	````bash
 	docker rm -f mysql
-	```
+	````
 
-	![image-20201208212849184](Docker安装Mysql.assets/image-20201208212849184.png)
+	  ![image-20201208212849184](Docker安装Mysql.assets/image-20201208212849184.png)
 
-	
+ 
 
-	```bash
+4. 重新挂载
+
+	````bash
 	docker run --name mysql -v /root/mysql/conf.d:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=root -d mysql:tag
-	```
+	````
+
+* 启动报错 ：<font color =ff00aa>mysqld: Can't read dir of '/etc/mysql/conf.d/' (OS errno 13 - Permission denied)</font>
+
+	  ![image-20201208213836754](Docker安装Mysql.assets/image-20201208213836754.png)
+
+* 删除之前容器重新执行命令
+
+	````bash
+	docker run --privileged=true --name mysql -v /root/mysql/conf.d:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=root -d mysql:tag
+	````
 
 	
 
-	启动报错 ：<font color =ff00aa>mysqld: Can't read dir of '/etc/mysql/conf.d/' (OS errno 13 - Permission denied)</font>
-
-	![image-20201208213836754](Docker安装Mysql.assets/image-20201208213836754.png)
-
-	删除之前容器重新执行命令
-
-	```bash
-	docker run --privileged=true --name mysql -v /root/mysql/conf.d:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=root -d mysql:tag
-	```
-
-	![image-20201208214259608](Docker安装Mysql.assets/image-20201208214259608.png)
+![image-20201208214259608](Docker安装Mysql.assets/image-20201208214259608.png)
 
 ​	
 
@@ -108,7 +110,7 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 
 	* Spring-boot-demo.sql内容
 
-		```sql
+		````sql
 		USE dockerDemo;
 		-- ----------------------------
 		-- Table structure for users
@@ -131,38 +133,35 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 		COMMIT;
 		
 		SET FOREIGN_KEY_CHECKS = 1;
-		
-		```
-
-		
+		````
 
 	* 拷贝主机文件到容器内
 
-		```bash
+		````bash
 		docker cp /home/admin/spring-boot-demo.sql mysql:/tmp/spring-boot-demo.sql
-		```
+		````
 
 	* 进入容器检查是否拷贝成功
 
-		```bash
+		````bash
 		docker exec -it mysql bash
-		```
+		````
 
-		![image-20201208231831593](Docker安装Mysql.assets/image-20201208231831593.png)
+	![image-20201208231831593](Docker安装Mysql.assets/image-20201208231831593.png)
 
-	* 在容器中登录mysql
+	 *  在容器中登录mysql
 
-		```sql
+		````sql
 		mysql -uroot -proot
-		```
+		````
 
-		![image-20201208231948823](Docker安装Mysql.assets/image-20201208231948823.png)
+	![image-20201208231948823](Docker安装Mysql.assets/image-20201208231948823.png)
 
 	* 执行source命令
 
-		```sql
+		````sql
 		source /tmp/spring-boot-demo.sql
-		```
+		````
 
 		![image-20201208232035191](Docker安装Mysql.assets/image-20201208232035191.png)![image-20201208232050602](Docker安装Mysql.assets/image-20201208232050602.png)
 
@@ -174,7 +173,7 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 
 	* yaml文件  `修改服务器IP以及Docker中数据库`
 
-		```yaml
+		````yaml
 		spring:
 		  # datasource 数据源配置内容
 		  datasource:
@@ -188,7 +187,7 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 		    # Hibernate 配置内容，对应 HibernateProperties 类
 		    hibernate:
 		      ddl-auto: none
-		```
+		````
 
 	* 测试类
 
@@ -199,19 +198,17 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 		
 		    @Autowired
 		    private UserRepository userRepository;
-		
-		
-		    @Test
+				@Test
 		    public void testSelectByUsername() {
 		        userRepository.findAll().forEach(x -> System.out.println(x.toString()));
-		    }
-		}
+			  }
+		}  
 		```
+	
+* 结果
 
-	* 结果
-
-		![image-20201208232508452](Docker安装Mysql.assets/image-20201208232508452.png)
-
+	![image-20201208232508452](Docker安装Mysql.assets/image-20201208232508452.png)
+	
 	> 需要springboot-jpa-docker-mysql模块源码的可以到我的gitee上下载
 	>
 	> 目录：https://gitee.com/gadeGG/ProjectCode.git

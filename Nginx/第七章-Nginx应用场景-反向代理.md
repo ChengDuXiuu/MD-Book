@@ -1,5 +1,138 @@
 ## 反向代理
 
+### Nginx代理Nginx
+
+`效果:`
+
+​	本机访问虚拟机nginx然后跳转到另一台虚拟机nginx
+
+
+
+* 环境准备
+
+	* 两台虚拟机centos (192.168.124.6、192.168.124.7)
+
+	* 两台虚拟机配置好docker-nginx:并配置好docker中nginx和虚拟机的映射关系
+
+		![image-20210117150838629](第七章-Nginx应用场景-反向代理.assets/image-20210117150838629.png)
+
+		![image-20210117150905636](第七章-Nginx应用场景-反向代理.assets/image-20210117150905636.png)
+	
+	* 映射关系如下
+	
+		````bash
+		docker run  --name nginx -d -p 80:80 --privileged=true  -v /root/nginx/html:/usr/share/nginx/html -v /root/nginx/config/nginx.conf:/etc/nginx/nginx.conf nginx
+		````
+	
+
+* 配置192.168.124.6 nginx
+
+	* 进入nginx容器内部
+
+		````bash
+		docker exec -it 容器ID /bin/bash
+		````
+
+	* 配置default.conf
+
+		````bash
+		vim /etc/nginx/conf.d/default.conf 
+		````
+
+	![image-20210117153746231](第七章-Nginx应用场景-反向代理.assets/image-20210117153746231.png)
+
+* 在192.168.124.7 中新增to目录
+
+	![image-20210117154010142](第七章-Nginx应用场景-反向代理.assets/image-20210117154010142.png)
+
+* 结果
+
+	![image-20210117154046797](第七章-Nginx应用场景-反向代理.assets/image-20210117154046797.png)
+
+
+
+### Nginx代理Tomcat
+
+`效果:`
+
+本机访问虚拟机nginx然后跳转到另一台虚拟机Tomcat
+
+
+
+* 环境准备
+
+	* 两台虚拟机centos (192.168.124.6、192.168.124.7)
+
+	* 两台虚拟机配置好docker-nginx:并配置好docker中nginx和虚拟机的映射关系
+
+		![image-20210117150838629](第七章-Nginx应用场景-反向代理.assets/image-20210117150838629.png)
+
+		![image-20210117150905636](第七章-Nginx应用场景-反向代理.assets/image-20210117150905636.png)
+
+	* 映射关系如下
+
+		````bash
+		docker run  --name nginx -d -p 80:80 --privileged=true  -v /root/nginx/html:/usr/share/nginx/html -v /root/nginx/config/nginx.conf:/etc/nginx/nginx.conf nginx
+		````
+
+* 配置192.168.124.6 nginx
+
+	* 进入nginx容器内部
+
+		````bash
+		docker exec -it 容器ID /bin/bash
+		````
+
+	* 配置default.conf
+
+		````bash
+		vim /etc/nginx/conf.d/default.conf 
+		````
+
+	![image-20210117160148142](第七章-Nginx应用场景-反向代理.assets/image-20210117160148142.png)
+
+
+
+* 配置192.168.127.7 Tomcat
+
+	````bash
+	docker run --privileged=true -p 8080:8080 -v /root/tomcat/webapps:/usr/local/tomcat/webapps -d --name tomcat tomcat
+	````
+
+	> 具体配置可参考我的另外一篇文章：MD-Book/Docker/第十章-Docker安装Tomcat.md
+
+![image-20210117160223283](第七章-Nginx应用场景-反向代理.assets/image-20210117160223283.png)
+
+
+
+* 结果
+
+	![image-20210117160259678](第七章-Nginx应用场景-反向代理.assets/image-20210117160259678.png)
+
+
+
+* 访问真实的项目
+
+	* 放置一个SpringBoot项目到192.168.124.7 webapps内
+
+	* 重启docker - Tomcat
+
+		````bash
+		docker restart c314
+		````
+
+	* 修改192.168.12.6 Nginx配置文件
+
+	![image-20210117163104309](第七章-Nginx应用场景-反向代理.assets/image-20210117163104309.png)
+
+* 结果
+
+	![image-20210117163216801](第七章-Nginx应用场景-反向代理.assets/image-20210117163216801.png)
+
+
+
+
+
 `效果1:`
 
 *   本机配置Nginx。使用本机浏览器访问本机域名然后跳转到虚拟机中Tomcat(可以使用Docker部署Tomcat映射到虚拟机)
