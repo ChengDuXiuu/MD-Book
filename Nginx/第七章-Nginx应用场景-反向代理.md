@@ -24,7 +24,6 @@
 		docker run  --name nginx -d -p 80:80 --privileged=true  -v /root/nginx/html:/usr/share/nginx/html -v /root/nginx/config/nginx.conf:/etc/nginx/nginx.conf nginx
 		````
 	
-
 * 配置192.168.124.6 nginx
 
 	* 进入nginx容器内部
@@ -197,3 +196,4 @@ nginx是一个高性能的web服务器，应用广泛。下面是两个nginx反�
 
 
 
+s
