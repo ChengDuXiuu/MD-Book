@@ -1,0 +1,168 @@
+## 什么是ElasticSearch
+
+* lucene就是一个jar包，里面封装好了一些复杂的API以及包含了`倒排索引`，`数据存储到磁盘`。也就是说lucene是一种采取了`倒排索引`的方式进行`高效率搜索`的==框架==。但是它api复杂，且不支持集群。
+* Elasticsearch完美解决了lucene的这些缺点，它天然支持集群，REST API相对简单，开箱即用。底层还是封装的lucene。
+* Mysql  <--> Mybatis   和   lucene  <-->ElasticSearch
+
+
+
+## 能干什么
+
+* 分布式搜索引擎和数据分析引擎
+
+	* 搜索引擎 ： 百度、Google、网站中商品、文章、等等内容的检索
+	* 数据分析引擎 ： 用户行为埋点，简单理解为用户喜好分析并推送(推根据你购买历史进行商品推荐)。
+
+* 全文检索、结构化搜索以及聚合
+
+	* 全文检索 ： 全部内容中找关键字  ==> like
+	* 结构化 ： 等值匹配   ==> =   
+	* 聚合 ： 分析每个商品分类下有多少个商品  ==> count
+
+* 海量数据近实时处理
+
+	> ES自动将海量数据分散到多台服务器上去存储和检索、分布式。
+
+	* 海量数据 ： 分布式以后，可以采用大量的服务器去存储和检索数据。
+	* 近实时 ： ES可以在秒级对数据进行搜索和分析
+
+
+
+## 使用场景
+
+* 百度、维基百科等所搜引擎
+* 电商、新闻等几乎所有网站中数据检索
+* BI 数据分析、挖掘
+
+
+
+
+
+## 概念了解
+
+|      ES       | MySQL  |
+| :-----------: | :----: |
+| Index（索引） | 数据库 |
+| Type（类型）  |   表   |
+|   （文档）    | 行数据 |
+|   （属性）    | 列数据 |
+
+![image-20210127153405060](第一章-Elasticsearch.assets/image-20210127153405060.png)
+
+
+
+
+
+## 为什么检索用ElasticSearch
+
+`需求：`
+
+​	现在有1000w条数据，如果快速检索出我需要的信息。以其中五条举例：
+
+1. 红海行动
+2. 探索红海行动
+3. 红海特别行动
+4. 红海记录篇
+5. 特工红海特别行动
+
+`MySQL`
+
+* 遍历5条数据Docker安装ElasticSearch和kibana
+
+	1. 拉取
+
+		```bash
+		docker pull elasticsearch
+		docker pull kibana
+		```
+
+	2. ElasticSearch数据卷
+
+		```bash
+		# 1. 在宿主机中创建配置文件以及数据文件
+		mkdir -p /root/elasticsearch/config
+		mkdir -p /root/elasticsearch/data
+		# 2. 写入内容 :后面一定要有空格
+		echo "http.host: 0.0.0.0" >> /root/elasticsearch/config/elasticsearch.yml
+		# 3. 数据挂载
+		docker run --privileged=true -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -v /root/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml -v /root/elasticsearch/data:/usr/share/elasticsearch/data -v /root/elasticsearch/plugins:/usr/share/elasticsearch/plugins -d --name es elasticsearch
+		```
+
+	3. 修改宿主机es目录权限
+
+		```bash
+		chmod -R 777 /root/elasticsearch/
+		```
+
+		
+
+	4. 访问 宿主机IP:9200
+
+		![image-20210127203308661](第一章-Elasticsearch介绍.assets/image-20210127203308661.png)
+
+	
+
+	5. 使用postman测试ElasticSearch
+
+		![image-20210127204219324](第一章-Elasticsearch介绍.assets/image-20210127204219324.png)
+
+		![image-20210127204247710](第一章-Elasticsearch介绍.assets/image-20210127204247710.png)
+
+	
+
+	6. 安装kibana可视化工具
+
+		```bash
+		# 这里的192.168.124.3切换为自己宿主机的IP地址。
+		docker run --name kibana -e ELASTICSEARCH_HOSTS=http://192.168.124.3:9200 -p 5601:5601 -d kibana
+		```
+
+	7. 访问 192.168.124.3:5610
+
+		![image-20210127205023811](第一章-Elasticsearch介绍.assets/image-20210127205023811.png)
+
+		
+
+* 每条数据使用like来查询
+
+> 当数据量是1000w条的时候可想而知
+
+
+
+`ElasticSearch：倒排索引技术`
+
+* 保存数据前 `分词` 维护一张  ==词==  和 ==记录==   的映射表	
+
+	* 词  ：是每条纪录的数据进行分词
+	* 记录 ：是每个词出现在这条记录的数据索引
+
+	| 词     | 记录          |
+	| ------ | ------------- |
+	| 红海   | 1，2，3，4，5 |
+	| 行动   | 1，2，3，5    |
+	| 探索   | 2，5          |
+	| 特别   | 3，5          |
+	| 纪录篇 | 4             |
+	| 特工   | 5             |
+
+> 检索 红海行动 ？
+
+* 红海行动 分词后 ==红海==和==行动==均出现在记录（1，2，3，4，5）和记录（1，2，3），因此1，2，3，4，5对应的5条数据全部显示
+* 显示顺序按照 `相关性得分`来排序
+	* 第一条数据-1  词 ==红海====行动== 在记录中全部命中 2/2得分最高
+	* 第二条数据-2  在记录中 出现在三个词中，有两个命中因此得分2/3 
+	* 第三条数据-3  在记录中 出现在三个词中，有两个命中因此得分2/3
+	* 第四条数据-4  在记录中 出现在两个词中，有一个命中因此得分1/2
+	* 第五条数据-5  在记录中 出现在五个词中，有一个命中因此得分1/5
+* 排序为 1   2   3   4   5
+
+> 检索  特工红海行动 ？
+
+* 红海特工行动  分词后 ==红海====行动====特工==均出现在记录中(1，2，3，4，5)和记录(1，2，3)以及记录(5)，因此5条数据全部显示
+* 显示顺序按照 `相关性得分`来排序
+	* 第一条数据-1  在记录中 出现在两个词中，有两个命中因此得分2/2 
+	* 第二条数据-2  在记录中 出现在三个词中，有两个命中因此得分2/3 
+	* 第三条数据-3  在记录中 出现在三个词中，有两个命中因此得分2/3
+	* 第四条数据-4  在记录中 出现在两个词中，有一个命中因此得分1/2
+	* 第五条数据-5  在记录中 出现在五个词中，有三个命中因此得分3/5
+* 排序为 1   2   3   5   4

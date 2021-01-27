@@ -1,60 +1,55 @@
-## 拉取ElasticSearch
+## Docker安装ElasticSearch和kibana
 
-```bash
-docker pull elasticsearch
-```
-
-
-
-## 运行ElasticSearch
-
-* 调高JVM线程数限制数量
-
-	```markdown
-	# 1.在centos虚拟机中，修改配置sysctl.conf
-		vim /etc/sysctl.conf
-	# 2.加入如下配置
-		vm.max_map_count=262144 
-	# 3.启用配置
-		sysctl -p
-		注：这一步是为了防止启动容器时，报出如下错误：
-		bootstrap checks failed max virtual memory areas vm.max_map_count [65530] likely too low, increase to at least [262144]
-	```
-
-* 运行ElasticSearch
+1. 拉取
 
 	```bash
-	docker run -d -p 9200:9200 -p 9300:9300 --name es elasticsearch
+	docker pull elasticsearch
+	docker pull kibana
+	```
+
+2. ElasticSearch数据卷
+
+	```bash
+	# 1. 在宿主机中创建配置文件以及数据文件
+	mkdir -p /root/elasticsearch/config
+	mkdir -p /root/elasticsearch/data
+	# 2. 写入内容 :后面一定要有空格
+	echo "http.host: 0.0.0.0" >> /root/elasticsearch/config/elasticsearch.yml
+	# 3. 数据挂载
+	docker run --privileged=true -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -v /root/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml -v /root/elasticsearch/data:/usr/share/elasticsearch/data -v /root/elasticsearch/plugins:/usr/share/elasticsearch/plugins -d --name es elasticsearch
+	```
+
+3. 修改宿主机es目录权限
+
+	```bash
+	chmod -R 777 /root/elasticsearch/
 	```
 
 	
 
-## 数据卷-数据
+4. 访问 宿主机IP:9200
 
-```bash
-mkdir -p /root/es/data
-
-docker cp es:/usr/share/elasticsearch/data /root/es/data/
-
-docker rm -f es
-
-docker run --privileged=true -d --name es -p 9200:9200 -p 9300:9300 -e ES_JAVA_OPTS="-Xms128m -Xmx128m" -v /root/es/plugins:/usr/share/elasticsearch/plugins -v /root/es/data:/usr/share/elasticsearch/data elasticsearch
-```
+	![image-20210127203308661](第十二章-Docker安装ElasticsEarch.assets/image-20210127203308661.png)
 
 
 
-## 安装IK分词器
+5. 使用postman测试ElasticSearch
 
-* 查看ElasticSearch版本
+	![image-20210127204219324](第十二章-Docker安装ElasticsEarch.assets/image-20210127204219324.png)
 
-	![image-20201212234516500](第十二章-Docker安装ElasticsEarch.assets/image-20201212234516500.png)
+	![image-20210127204247710](第十二章-Docker安装ElasticsEarch.assets/image-20210127204247710.png)
 
-	* 在GitHub上下载对应版本的IK
 
-		![image-20201212235050604](第十二章-Docker安装ElasticsEarch.assets/image-20201212235050604.png)
 
-* 使用wget下载
+6. 安装kibana可视化工具
 
-	![image-20201212235318268](第十二章-Docker安装ElasticsEarch.assets/image-20201212235318268.png)
+	```bash
+	# 这里的192.168.124.3切换为自己宿主机的IP地址。
+	docker run --name kibana -e ELASTICSEARCH_HOSTS=http://192.168.124.3:9200 -p 5601:5601 -d kibana
+	```
+
+7. 访问 192.168.124.3:5610
+
+	![image-20210127205023811](第十二章-Docker安装ElasticsEarch.assets/image-20210127205023811.png)
 
 	
