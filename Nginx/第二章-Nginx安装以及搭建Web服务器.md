@@ -96,8 +96,8 @@ http {
 
         #access_log  logs/host.access.log  main;		#日志
 
-        location / {		#域名根路径  对应的文件
-            root   html;
+        location / {		#域名根路径  对应的文件。
+            root   html;    #如果访问路径是/demo 则访问的是html/demo。而如果将root修改为alias则访问的是html
             index  index.html index.htm;		#服务端默认返回给用户的文件
         }
 
@@ -302,3 +302,4 @@ http {
 
     >   如果需要修改为其他项目名，则只需要修改打包后的dist文件夹为 ‘新项目名’ nginx配置文件dist修改为  ‘新项目名’
 
+*   Nginx访问路径特点：比如你在配置文件中只配置了 / 无其他域名路径，如果你对应的html/dist中有demo、test等等目录。这个时候你访问location/demo或者location/test则也会去路径下打开路径下index对应的页面
