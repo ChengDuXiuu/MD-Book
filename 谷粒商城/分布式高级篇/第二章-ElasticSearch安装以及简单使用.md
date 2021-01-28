@@ -220,12 +220,123 @@ DELETE http://ip地址:9200/索引名称
 
 ### 7、bulk批量API
 
+>   使用Kibina，postman软件换行有问题。
+
+`格式:`
+
 ```bash
-POST http://ip地址:9200/索引名称/类型名称/_bulk
-{"index":{"_id":"1"}}
-{"name":"upup"}
-{"index":{"_id":"2"}}
+# 两行为一个操作内容  第一行：操作行为     第二行：请求内容
+{action:{metadata}}\n
+{requstbody}\n (请求体)
 ```
 
+`action` : 必须是以下4种选项之一
+
+-   `index`(最常用) : 如果文档不存在就创建他，如果文档存在就更新他
+-   `create` : 如果文档不存在就创建他，但如果文档存在就返回错误
+    -   使用时一定要在metadata设置`_id`值，他才能去判断这个文档是否存在
+-   `update` : 更新一个文档，如果文档不存在就返回错误
+    -   使用时也要给`_id`值，且后面文档的格式和其他人不一样
+-   `delete` : 删除一个文档，如果要删除的文档id不存在，就返回错误
+    -   使用时也必须在metadata中设置文档`_id`，且后面不能带一个doc，因为没意义，他是用`_id`去删除文档的
 
 
+
+
+
+*   批量添加
+
+    ```bash
+    POST /索引名称/类型名称/_bulk
+    #第一个操作
+    {"index":{"_id":1}}  \\行为：索引信息
+    {"title":"Java","price","55"} \\请求体
+    #第二个操作
+    {"index":{"_id":2}}
+    {"title":"Html5","price","45"}
+    #第三个操作
+    {"index":{"_id":3}}
+    {"title":"Php","price","35"}`
+    #第四个操作
+    {"index":{"_id":4}}
+    {"title":"Python","price","50"}
+    ```
+
+![image-20210128165850101](第二章-ElasticSearch安装以及简单使用.assets/image-20210128165850101.png)
+
+
+
+*   批量查询
+
+    ```bash
+    # 可以查询不同的索引以及不同的类型还可以查询指定字段
+    GET _mget
+    {
+      "docs":[
+         {
+            "_index": "testindex",
+            "_type": "testType",
+            "_id": "1",
+            "_source": "title"
+         },
+         {
+            "_index": "testindex",
+            "_type": "testType",
+            "_id": "2",
+            "_source": ["price","title"]
+         }
+      ]
+    }
+    
+    GET /索引名称/类型名称/_mget
+    {
+      "docs":[
+         {
+            "_id": "1"
+         },
+         {
+            "_id": "2"
+         }
+      ]
+    }
+    
+    GET /索引名称/类型名称/_mget
+    {
+      "ids":["1","2"]
+    }
+    ```
+
+![image-20210128175626520](第二章-ElasticSearch安装以及简单使用.assets/image-20210128175626520.png)
+
+*   其余批量操作
+
+    ```bash
+    POST 127.0.0.1/mytest/doc/_bulk
+    //创建一笔数据
+    { "create" : { "_id": 1 } }
+    { "color": "create black" }
+    //创建一笔数据，因为id=1的文档已经存在，所以会创建失败
+    { "create" : { "_id": 1 } }
+    { "color": "create black2" }
+    //索引一笔数据
+    { "index" : { "_id": 2 } } 
+    { "color": "index red" }
+    //索引一笔数据，但是index可以创建也可以更新，所以执行成功
+    { "index" : { "_id": 2 } } 
+    { "color": "index red2" }
+    //索引一笔数据，不一定要设置id(index又能创建又能更新又不用设id，超好用)
+    { "index": {} } 
+    { "color": "index blue" } 
+    //删除一笔文档，注意delete后面不接一个doc
+    { "delete" : { "_id": "2" } } 
+    //找不到此id的文档，删除失败
+    { "delete" : { "_id": "2" } } 
+    //更新一笔文档，注意doc格式不太一样
+    { "update" : { "_id": 1 } } 
+    { "doc": { "color": "update green"} }
+    //更新一笔文档，但因为此id的文档不存在，所以更新失败
+    { "update" : { "_id": 100 } } 
+    { "doc": { "color": "update green2"} }
+    ```
+
+    
