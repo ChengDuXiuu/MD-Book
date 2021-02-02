@@ -85,11 +85,11 @@
 
 下面我们来继续探索 IOC又是如何工作的呢
 
-1. 配置元数据
+1. 配置元数据 ：Bean装配
 
-	> 需要配置一些元数据来告诉 Spring，你希望容器如何工作，具体来说，就是如何去初始化、配置、管理 JavaBean 对象。而Spring是通过Resource接口来获取到用户自定义的配置文件或者注解
+  > *   需要配置一些元数据来告诉 Spring，你希望容器如何工作，具体来说，就是如何去初始化、配置、管理 JavaBean 对象(这一过程也叫bean的装配)。而Spring是通过Resource接口来获取到用户自定义的配置文件或者注解
 
-2. 实例化容器
+2. 实例化容器 
 
 	> 定位资源文件并依据元数据实例化并装配Bean  把用户定义好的Bean表示成IoC容器内部的数据结构，而这个容器内部的数据结构就是BeanDefinition。IoC 容器根据 BeanDefinition 进行实例化、配置及组装 Bean。
 
@@ -164,7 +164,7 @@
 	<import resource="/WEB-INF/spring/service.xml"/>
 	```
 
-2. 实例化容器
+2. 实例化容器 ：Bean装配
 
 	```java
 	ApplicationContext applicationContext = new ClassPathXmlApplicationContext("xml/xmlConfig.xml");
@@ -727,11 +727,23 @@ DI 是组件之间依赖关系由容器在运行期决定，形象的说，即�
 
 
 
+IoC 依赖注入 API
+
+-   根据 Bean 名称注入
+-   根据 Bean 类型注入
+-   注入容器内建 Bean 对象
+-   注入非 Bean 对象
+-   注入类型
+    -   实时注入
+    -   延迟注入
+
 
 
 ## Bean
 
-由 IoC 容器管理的那些组成你应用程序的对象我们就叫它 Bean。Bean 就是由 Spring 容器初始化、装配及管理的对象，除此之外，bean 就与应用程序中的其他对象没有什么区别了。那 IoC 怎样确定如何实例化 Bean、管理 Bean 之间的依赖关系以及管理 Bean 呢？这就需要配置元数据，在 Spring 中由 BeanDefinition 代表，后边会详细介绍，配置元数据指定如何实例化 Bean、如何组装 Bean 等。
+spring的三个主要的部分，beans、context、core：
+
+ 在这三个主要部分中的核心是什么呢？那就非beans莫属了。spring的核心就是把我们平时使用的对象配置文件化，而配置文件中的对象就是被解析为beans来供开发人员来使用的。要说一个spring是一个舞台剧，那么beans就是一个个演员，没有演员怎么来的舞台剧？bean在spring中的重要性可想而知。而context的作用就是封装一下beans。如果没有context的话，我们每次使用spring的编程模式就一定要使用编程式使用spring的ioc容器了，而有了context只有，使用spring的ioc容器变得简单了许多，可以使用声明式的方式了。那么core的作用是什么呢？其实core就是一个工具类，如果我们想要将其改名为utils其实都是可以的。
 
 ### Bean 概述
 
@@ -760,4 +772,44 @@ Spring IoC 容器本身，并不能识别你配置的元数据。为此，要将
 <bean id="exampleBean" class="examples.ExampleBean"/>
 ```
 
+### 依赖
+
+依赖注入有两种主要方式：
+
+-   构造器注入
+-   Setter 注入
+
+构造器注入有可能出现循环注入的错误。如：
+
+```
+class A {
+	public A(B b){}
+}
+class B {
+	public B(A a){}
+}
+```
+
+
+
+### Bean作用域
+
+
+
+
+
+
+
+### Bean后处理器
+
+
+
+Spring后处理器，是Spring定义的**功能接口Interface**，包括两种：
+
+-   **BeanPostProcessor**  对容器中的**Bean**进行后处理，对Bean进行额外的加强
+-   **BeanFactoryPostProcessor**  对**Spring容器本身**进行后处理，增强容器的功能
+
+
+
+### 
 
