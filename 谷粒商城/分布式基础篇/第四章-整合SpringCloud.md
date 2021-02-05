@@ -258,3 +258,66 @@
 		```
 
 		
+
+## 整合SpringCloud  - - Nacos配置中心
+
+
+
+1. 导包
+
+	> 每个服务都会用到`注册发现`与`配置中心`,放到`gulimall-Common`中
+
+	```xml
+	 <!--服务配置中心-->
+	<dependency>
+	    <groupId>com.alibaba.cloud</groupId>
+	    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+	</dependency>
+	```
+
+2. `gulimall-Product`中新建==bootstrap.yml==文件
+
+	```properties
+	# 优先级  bootstrap.yml > application.properties > application.yml
+	# 应用名称
+	spring.application.name=gulimall-Product
+	# 配置中心服务地址
+	spring.cloud.nacos.config.server-addr=127.0.0.1:8848
+	```
+
+3. 启动 
+
+	> 如下图 ：服务在启动时会去服务配置中心中获取gulimall-Product.properties配置文件进行加载。因此我们需要在配置中心服务器中新建配置文件并写入配置即可。
+
+![image-20210204223302728](第四章-整合SpringCloud.assets/image-20210204223302728.png)
+
+
+
+4. 配置中心 新建配置文件 并将之前yml配置文件中内容写入
+
+	> 删除application.yml中配置内容后进行测试。
+
+![image-20210204223946106](第四章-整合SpringCloud.assets/image-20210204223946106.png)
+
+![image-20210204224244622](第四章-整合SpringCloud.assets/image-20210204224244622.png)
+
+
+
+5. ==问题==
+
+	>项目启动时默认会从  Nacos配置中心  中加载 `项目名.properties`文件。如上是有问题的，因为默认加载properties文件，但是我在properties文件中存放的是yaml格式的内容。
+	>
+	>因此需要在bootstrap.yml中指定 加载配置文件以及格式
+
+	* 新建配置文件 gulimall-Product.yml  并将之前yml配置文件中内容写入
+
+	![image-20210204231632765](第四章-整合SpringCloud.assets/image-20210204231632765.png)
+
+	![image-20210204231246297](第四章-整合SpringCloud.assets/image-20210204231246297.png)
+
+
+
+
+
+6. 启动项目测试数据库是否连接成功
+
