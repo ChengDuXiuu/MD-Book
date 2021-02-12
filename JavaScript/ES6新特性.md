@@ -1,3 +1,5 @@
+
+
 ## ES6新特性
 
 1. const和let
@@ -94,7 +96,7 @@
 7. 对象超类
 
 	 Class 可以通过`extends`关键字实现继承，这比 ES5 的通过修改原型链实现继承，要清晰和方便很多。  类通过`extends`关键字，继承了父类的所有属性和方法。 
-	
+
 	```jsx
 	class ColorPoint extends Point {
 	  constructor(x, y, color) {
@@ -109,7 +111,7 @@
 	```
 	
 	* 与Java继承一样， 子类必须在`constructor`方法中调用`super`方法 
-	
+
 8. for...of 和 for...in
 
   * for...of 用于遍历一个迭代器，如数组：

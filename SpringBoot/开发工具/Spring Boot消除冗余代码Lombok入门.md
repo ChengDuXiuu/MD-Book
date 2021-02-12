@@ -160,7 +160,7 @@ Lombok 的注解非常多，我们逐个来看看。
 
 # 7. @Slf4j 注解
 
-[`@Slf4j`](https://github.com/rzwitserloot/lombok/blob/master/src/core/lombok/Slf4j.java) 注解，添加在**类**上，给该类创建 Slf4j Logger **静态**属性。
+[`@Slf4j`](https://github.com/rzwitserloot/lombok/blob/master/src/core/lombok/Slf4j.java) 注解，添加在**类**上，给该类创建 yLogger **静态**属性。
 
 日志的使用可以观看[ Spring Boot日志框架介绍 ]()
 

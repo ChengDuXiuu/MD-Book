@@ -51,15 +51,19 @@
 
 1. 新建项目模块==gulimall-gateway==
 
-2. 嵌入==gulimall-common==模块
+2. 嵌入==gulimall-common==模块和gateway依赖
 
-	```xml
-	<dependency>
-	    <groupId>com.shuai.gulimall</groupId>
-	    <artifactId>gulimall-common</artifactId>
-	    <version>0.0.1-SNAPSHOT</version>
-	</dependency>
-	```
+  ```xml
+  <dependency>
+      <groupId>com.shuai.gulimall</groupId>
+      <artifactId>gulimall-common</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+  </dependency>
+  <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-gateway</artifactId>
+  </dependency>
+  ```
 
 3. 开启服务的注册发现
 
@@ -136,11 +140,11 @@
 	      - id: query_route_baidu # 路由给百度
 	        uri: https://www.baidu.com
 	        predicates:
-	        - Query=url, baidu  # URL中包含百度则路由给百度
+	          - Query=url, baidu  # URL中包含百度则路由给百度
 	      - id: query_route_QQ # 路由给QQ
 	        uri: https://www.qq.com
 	        predicates:
-	        - Query=url, qq
+	          - Query=url, qq
 	
 	
 	
