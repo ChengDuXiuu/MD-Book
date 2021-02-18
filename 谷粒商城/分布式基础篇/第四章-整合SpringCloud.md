@@ -113,7 +113,7 @@
 	  port: 9001       
 	```
 
-	> #这里使用`gulimall-Coupon服务`做演示。其他微服务(除Common)一样处理  1. 导包(Common基础包)   2. 配置yml   3. 注解开启
+	> 这里使用`gulimall-Coupon服务`做演示。其他微服务(除Common)一样处理  1. 导包(Common基础包)   2. 配置yml   3. 注解开启
 
 	> 使用阿里巴巴代理生成SpringBoot项目时候会默认生成application.properties文件，并且该文件中默认配置了项目名和端口号，删除该文件在yml文件中配置项目名和端口号
 	>
