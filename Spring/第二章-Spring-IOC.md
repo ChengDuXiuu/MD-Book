@@ -215,20 +215,53 @@
 
 1. 配置数据源--JAVA配置类
 
-	```java
-	@Configuration  // 声明这是一个配置类，程序运行时初始化这个类，把 @Bean 注解的 bean 加载到 ioc 容器备用
-	public class UserConfig {
-	    @Bean // 类似于<bean>  加载到 ioc 容器备用
-	    public UserDao studentDao() {
-	        return new UserDao();
-	    }
-	
-	    @Bean // 类似于<bean>  加载到 ioc 容器备用  并将依赖类 UserDao传入
-	    public UserService userService(UserDao userDao) {
-	        return new UserService(userDao);
-	    }
-	}
-	```
+  ```java
+  @Configuration  // 声明这是一个配置类，程序运行时初始化这个类，把 @Bean 注解的 bean 加载到 ioc 容器备用
+  public class UserConfig {
+      @Bean // 类似于<bean>  加载到 ioc 容器备用
+      public UserDao studentDao() {
+          return new UserDao();
+      }
+  
+      @Bean // 类似于<bean>  加载到 ioc 容器备用  并将依赖类 UserDao传入
+      public UserService userService(UserDao userDao) {
+          return new UserService(userDao);
+      }
+  }
+  
+  
+  @Configuration  
+  public class CorsConfig implements WebMvcConfigurer {
+  
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+          registry.addMapping("/**")
+              .allowedOrigins("*")
+              .allowCredentials(true)
+              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .maxAge(3600);
+      }
+  }
+  
+  
+  @Configuration
+  public class GulimallCorsConfiguration {
+      @Bean
+      public CorsWebFilter corsWebFilter(){
+          UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+          CorsConfiguration corsConfiguration = new CorsConfiguration();
+  
+          //1. 配置跨域
+          corsConfiguration.addAllowedHeader("*");
+          corsConfiguration.addAllowedMethod("*");
+          corsConfiguration.addAllowedOrigin("*");
+          corsConfiguration.setAllowCredentials(true);
+          source.registerCorsConfiguration("/**",corsConfiguration);
+  
+          return new CorsWebFilter(source);
+      }
+  }
+  ```
 
 2. 实例化容器
 
@@ -249,367 +282,247 @@
 
 ### 注解方式
 
-#### 1、启动注解
+`注解种类`
 
-Spring 默认是不启用注解的。如果想使用注解，需要先在 xml 中启动注解。 启动方式：在 xml 中加入一个标签，很简单吧。
+*   @Component
 
-```xml
-<context:annotation-config/>
-```
+    定义Bean，该注解的 value 属性用于指定该 bean 的 id 值 
 
-> 注：`<context:annotation-config/>` 只会检索定义它的上下文。什么意思呢？就是说，如果你 为 DispatcherServlet 指定了一个`WebApplicationContext`，那么它只在 controller 中查找`@Autowired`注解，而不会检查其它的路径。
+    *   @Repository 用于对 DAO 实现类进行注解
+    *    @Service 用于对 Service 实现类进行注解
+    *    @Controller 用于对 Controller 实现类进行注解
 
-#### 2、Spring 注解
+    >   之所以创建这三个功能与@Component 等效的注解，是为了以后对其进行功能上的扩展，使它们不再等效  
 
-- **`@Required`**
+*   @Scope
 
-`@Required` 注解只能用于修饰 bean 属性的 setter 方法。受影响的 bean 属性必须在配置时被填充在 xml 配置文件中，否则容器将抛出`BeanInitializationException`。
+    指定Bean作用域，默认singleton
 
-```java
-public class AnnotationRequired {
-    private String name;
-    private String sex;
+*   @Value
 
-    public String getName() {
-        return name;
+    属性值注入，有setter方法也可以加到setter方法上，适用于属性为基本类型。
+
+*   @Autowired 
+
+    域属性上使用注解@Autowired ，该注解默认使用按==类型==自动装配 Bean 的方式。适用于属性为对象类型。
+
+    @Autowired 还有一个属性 required，默认值为 true，表示当匹配失败后，会终止程序运行。若将其值设置为 false，则匹配失败，将被忽略，未匹配的属性值为 null。  
+
+*   @Qualifier  
+
+    和@Autowired类似，其为域属性按==名称==注入
+
+*   @Resource  
+
+    即可按==类型==注入属性值，也可按==名称==注入属性值
+
+    >   此注解属于javax，导包
+    >
+    >   ```
+    >   <dependency>
+    >       <groupId>javax.annotation</groupId>
+    >       <artifactId>jsr250-api</artifactId>
+    >       <version>${annotation.version}</version>
+    >   </dependency>
+    >   ```
+
+*   @PostConstruct
+
+    Bean生命始
+
+*   @PreDestroy
+
+    Bean生命末
+
+
+
+`流程`
+
+1.  导包 Spring IOC依赖包和Spring Boot测试包
+
+    ```xml
+    <properties>
+        <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- spring boot版本和spring版本保持一致，否则会有依赖冲突 -->
+        <spring.version>4.2.1.RELEASE</spring.version>
+        <spring-boot.version>2.3.0.RELEASE</spring-boot.version>
+        <commons-logging.version>1.1.1</commons-logging.version>
+        <log4j.version>1.2.16</log4j.version>
+        <junit.version>4.12</junit.version>
+        <lombok.version>1.18.8</lombok.version>
+        <annotation.version>1.0</annotation.version>
+    </properties>
+    
+    <modules>
+        <module>Spring-IOC</module>
+    </modules>
+    
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring IOC 依赖 -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-expression</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aop</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <!--  @Resource依赖 -->
+            <dependency>
+                <groupId>javax.annotation</groupId>
+                <artifactId>jsr250-api</artifactId>
+                <version>${annotation.version}</version>
+            </dependency>
+            <!-- 日志 -->
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <!-- 测试 -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <!--<scope>test</scope>-->
+            </dependency>
+            <!-- LOMBOK -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+    
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ```
+
+2.  开启注解扫描器，用以在指定包中扫描注解
+
+    *   在 xml中进行配置
+
+        ```xml
+        <!--  基于注解的DI  -->
+        <context:component-scan base-package="com.shuai.springioc.annotation-DI"/>
+        ```
+
+    *   使用配置类进行扫描
+
+        ```java
+        @Configuration
+        @ComponentScan(basePackageClasses = {Cause.class,Medium.class})
+        public class AnnotationScanConfig {
+        }
+        ## 如果为配置类进行扫描则在测试时候 @ContextConfiguration(classes=AnnotationScanConfig.class)
+        ```
+
+        
+
+3.  定义Bean
+
+    ```java
+    @Scope("prototype")
+    @Component("student")
+    @Data
+    @Log4j
+    public class Student {
+        @Value("张三")
+        private String name;
+        @Value("48")
+        private Integer age;
+        @Autowired(required = false) //按照School类型进行注入,School必须为Bean。required为false时，若School不是Bean则school属性为null
+    //    @Qualifier("school")
+    //    @Resource      //类型注入
+    //    @Resource(name = "school")      //名称注入
+        private School school;
+    
+        // todo Bean的生命始末
+        @PostConstruct
+        public void init(){
+            System.out.println("bean初始化执行方法");
+        }
+    
+        @PreDestroy
+        public void destory(){
+            System.out.println("销毁bean执行方法");
+        }
+    
+        public void test(){
+            System.out.println("测试方法 Student");
+        }
     }
+    ```
 
-    /**
-     * @Required 注解用于bean属性的setter方法并且它指示，受影响的bean属性必须在配置时被填充在xml配置文件中，
-     *           否则容器将抛出BeanInitializationException。
-     */
-    @Required
-    public void setName(String name) {
-        this.name = name;
+    ```java
+    @Data
+    @Component("school")
+    public class School {
+        @Value("华仁")
+        private String name;
+        @Value("fhds")
+        private String address;
     }
+    ```
 
-    public String getSex() {
-        return sex;
+4.  定义测试类 -- 在spring boot环境下进行测试
+
+    ```java
+    @RunWith(SpringRunner.class)//让测试运行于spring测试环境
+    @ContextConfiguration(locations = "classpath:annotation.xml")//指定 Spring 配置文件所在的位置
+    //@ContextConfiguration(classes=AnnotationScanConfig.class)  如果为配置类则使用
+    @Slf4j
+    public class TestCli {
+        @Autowired
+        private Student student;
+    
+        @Test
+        public void testBean(){
+            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
+            ServiceImpl iserver = (ServiceImpl)applicationContext.getBean("iserver");
+            iserver.doSome();
+        }
+        @Test
+        public void testAnnotation(){
+            student.test();
+            log.error(student.toString());
+        }
+    
     }
+    ```
 
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-}
-```
-
-- **`@Autowired`**
-
-`@Autowired`注解可用于修饰属性、setter 方法、构造方法。
-
-> 注：`@Autowired`注解也可用于修饰构造方法，但如果类中只有默认构造方法，则没有必要。如果有多个构造器，至少应该修饰一个，来告诉容器哪一个必须使用。
-
-可以使用 JSR330 的注解`@Inject`来替代`@Autowired`。
-
-***范例\***
-
-```java
-public class AnnotationAutowired {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationRequired.class);
-
-    @Autowired
-    private Apple fieldA;
-
-    private Banana fieldB;
-
-    private Orange fieldC;
-
-    public Apple getFieldA() {
-        return fieldA;
-    }
-
-    public void setFieldA(Apple fieldA) {
-        this.fieldA = fieldA;
-    }
-
-    public Banana getFieldB() {
-        return fieldB;
-    }
-
-    @Autowired
-    public void setFieldB(Banana fieldB) {
-        this.fieldB = fieldB;
-    }
-
-    public Orange getFieldC() {
-        return fieldC;
-    }
-
-    public void setFieldC(Orange fieldC) {
-        this.fieldC = fieldC;
-    }
-
-    public AnnotationAutowired() {}
-
-    @Autowired
-    public AnnotationAutowired(Orange fieldC) {
-        this.fieldC = fieldC;
-    }
-
-    public static void main(String[] args) throws Exception {
-        AbstractApplicationContext ctx =
-                        new ClassPathXmlApplicationContext("spring/spring-annotation.xml");
-
-        AnnotationAutowired annotationAutowired =
-                        (AnnotationAutowired) ctx.getBean("annotationAutowired");
-        log.debug("fieldA: {}, fieldB:{}, fieldC:{}", annotationAutowired.getFieldA().getName(),
-                        annotationAutowired.getFieldB().getName(),
-                        annotationAutowired.getFieldC().getName());
-        ctx.close();
-    }
-}
-```
-
-xml 中的配置
-
-```xml
-<!-- 测试@Autowired -->
-<bean id="apple" class="org.zp.notes.spring.beans.annotation.sample.Apple"/>
-<bean id="potato" class="org.zp.notes.spring.beans.annotation.sample.Banana"/>
-<bean id="tomato" class="org.zp.notes.spring.beans.annotation.sample.Orange"/>
-<bean id="annotationAutowired" class="org.zp.notes.spring.beans.annotation.sample.AnnotationAutowired"/>
-```
-
-- **`@Qualifier`**
-
-在`@Autowired`注解中，提到了如果发现有多个候选的 bean 都符合修饰类型，Spring 就会抓瞎了。
-
-那么，如何解决这个问题。
-
-可以通过`@Qualifier`指定 bean 名称来锁定真正需要的那个 bean。
-
-***范例\***
-
-```java
-public class AnnotationQualifier {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationQualifier.class);
-
-    @Autowired
-    @Qualifier("dog") /** 去除这行，会报异常 */
-    Animal dog;
-
-    Animal cat;
-
-    public Animal getDog() {
-        return dog;
-    }
-
-    public void setDog(Animal dog) {
-        this.dog = dog;
-    }
-
-    public Animal getCat() {
-        return cat;
-    }
-
-    @Autowired
-    public void setCat(@Qualifier("cat") Animal cat) {
-        this.cat = cat;
-    }
-
-    public static void main(String[] args) throws Exception {
-        AbstractApplicationContext ctx =
-                new ClassPathXmlApplicationContext("spring/spring-annotation.xml");
-
-        AnnotationQualifier annotationQualifier =
-                (AnnotationQualifier) ctx.getBean("annotationQualifier");
-
-        log.debug("Dog name: {}", annotationQualifier.getDog().getName());
-        log.debug("Cat name: {}", annotationQualifier.getCat().getName());
-        ctx.close();
-    }
-}
-
-abstract class Animal {
-    public String getName() {
-        return null;
-    }
-}
-
-class Dog extends Animal {
-    public String getName() {
-        return "狗";
-    }
-}
-
-class Cat extends Animal {
-    public String getName() {
-        return "猫";
-    }
-}
-```
-
-xml 中的配置
-
-```xml
-<!-- 测试@Qualifier -->
-<bean id="dog" class="org.zp.notes.spring.beans.annotation.sample.Dog"/>
-<bean id="cat" class="org.zp.notes.spring.beans.annotation.sample.Cat"/>
-<bean id="annotationQualifier" class="org.zp.notes.spring.beans.annotation.sample.AnnotationQualifier"/>
-```
-
-#### 3、JSR 250 注解
-
-@Resource
-
-Spring 支持 JSP250 规定的注解`@Resource`。这个注解根据指定的名称来注入 bean。
-
-如果没有为`@Resource`指定名称，它会像`@Autowired`一样按照类型去寻找匹配。
-
-在 Spring 中，由`CommonAnnotationBeanPostProcessor`来处理`@Resource`注解。
-
-***范例\***
-
-```java
-public class AnnotationResource {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationResource.class);
-
-    @Resource(name = "flower")
-    Plant flower;
-
-    @Resource(name = "tree")
-    Plant tree;
-
-    public Plant getFlower() {
-        return flower;
-    }
-
-    public void setFlower(Plant flower) {
-        this.flower = flower;
-    }
-
-    public Plant getTree() {
-        return tree;
-    }
-
-    public void setTree(Plant tree) {
-        this.tree = tree;
-    }
-
-    public static void main(String[] args) throws Exception {
-        AbstractApplicationContext ctx =
-                        new ClassPathXmlApplicationContext("spring/spring-annotation.xml");
-
-        AnnotationResource annotationResource =
-                        (AnnotationResource) ctx.getBean("annotationResource");
-        log.debug("type: {}, name: {}", annotationResource.getFlower().getClass(), annotationResource.getFlower().getName());
-        log.debug("type: {}, name: {}", annotationResource.getTree().getClass(), annotationResource.getTree().getName());
-        ctx.close();
-    }
-}
-```
-
-xml 的配置
-
-```xml
-<!-- 测试@Resource -->
-<bean id="flower" class="org.zp.notes.spring.beans.annotation.sample.Flower"/>
-<bean id="tree" class="org.zp.notes.spring.beans.annotation.sample.Tree"/>
-<bean id="annotationResource" class="org.zp.notes.spring.beans.annotation.sample.AnnotationResource"/>
-```
-
-- **`@PostConstruct` 和 `@PreDestroy`**
-
-`@PostConstruct` 和 `@PreDestroy` 是 JSR 250 规定的用于生命周期的注解。
-
-从其名号就可以看出，一个是在构造之后调用的方法，一个是销毁之前调用的方法。
-
-```java
-public class AnnotationPostConstructAndPreDestroy {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationPostConstructAndPreDestroy.class);
-
-    @PostConstruct
-    public void init() {
-        log.debug("call @PostConstruct method");
-    }
-
-    @PreDestroy
-    public void destroy() {
-        log.debug("call @PreDestroy method");
-    }
-}
-```
-
-#### 4、JSR 330 注解
-
-从 Spring3.0 开始，Spring 支持 JSR 330 标准注解（依赖注入）。
-
-注：如果要使用 JSR 330 注解，需要使用外部 jar 包。
-
-若你使用 maven 管理 jar 包，只需要添加依赖到 pom.xml 即可：
-
-```xml
-<dependency>
-  <groupId>javax.inject</groupId>
-  <artifactId>javax.inject</artifactId>
-  <version>1</version>
-</dependency>
-```
-
-@Inject
-
-`@Inject`和`@Autowired`一样，可以修饰属性、setter 方法、构造方法。
-
-***范例\***
-
-```java
-public class AnnotationInject {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationInject.class);
-    @Inject
-    Apple fieldA;
-
-    Banana fieldB;
-
-    Orange fieldC;
-
-    public Apple getFieldA() {
-        return fieldA;
-    }
-
-    public void setFieldA(Apple fieldA) {
-        this.fieldA = fieldA;
-    }
-
-    public Banana getFieldB() {
-        return fieldB;
-    }
-
-    @Inject
-    public void setFieldB(Banana fieldB) {
-        this.fieldB = fieldB;
-    }
-
-    public Orange getFieldC() {
-        return fieldC;
-    }
-
-    public AnnotationInject() {}
-
-    @Inject
-    public AnnotationInject(Orange fieldC) {
-        this.fieldC = fieldC;
-    }
-
-    public static void main(String[] args) throws Exception {
-        AbstractApplicationContext ctx =
-                        new ClassPathXmlApplicationContext("spring/spring-annotation.xml");
-        AnnotationInject annotationInject = (AnnotationInject) ctx.getBean("annotationInject");
-
-        log.debug("type: {}, name: {}", annotationInject.getFieldA().getClass(),
-                        annotationInject.getFieldA().getName());
-
-        log.debug("type: {}, name: {}", annotationInject.getFieldB().getClass(),
-                        annotationInject.getFieldB().getName());
-
-        log.debug("type: {}, name: {}", annotationInject.getFieldC().getClass(),
-                        annotationInject.getFieldC().getName());
-
-        ctx.close();
-    }
-}
-```
-
-> 注：spring 中，先进行注解注入，然后才是 xml 注入，因此如果注入的目标相同，后者会覆盖前者。
+> 注：spring 中，先进行注解注入，然后才是 xml 注入，因此如果注入的目标相同，后者会覆盖前者。即xml配置文件级别高于注解
 
 ### 自动装配
 
@@ -634,7 +547,7 @@ public class AnnotationInject {
 	
 	    private UserDao  userDao;
 	
-	    @Autowired
+	    @Autowired  构造器进行依赖注入
 	    public UserService(UserDao userDao) {
 	        this.userDao = userDao;
 	    }
@@ -796,13 +709,19 @@ class B {
 
 
 
-
+| 作用域      | 描述                                                         |
+| ----------- | ------------------------------------------------------------ |
+| singleton   | 在spring IoC容器仅存在一个Bean实例，Bean以单例方式存在，bean作用域范围的默认值。 |
+| prototype   | 每次从容器中调用Bean时，都返回一个新的实例，即每次调用getBean()时，相当于执行newXxxBean()。 |
+| request     | 每次HTTP请求都会创建一个新的Bean，该作用域仅适用于web的Spring WebApplicationContext环境。 |
+| session     | 同一个HTTP Session共享一个Bean，不同Session使用不同的Bean。该作用域仅适用于web的Spring WebApplicationContext环境。 |
+| application | 限定一个Bean的作用域为`ServletContext`的生命周期。该作用域仅适用于web的Spring WebApplicationContext环境。 |
 
 
 
 ### Bean后处理器
 
-
+>   Bean 后处理器是一种特殊的 Bean，容器中所有的 Bean 在初始化时，均会自动执行该类的两个方法。  
 
 Spring后处理器，是Spring定义的**功能接口Interface**，包括两种：
 
@@ -811,11 +730,59 @@ Spring后处理器，是Spring定义的**功能接口Interface**，包括两种�
 
 
 
+`案例`
+
+1.  处理器类
+
+    ```java
+    /* Bean后处理器 */
+    public class MyBeanPostProcessor implements BeanPostProcessor {
+        @Override
+        public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+            System.out.println("postProcessBeforeInitialization - -"+bean+"- - "+beanName);
+            return bean;
+        }
+    
+        @Override
+        public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+            System.out.println("postProcessAfterInitialization - -"+bean+"- - "+beanName);
+            return bean;
+        }
+    }
+    ```
+
+2.  xml中指定bean
+
+    ```xml
+    <bean class="com.shuai.springioc.processor.MyBeanPostProcessor"></bean>
+    ```
+
+    
+
+
+
 ### Bean生命始末
 
+>   可以为 ==每个Bean== 定制初始化后的生命行为，也可以为 ==每个Bean== 定制销毁前的生命行为。  
 
 
 
+
+
+## 应用场景
+
+*   Spring项目的基石，几乎所有的都要用到 IOC
+*   系统服务都可以使用 ioc注入到容器，例如redis、MongoDB工具类 注入到容器当作系统服务使用(默认单例)
+*   三层架构中services、dao、controller都是用了IOC
+
+
+
+## 总结
+
+1.  在spring出现之前，项目整体臃肿庞大，项目作为一个整体没有主次以及层级。对象的依赖以及管理繁琐。
+2.  spring出现就是解决两个事 ①：将项目分层 ==系统服务==、==业务代码==  -- 解耦  ②：对象的创建和依赖管理交由Spring容器管理
+3.  其中容器管理是由IOC来完成的，IOC分为对象装配（xml、配置类、注解等）、使用 （两大容器接口 beanfactory和ApplicationContext）
+4.  bean的作用域以及生命始末和bean后处理器
 
 
 
