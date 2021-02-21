@@ -1,3 +1,123 @@
+## 什么是AOP
+
+AOP（Aspect Orient Programming），==面向切面编程==，是==面向对象编程 OOP== 的一种补充。面向对象编程是从静态角度考虑程序的结构，而面向切面编程是从动态角度考虑程序运行过程。
+AOP 底层，就是采用动态代理模式实现的。采用了两种代理： `JDK 的动态代理`，与 `CGLIB的动态代理`。
+
+两种代理具体可参考 ： MD-Book/解决方案/代理.md
+
+
+
+## AOP作用
+
+解耦，面向切面 编程
+
+
+
+面向切面编程，就是将交叉业务逻辑封装成切面，利用 AOP 容器的功能将切面织入到主业务逻辑中。所谓交叉业务逻辑是指，通用的、与主业务逻辑无关的代码，如安全检查、事务、日志等。若不使用 AOP，则会出现代码纠缠，即交叉业务逻辑与主业务逻辑混合在一起。这样，会使主业务逻辑变的混杂不清。
+
+例如，转账，在真正转账业务逻辑前后，需要权限控制、日志记录、加载事务、结束事务等交叉业务逻辑，而这些业务逻辑与主业务逻辑间并无直接关系。但，它们的代码量所占比重能达到总代码量的一半甚至还多。它们的存在，不仅产生了大量的“冗余”代码，还大大干扰了主业务逻辑---转账。
+
+
+
+`演变:`
+
+比如,项目中需要记录日志.
+
+1. 在不使用日志框架前提下,最开始我们想到的是在每个需要记录日志的类中封装日志方法log()，需要时调用即可。 -- 代码冗余
+2. 将日志方法封装工具类。-- 工具类多处调用冗余
+3. AOP   -- 在不影响主业务代码前提下，进行方法增强和扩展
+
+
+
+
+
+## AOP术语
+
+```java
+/**
+ * TODO:<p> JDK -- 自定义动态代理处理类 <p/>
+ *
+ * @package: com.shuai.springaop.dynamicJDK.dynamicHandle
+ * @Author mac
+ * @Date 2021/2/21 3:17 下午
+ * @Version V1.0
+ **/
+@Slf4j
+public class DynamicHandle implements InvocationHandler {
+    /* 目标对象 */
+    private Object target;
+    public DynamicHandle(Object target){
+        this.target = target;
+    }
+    /*
+     * TODO <p> 此方法主要替代代理类。因此要实现1.执行目标方法，2.方法增强 </p>
+     * @date 2021/2/21 3:19 下午
+     * @param proxy   : 为代理目标对象 ，传入什么实现类则执行什么实现类的目标方法
+     * @param method : 为反射核心类
+     * @param args  : 为代理对象方法参数
+     * @return java.lang.Object ：为地阿里对象方法返回值
+     */
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 1. 利用反射执行目标方法
+        Object res = method.invoke(target, args); // 反射
+
+        //2. 方法增强
+        float price = (float) res;
+        price = price + 25;
+        log.error("代理平台进行加价后，价格为 {} ",price);
+
+        return price;
+    }
+}
+```
+
+`切面（Aspect）:`
+
+​	切面泛指交叉业务逻辑 , 即对目标对象增强或扩展的功能。上例中的事务处理、日志处理就可以理解为切面。常用的切面有==通知==与==顾问==。实际就是对主业务逻辑的一种增强。
+
+`织入（Weaving）:`
+
+​	织入是指将切面代码插入到目标对象的过程。上面 DynamicHandle类中的invoke()方法完成的工作，就可以称为织入。
+
+`连接点（ JoinPoint）:`
+
+​	连接点指可以被切面织入的方法。通常目标接口中的方法均为连接点。
+
+`切入点（ Pointcut）:`
+
+​	切入点指切面具体织入的方法。即目标接口或者类中要增强的方法。
+
+`目标对象（ Target）:`
+
+​	目 标 对 象 指 将 要 被 增 强 的 对 象 。 即 包 含 主 业 务 逻 辑 的 类 的 对 象 。 
+
+`通知（ Advice）:`
+
+​	通知是切面的一种实现，可以完成 ==简单织入功能==（织入功能就是在这里完成的）。上例中的 DynamicHandle 就可以理解为是一种通知。换个角度来说， ==通知定义了增强代码切入到目标代码的时间点，是目标方法执行之前执行，还是之后执行等。通知类型不同，切入时间不同。切入点定义切入的位置，通知定义切入的时间。==
+
+> 常用通知有：前置通知、后置通知、环绕通知、异常处理通知。
+
+`顾问（ Advisor）:`
+
+​	顾问是切面的另一种实现，能够将通知以更为复杂的方式织入到目标对象中，是将通知包装为更复杂切面的装配器。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [AOP 概念](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=aop-概念)
 
 ### [什么是 AOP](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=什么是-aop)
