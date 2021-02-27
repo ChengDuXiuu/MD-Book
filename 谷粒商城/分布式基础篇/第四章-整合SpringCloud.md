@@ -122,7 +122,7 @@
 	> 	application:
 	>   	name: 项目名
 	> server:
-	>   port: 端口号    	
+	>   	port: 端口号    	
 	> ```
 
 4. 开启服务注册发现 ==@EnableDiscoveryClient==

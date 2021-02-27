@@ -1,7 +1,7 @@
 ## 什么是AOP
 
 AOP（Aspect Orient Programming），==面向切面编程==，是==面向对象编程 OOP== 的一种补充。面向对象编程是从静态角度考虑程序的结构，而面向切面编程是从动态角度考虑程序运行过程。
-AOP 底层，就是采用动态代理模式实现的。采用了两种代理： `JDK 的动态代理`，与 `CGLIB的动态代理`。
+AOP 底层，就是采用动态代理模式实现的。采用了两种代理： `JDK 的动态代理`，与 `CGLIB的动态代理`。 如果动态代理为 JDK  则只能切入接口    ，如果为CGLIB   则 接口和普通类都可切入
 
 两种代理具体可参考 ： MD-Book/解决方案/代理.md
 
@@ -94,9 +94,14 @@ public class DynamicHandle implements InvocationHandler {
 
 `通知（ Advice）:`
 
-​	通知是切面的一种实现，可以完成 ==简单织入功能==（织入功能就是在这里完成的）。上例中的 DynamicHandle 就可以理解为是一种通知。换个角度来说， ==通知定义了增强代码切入到目标代码的时间点，是目标方法执行之前执行，还是之后执行等。通知类型不同，切入时间不同。切入点定义切入的位置，通知定义切入的时间。==
+​	通知是切面的一种实现，可以完成 ==简单织入功能==（织入功能就是在这里完成的）。上例中的 DynamicHandle 就可以理解为是一种通知。换个角度来说， ==通知定义了增强代码切入到目标代码的时间点，是目标方法执行之前执行，还是之后执行等。通知类型不同，切入时间不同。==
 
-> 常用通知有：前置通知、后置通知、环绕通知、异常处理通知。
+常用通知有：
+
+*   前置通知 MethodBeforeAdvice     
+*   后置通知 AfterReturningAdvice  
+*   环绕通知 MethodInterceptor  
+*   异常处理通知ThrowsAdvice  
 
 `顾问（ Advisor）:`
 
@@ -106,362 +111,1498 @@ public class DynamicHandle implements InvocationHandler {
 
 
 
+## 切面实现①   --  通知   --   xml配置  --单类所有方法
 
+>   <font color=ff00aa> 核心 : </font> 利用 `动态代理` 将通知类   切入到    目标类中。 如果动态代理为 JDK  则只能切入接口    ，如果为CGLIB   则 接口和普通类都可切入  。  总之，通知能够做到在目标类中使用动态代理在合适的时机(目标方法)进行切入或者增强。
 
+>   <font color=ff00aa>通知局限性 ：</font> 
+>
+>   *    jdk、cglib动态代理 可以对某一个方法进行特定增强。
+>   *   通知 只能够对切入目标类中的   所有方法   进行全部增强 而不能是某一个具体的方法。即切入点操作粒度太大
 
+### 切面实现①  -- 通知  --  JDK动态代理
 
+1.  定义目标类  --  jdk动态代理为接口   |   cglib类和接口都可以
 
+    即需要进行切入|增强的类
 
-
-
-
-
-
-
-## [AOP 概念](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=aop-概念)
-
-### [什么是 AOP](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=什么是-aop)
-
-AOP(Aspect-Oriented Programming，即 **面向切面编程**)与 OOP( Object-Oriented Programming，面向对象编程) 相辅相成，提供了与 OOP 不同的抽象软件结构的视角。
-
-在 OOP 中，我们以类(class)作为我们的基本单元，而 AOP 中的基本单元是 **Aspect(切面)**
-
-### [术语](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=术语)
-
-#### [Aspect(切面)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=aspect切面)
-
-`aspect` 由 `pointcount` 和 `advice` 组成, 它既包含了横切逻辑的定义, 也包括了连接点的定义. Spring AOP 就是负责实施切面的框架, 它将切面所定义的横切逻辑织入到切面所指定的连接点中. AOP 的工作重心在于如何将增强织入目标对象的连接点上, 这里包含两个工作:
-
-1. 如何通过 pointcut 和 advice 定位到特定的 joinpoint 上
-2. 如何在 advice 中编写切面代码.
-
-**可以简单地认为, 使用 @Aspect 注解的类就是切面.**
-
-#### [advice(增强)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=advice增强)
-
-由 aspect 添加到特定的 join point(即满足 point cut 规则的 join point) 的一段代码. 许多 AOP 框架, 包括 Spring AOP, 会将 advice 模拟为一个拦截器(interceptor), 并且在 join point 上维护多个 advice, 进行层层拦截. 例如 HTTP 鉴权的实现, 我们可以为每个使用 RequestMapping 标注的方法织入 advice, 当 HTTP 请求到来时, 首先进入到 advice 代码中, 在这里我们可以分析这个 HTTP 请求是否有相应的权限, 如果有, 则执行 Controller, 如果没有, 则抛出异常. 这里的 advice 就扮演着鉴权拦截器的角色了.
-
-#### [连接点(join point)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=连接点join-point)
-
-> a point during the execution of a program, such as the execution of a method or the handling of an exception. In Spring AOP, a join point always represents a method execution.
-
-程序运行中的一些时间点, 例如一个方法的执行, 或者是一个异常的处理. `在 Spring AOP 中, join point 总是方法的执行点, 即只有方法连接点.`
-
-#### [切点(point cut)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=切点point-cut)
-
-匹配 join point 的谓词(a predicate that matches join points). Advice 是和特定的 point cut 关联的, 并且在 point cut 相匹配的 join point 中执行. `在 Spring 中, 所有的方法都可以认为是 joinpoint, 但是我们并不希望在所有的方法上都添加 Advice, 而 pointcut 的作用就是提供一组规则(使用 AspectJ pointcut expression language 来描述) 来匹配joinpoint, 给满足规则的 joinpoint 添加 Advice.`
-
-#### [关于 join point 和 point cut 的区别](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=关于-join-point-和-point-cut-的区别)
-
-在 Spring AOP 中, 所有的方法执行都是 join point. 而 point cut 是一个描述信息, 它修饰的是 join point, 通过 point cut, 我们就可以确定哪些 join point 可以被织入 Advice. 因此 join point 和 point cut 本质上就是两个不同纬度上的东西. `advice 是在 join point 上执行的, 而 point cut 规定了哪些 join point 可以执行哪些 advice`
-
-#### [introduction](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=introduction)
-
-为一个类型添加额外的方法或字段. Spring AOP 允许我们为 `目标对象` 引入新的接口(和对应的实现). 例如我们可以使用 introduction 来为一个 bean 实现 IsModified 接口, 并以此来简化 caching 的实现.
-
-#### [目标对象(Target)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=目标对象target)
-
-织入 advice 的目标对象. 目标对象也被称为 `advised object`. `因为 Spring AOP 使用运行时代理的方式来实现 aspect, 因此 adviced object 总是一个代理对象(proxied object)` `注意, adviced object 指的不是原来的类, 而是织入 advice 后所产生的代理类.`
-
-#### [AOP proxy](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=aop-proxy)
-
-一个类被 AOP 织入 advice, 就会产生一个结果类, 它是融合了原类和增强逻辑的代理类. 在 Spring AOP 中, 一个 AOP 代理是一个 JDK 动态代理对象或 CGLIB 代理对象.
-
-#### [织入(Weaving)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=织入weaving)
-
-将 aspect 和其他对象连接起来, 并创建 adviced object 的过程. 根据不同的实现技术, AOP 织入有三种方式:
-
-- 编译器织入, 这要求有特殊的 Java 编译器.
-- 类装载期织入, 这需要有特殊的类装载器.
-- 动态代理织入, 在运行期为目标类添加增强(Advice)生成子类的方式. Spring 采用动态代理织入, 而 AspectJ 采用编译器织入和类装载期织入.
-
-### [advice 的类型](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=advice-的类型)
-
-- before advice, 在 join point 前被执行的 advice. 虽然 before advice 是在 join point 前被执行, 但是它并不能够阻止 join point 的执行, 除非发生了异常(即我们在 before advice 代码中, 不能人为地决定是否继续执行 join point 中的代码)
-- after return advice, 在一个 join point 正常返回后执行的 advice
-- after throwing advice, 当一个 join point 抛出异常后执行的 advice
-- after(final) advice, 无论一个 join point 是正常退出还是发生了异常, 都会被执行的 advice.
-- around advice, 在 join point 前和 joint point 退出后都执行的 advice. 这个是最常用的 advice.
-
-### [关于 AOP Proxy](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=关于-aop-proxy)
-
-Spring AOP 默认使用标准的 JDK 动态代理(dynamic proxy)技术来实现 AOP 代理, 通过它, 我们可以为任意的接口实现代理. `如果需要为一个类实现代理, 那么可以使用 CGLIB 代理.` 当一个业务逻辑对象没有实现接口时, 那么 Spring AOP 就默认使用 CGLIB 来作为 AOP 代理了. 即如果我们需要为一个方法织入 advice, 但是这个方法不是一个接口所提供的方法, 则此时 Spring AOP 会使用 CGLIB 来实现动态代理. 鉴于此, Spring AOP 建议基于接口编程, 对接口进行 AOP 而不是类.
-
-## [彻底理解 aspect, join point, point cut, advice](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=彻底理解-aspect-join-point-point-cut-advice)
-
-看完了上面的理论部分知识, 我相信还是会有不少朋友感觉到 AOP 的概念还是很模糊, 对 AOP 中的各种概念理解的还不是很透彻. 其实这很正常, 因为 AOP 中的概念是在是太多了, 我当时也是花了老大劲才梳理清楚的. 下面我以一个简单的例子来比喻一下 AOP 中 aspect, jointpoint, pointcut 与 advice 之间的关系.
-
-让我们来假设一下, 从前有一个叫爪哇的小县城, 在一个月黑风高的晚上, 这个县城中发生了命案. 作案的凶手十分狡猾, 现场没有留下什么有价值的线索. 不过万幸的是, 刚从隔壁回来的老王恰好在这时候无意中发现了凶手行凶的过程, 但是由于天色已晚, 加上凶手蒙着面, 老王并没有看清凶手的面目, 只知道凶手是个男性, 身高约七尺五寸. 爪哇县的县令根据老王的描述, 对守门的士兵下命令说: 凡是发现有身高七尺五寸的男性, 都要抓过来审问. 士兵当然不敢违背县令的命令, 只好把进出城的所有符合条件的人都抓了起来.
-
-来让我们看一下上面的一个小故事和 AOP 到底有什么对应关系. 首先我们知道, 在 Spring AOP 中 join point 指代的是所有方法的执行点, 而 point cut 是一个描述信息, 它修饰的是 join point, 通过 point cut, 我们就可以确定哪些 join point 可以被织入 Advice. 对应到我们在上面举的例子, 我们可以做一个简单的类比, join point 就相当于 **爪哇的小县城里的百姓**, point cut 就相当于 **老王所做的指控, 即凶手是个男性, 身高约七尺五寸**, 而 advice 则是施加在符合老王所描述的嫌疑人的动作: **抓过来审问**. 为什么可以这样类比呢?
-
-- join point --> 爪哇的小县城里的百姓: 因为根据定义, join point 是所有可能被织入 advice 的候选的点, 在 Spring AOP 中, 则可以认为所有方法执行点都是 join point. 而在我们上面的例子中, 命案发生在小县城中, 按理说在此县城中的所有人都有可能是嫌疑人.
-- point cut --> 男性, 身高约七尺五寸: 我们知道, 所有的方法(joint point) 都可以织入 advice, 但是我们并不希望在所有方法上都织入 advice, 而 pointcut 的作用就是提供一组规则来匹配 joinpoint, 给满足规则的 joinpoint 添加 advice. 同理, 对于县令来说, 他再昏庸, 也知道不能把县城中的所有百姓都抓起来审问, 而是根据`凶手是个男性, 身高约七尺五寸`, 把符合条件的人抓起来. 在这里`凶手是个男性, 身高约七尺五寸` 就是一个修饰谓语, 它限定了凶手的范围, 满足此修饰规则的百姓都是嫌疑人, 都需要抓起来审问.
-- advice --> 抓过来审问, advice 是一个动作, 即一段 Java 代码, 这段 Java 代码是作用于 point cut 所限定的那些 join point 上的. 同理, 对比到我们的例子中, `抓过来审问` 这个动作就是对作用于那些满足 `男性, 身高约七尺五寸` 的`爪哇的小县城里的百姓`.
-- aspect: aspect 是 point cut 与 advice 的组合, 因此在这里我们就可以类比: **"根据老王的线索, 凡是发现有身高七尺五寸的男性, 都要抓过来审问"** 这一整个动作可以被认为是一个 aspect.
-
-或则我们也可以从语法的角度来简单类比一下. 我们在学英语时, 经常会接触什么 `定语`, `被动句` 之类的概念, 那么可以做一个不严谨的类比, 即 `joinpoint` 可以认为是一个 `宾语`, 而 `pointcut` 则可以类比为修饰 `joinpoint` 的定语, 那么整个 `aspect` 就可以描述为: `满足 pointcut 规则的 joinpoint 会被添加相应的 advice 操作.`
-
-## [@AspectJ 支持](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=aspectj-支持)
-
-**`@AspectJ`** 是一种使用 Java 注解来实现 AOP 的编码风格。
-
-@AspectJ 风格的 AOP 是 AspectJ Project 在 AspectJ 5 中引入的, 并且 Spring 也支持 @AspectJ 的 AOP 风格.
-
-### [使能 @AspectJ 支持](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=使能-aspectj-支持)
-
-@AspectJ 可以以 XML 的方式或以注解的方式来使能, 并且不论以哪种方式使能@ASpectJ, 我们都必须保证 aspectjweaver.jar 在 classpath 中.
-
-#### [使用 Java Configuration 方式使能@AspectJ](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=使用-java-configuration-方式使能aspectj)
-
-```java
-@Configuration
-@EnableAspectJAutoProxy
-public class AppConfig {
-}
-```
-
-#### [使用 XML 方式使能@AspectJ](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=使用-xml-方式使能aspectj)
-
-```
-<aop:aspectj-autoproxy/>
-```
-
-### [定义 aspect(切面)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=定义-aspect切面)
-
-当使用注解 **@Aspect** 标注一个 Bean 后, 那么 Spring 框架会自动收集这些 Bean, 并添加到 Spring AOP 中, 例如:
-
-```java
-@Component
-@Aspect
-public class MyTest {
-}
-注意, 仅仅使用@Aspect 注解, 并不能将一个 Java 对象转换为 Bean, 因此我们还需要使用类似 @Component 之类的注解.` `注意, 如果一个 类被@Aspect 标注, 则这个类就不能是其他 aspect 的 **advised object** 了, 因为使用 @Aspect 后, 这个类就会被排除在 auto-proxying 机制之外.
-```
-
-### [声明 pointcut](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=声明-pointcut)
-
-一个 pointcut 的声明由两部分组成:
-
-- 一个方法签名, 包括方法名和相关参数
-- 一个 pointcut 表达式, 用来指定哪些方法执行是我们感兴趣的(即因此可以织入 advice).
-
-在@AspectJ 风格的 AOP 中, 我们使用一个方法来描述 pointcut, 即:
-
-```java
-@Pointcut("execution(* com.xys.service.UserService.*(..))") // 切点表达式
-private void dataAccessOperation() {} // 切点前面
-```
-
-`这个方法必须无返回值.` `这个方法本身就是 pointcut signature, pointcut 表达式使用@Pointcut 注解指定.` 上面我们简单地定义了一个 pointcut, 这个 pointcut 所描述的是: 匹配所有在包 **com.xys.service.UserService** 下的所有方法的执行.
-
-#### [切点标志符(designator)](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=切点标志符designator)
-
-AspectJ5 的切点表达式由标志符(designator)和操作参数组成. 如 "execution(* greetTo(..))" 的切点表达式, **execution** 就是 标志符, 而圆括号里的 *****greetTo(..) 就是操作参数
-
-##### [execution](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=execution)
-
-匹配 join point 的执行, 例如 "execution(* hello(..))" 表示匹配所有目标类中的 hello() 方法. 这个是最基本的 pointcut 标志符.
-
-##### [within](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=within)
-
-匹配特定包下的所有 join point, 例如 `within(com.xys.*)` 表示 com.xys 包中的所有连接点, 即包中的所有类的所有方法. 而`within(com.xys.service.*Service)` 表示在 com.xys.service 包中所有以 Service 结尾的类的所有的连接点.
-
-##### [this 与 target](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=this-与-target)
-
-this 的作用是匹配一个 bean, 这个 bean(Spring AOP proxy) 是一个给定类型的实例(instance of). 而 target 匹配的是一个目标对象(target object, 即需要织入 advice 的原始的类), 此对象是一个给定类型的实例(instance of).
-
-##### [bean](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=bean)
-
-匹配 bean 名字为指定值的 bean 下的所有方法, 例如:
-
-```
-bean(*Service) // 匹配名字后缀为 Service 的 bean 下的所有方法
-bean(myService) // 匹配名字为 myService 的 bean 下的所有方法
-```
-
-##### [args](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=args)
-
-匹配参数满足要求的的方法. 例如:
-
-```java
-@Pointcut("within(com.xys.demo2.*)")
-public void pointcut2() {
-}
-
-@Before(value = "pointcut2()  &&  args(name)")
-public void doSomething(String name) {
-    logger.info("---page: {}---", name);
-}
-@Service
-public class NormalService {
-    private Logger logger = LoggerFactory.getLogger(getClass());
-
-    public void someMethod() {
-        logger.info("---NormalService: someMethod invoked---");
+    ```java
+    public interface TargetIService {
+        void sayHello();
     }
+    ```
 
-    public String test(String name) {
-        logger.info("---NormalService: test invoked---");
-        return "服务一切正常";
+    ```java
+    @Service
+    @Slf4j
+    public class TargetServiceImpl implements TargetIService{
+        @Override
+        public void sayHello() {
+            log.error("------ TargetServiceImpl1    say   hello");
+        }
+    }
+    ```
+
+    
+
+2.  定义通知类
+
+    即增强的功能，比如 ：日志、事务、校验
+
+    *   前置通知 : 前置通知代码不能阻止目标方法执行
+    *   后置通知
+    *   环绕通知 ：在目标方法前 、后 均执行
+    *   异常处理通知 ： 在目标方法执行过程中发生异常时执行的类
+
+    ```java
+    @Slf4j
+    public class Log implements AfterReturningAdvice {
+    
+        @Override
+        public void afterReturning(Object o, Method method, Object[] objects, Object o1) throws Throwable {
+            log.error("-----------   后置通知   --- 进行日志输入内容  ");
+        }
+    }
+    ```
+
+    
+
+3.  注册目标类
+
+    即在xml中进行 IOC 依赖注入
+
+    
+
+4.  注册通知切面
+
+    即在xml中进行 通知类 IOC 依赖注入
+
+
+
+5.  注册代理工厂对象
+
+    >   JDK动态代理  与   CGLIB动态代理    可以切换
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+    
+        <!--  测试 JDK 动态代理  目标类必须是接口  -->
+    
+        <!--  注入 目标接口  -->
+        <bean id="targetInter" class="com.shuai.springaop.advice.TargetServiceImpl"/>
+    
+    
+        <!-- 注入 通知类 -->
+        <bean id="logAdvice" class="com.shuai.springaop.advice.Log"/>
+    
+    
+        <!-- 配置代理工厂 -->
+        <bean id="jdkProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+            <property name="target" ref="targetInter"></property>
+            <property name="interfaces" value="com.shuai.springaop.advice.TargetIService"/>
+            <property name="interceptorNames" value="logAdvice"></property>
+        </bean>
+    
+    
+    </beans>
+    ```
+    
+6.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration(locations = "classpath:advice.xml")
+    public class Client {
+        @Test
+        public void adviceTest(){
+            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("advice.xml");
+            /* 获取的必须是代理对象，否则通知无法进行切入 */
+            TargetIService targetInter1 = (TargetIService)applicationContext.getBean("jdkProxy");
+            targetInter1.sayHello();
+        }
+    }
+    
+    ```
+
+7.  结果
+
+    ![image-20210222114420980](第三章-Spring-AOP.assets/image-20210222114420980.png)
+
+
+
+
+
+### 切面实现①   --  一个切入点多个通知
+
+1.  新增通知
+
+    ```java
+    @Slf4j
+    public class Check implements MethodBeforeAdvice {
+        @Override
+        public void before(Method method, Object[] objects, Object o) throws Throwable {
+            log.error("----------  前置通知   数据校验 {}",objects);
+        }
+    }
+    
+    ```
+
+2.  xml注入通知类
+
+    ```xml
+    <bean id="checkAdvice" class="com.shuai.springaop.advice.Check"/>
+    ```
+
+3.  xml配置多个通知一个切入点
+
+    ```xml
+    <!-- 配置代理工厂 -->
+    <bean id="jdkProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <!-- 如果多个目标类  怎么办 ？ -->
+        <property name="target" ref="targetInter"></property>
+        <property name="interfaces" value="com.shuai.springaop.advice.TargetIService"/>
+        <!-- 一个切入点一个通知 -->
+        <!-- <property name="interceptorNames" value="advice"></property>-->
+        <!-- 一个切入点多个通知 -->
+        <property name="interceptorNames" >
+            <list>
+                <value>logAdvice</value>
+                <value>checkAdvice</value>
+            </list>
+        </property>
+    </bean>
+    ```
+
+4.  测试
+
+    ![image-20210222141431608](第三章-Spring-AOP.assets/image-20210222141431608.png)
+
+
+
+### 切面实现①   --  通知  -- CGLIB代理
+
+
+
+`切入点为类`
+
+>   xml配置代理时不指定接口即可。
+
+1.  新增 代理类
+
+    ```java
+    @Slf4j
+    public class TargetClass1 {
+        public void doSomeThing(){
+            log.error("--------- Target1 主业务逻辑代码执行中 ~~~~~");
+        }
+    }
+    ```
+
+2.  新增通知
+
+    ```java
+    @Slf4j
+    public class Log implements AfterReturningAdvice {
+    
+        @Override
+        public void afterReturning(Object o, Method method, Object[] objects, Object o1) throws Throwable {
+            log.error("-----------   后置通知   --- 进行日志输入内容  ");
+        }
+    }
+    ```
+
+3.  xml配置
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+        <!--  测试 CGLIB 动态代理  切入点为类  -->
+    
+        <!-- 切入点 类  -->
+        <bean id="targetClass" class="com.shuai.springaop.advice.TargetClass1"/>
+    
+        <!-- 通知 -->
+        <bean id="logClass" class="com.shuai.springaop.advice.Log"/>
+    
+        <!-- 配置代理工厂 -->
+        <bean id="proxy_cglib_class" class="org.springframework.aop.framework.ProxyFactoryBean">
+            <property name="target" ref="targetClass"/>
+            <property name="interceptorNames" value="logClass"/>
+        </bean>
+    
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration(locations = "classpath:advice-cglib-class.xml")
+    public class ClientCglibClass {
+        @Test
+        public void cglibTest(){
+            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("advice-cglib-class.xml");
+            TargetClass1 cglib_class = (TargetClass1) applicationContext.getBean("proxy_cglib_class");
+    
+            cglib_class.doSomeThing();
+        }
+    }
+    ```
+
+5.  测试
+
+    ![image-20210222142947222](第三章-Spring-AOP.assets/image-20210222142947222.png)
+
+
+
+
+
+`切入点为接口`
+
+1.  切入点 接口及其实现类省略
+
+2.  通知类 省略
+
+3.  xml配置
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+        <!--  测试 CGLIB 动态代理  切入点为接口 -->
+    
+        <!-- 切入点 接口  -->
+        <bean id="targetInterface" class="com.shuai.springaop.advice.TargetServiceImpl"/>
+    
+        <!-- 通知 -->
+        <bean id="logClass" class="com.shuai.springaop.advice.Log"/>
+        <bean id="checkClass" class="com.shuai.springaop.advice.Check"/>
+    
+        <!-- 配置代理工厂 -->
+        <bean id="proxy_cglib_interface" class="org.springframework.aop.framework.ProxyFactoryBean">
+            <property name="target" ref="targetInterface"/>
+            <property name="interfaces" value="com.shuai.springaop.advice.TargetIService"/>
+            <property name="interceptorNames">
+                <list>
+                    <value>logClass</value>
+                    <value>checkClass</value>
+                </list>
+            </property>
+            <!-- 指定是否对类进行代理 -->
+            <property name="proxyTargetClass" value="true"/>
+            <!-- 强制使用cglib -->
+            <property name="optimize" value="true"/>
+        </bean>
+    
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration(locations = "classpath:advice-cglib-interface.xml")
+    public class ClientCglibInterface {
+        @Test
+        public void cglibTest(){
+            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("advice-cglib-interface.xml");
+            TargetIService targetIService = (TargetIService) applicationContext.getBean("proxy_cglib_interface");
+    
+            targetIService.sayHello();
+        }
+    }
+    ```
+
+5.  结果
+
+    ![image-20210222144649935](第三章-Spring-AOP.assets/image-20210222144649935.png)
+
+
+
+
+
+### 切面实现①   --  通知  -- 局限性
+
+*   通知 只能够对切入目标类中的   所有方法   进行全部增强 而不能是某一个具体的方法。即切入点操作粒度太大
+
+```java
+@RunWith(SpringRunner.class)
+@ContextConfiguration(locations = "classpath:notice-cglib-interface.xml")
+public class ClientCglibInterface {
+    @Test
+    public void cglibTest(){
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("notice-cglib-interface.xml");
+        TargetIService targetIService = (TargetIService) applicationContext.getBean("proxy_cglib_interface");
+		
+        //切入点类中所有方法都 进行了 增强   即使我们不愿意
+        targetIService.sayHello();
+        targetIService.sayGoodBy();
     }
 }
 ```
 
-当 NormalService.test 执行时, 则 advice `doSomething` 就会执行, test 方法的参数 name 就会传递到 `doSomething` 中.
-
-常用例子:
-
-```java
-// 匹配只有一个参数 name 的方法
-@Before(value = "aspectMethod()  &&  args(name)")
-public void doSomething(String name) {
-}
-
-// 匹配第一个参数为 name 的方法
-@Before(value = "aspectMethod()  &&  args(name, ..)")
-public void doSomething(String name) {
-}
-
-// 匹配第二个参数为 name 的方法
-Before(value = "aspectMethod()  &&  args(*, name, ..)")
-public void doSomething(String name) {
-}
-```
-
-##### [@annotation](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=annotation)
-
-匹配由指定注解所标注的方法, 例如:
-
-```java
-@Pointcut("@annotation(com.xys.demo1.AuthChecker)")
-public void pointcut() {
-}
-```
-
-则匹配由注解 `AuthChecker` 所标注的方法.
-
-#### [常见的切点表达式](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=常见的切点表达式)
-
-##### [匹配方法签名](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=匹配方法签名)
-
-```
-// 匹配指定包中的所有的方法
-execution(* com.xys.service.*(..))
-
-// 匹配当前包中的指定类的所有方法
-execution(* UserService.*(..))
-
-// 匹配指定包中的所有 public 方法
-execution(public * com.xys.service.*(..))
-
-// 匹配指定包中的所有 public 方法, 并且返回值是 int 类型的方法
-execution(public int com.xys.service.*(..))
-
-// 匹配指定包中的所有 public 方法, 并且第一个参数是 String, 返回值是 int 类型的方法
-execution(public int com.xys.service.*(String name, ..))
-```
-
-##### [匹配类型签名](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=匹配类型签名)
-
-```
-// 匹配指定包中的所有的方法, 但不包括子包
-within(com.xys.service.*)
-
-// 匹配指定包中的所有的方法, 包括子包
-within(com.xys.service..*)
-
-// 匹配当前包中的指定类中的方法
-within(UserService)
+![image-20210222153226655](第三章-Spring-AOP.assets/image-20210222153226655.png)
 
 
-// 匹配一个接口的所有实现类中的实现的方法
-within(UserDao+)
-```
 
-##### [匹配 Bean 名字](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=匹配-bean-名字)
+## 切面实现②  --  顾问  -- xml配置
 
-```
-// 匹配以指定名字结尾的 Bean 中的所有方法
-bean(*Service)
-```
+>   通知 只能完成在某个时间点进行方法增强，并且是对一个类中所有方法进行增强，不管你愿不愿意。但是 jdk和cglib动态代理 可以实现对某一个方法进行增强。
 
-##### [切点表达式组合](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=切点表达式组合)
 
-```
-// 匹配以 Service 或 ServiceImpl 结尾的 bean
-bean(*Service || *ServiceImpl)
 
-// 匹配名字以 Service 结尾, 并且在包 com.xys.service 中的 bean
-bean(*Service) && within(com.xys.service.*)
-```
+*   顾问是对 通知 的封装 | 增强
+*   根据不同的 顾问类型 在不同的时间点  将切面  切入到 具体的切入点   简单来说，就是相比通知 降低了切入点操作粒度
 
-### [声明 advice](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=声明-advice)
 
-advice 是和一个 pointcut 表达式关联在一起的, 并且会在匹配的 join point 的方法执行的前/后/周围 运行. `pointcut 表达式可以是简单的一个 pointcut 名字的引用, 或者是完整的 pointcut 表达式`. 下面我们以几个简单的 advice 为例子, 来看一下一个 advice 是如何声明的.
 
-#### [Before advice](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=before-advice)
+### 按照   名称 来匹配具体方法  切入 顾问   -- 简单方法名
 
-```java
-/**
- * @author xiongyongshun
- * @version 1.0
- * @created 16/9/9 13:13
- */
-@Component
-@Aspect
-public class BeforeAspectTest {
-    // 定义一个 Pointcut, 使用 切点表达式函数 来描述对哪些 Join point 使用 advise.
-    @Pointcut("execution(* com.xys.service.UserService.*(..))")
-    public void dataAccessOperation() {
+>   实现类  ：  NameMatchMethodPointcutAdvisor
+>
+>   简单方法名 ：不包含包名、类名、接口名的那种
+
+`局限性：`
+
+​	相较于 通知 能够指定 ==类中特定方法== 进行切入 顾问   ， 即只能对单个类进行切入，不能批量进行切入。
+
+
+
+1.  定义 切入点
+
+    ```java
+    @Slf4j
+    public class TargetClass {
+        public void hellKitty(){
+            log.error("hello kitty ~~");
+        }
+    
+        public void helloBoy(){
+            log.error("hello Boy ~~");
+        }
     }
-}
-@Component
-@Aspect
-public class AdviseDefine {
-    // 定义 advise
-    @Before("com.xys.aspect.PointcutDefine.dataAccessOperation()")
-    public void doBeforeAccessCheck(JoinPoint joinPoint) {
-        System.out.println("*****Before advise, method: " + joinPoint.getSignature().toShortString() + " *****");
+    ```
+
+2.  定义 顾问
+
+    ```java
+    @Slf4j
+    public class Log implements MethodInterceptor {
+    
+        @Override
+        public Object invoke(MethodInvocation methodInvocation) throws Throwable {
+            log.error("执行前日志输入~~~");
+            //执行目标方法
+            Object proceed = methodInvocation.proceed();
+    
+            log.error("执行后日志输出~~~");
+    
+            return proceed;
+        }
     }
-}
+    
+    ```
+
+3.  配置xml
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+        <!--  测试 CGLIB 动态代理  切入点为类  -->
+    
+        <!-- 切入点 类  -->
+        <bean id="targetClass" class="com.shuai.springaop.adviser.name.clazz.TargetClass"/>
+    
+        <!-- 通知 -->
+        <bean id="logClass" class="com.shuai.springaop.adviser.name.handle.Log"/>
+    
+        <!-- 顾问 -->
+        <bean id="adviser" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">
+            <!-- 通知 -->
+            <property name="advice" ref="logClass"></property>
+            <!-- 指定方法进行切入 -->
+            <property name="mappedNames" value="hellKitty,helloBoy"></property>
+        </bean>
+    
+        <!-- 配置代理工厂 -->
+        <bean id="proxy_cglib_class" class="org.springframework.aop.framework.ProxyFactoryBean">
+            <property name="target" ref="targetClass"/>
+            <!-- 指定顾问 -->
+            <property name="interceptorNames" value="adviser"/>
+            <!-- 指定是否对类进行代理 -->
+            <property name="proxyTargetClass" value="true"/>
+            <!-- 强制使用cglib -->
+            <property name="optimize" value="true"/>
+        </bean>
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration(locations = "classpath:adviser-cglib-class.xml")
+    public class AdviserClassClient {
+        @Test
+        public void AdviserTest(){
+            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("adviser-cglib-class.xml");
+    
+            TargetClass aClass = (TargetClass) applicationContext.getBean("proxy_cglib_class");
+            aClass.hellKitty();
+            aClass.helloBoy();
+        }
+    }
+    ```
+
+5.  结果
+
+    ![image-20210222162542621](第三章-Spring-AOP.assets/image-20210222162542621.png)
+
+6.  只针对一个方法进行增强
+
+    *   ```xml
+        <!-- 指定方法进行切入 -->
+        <!--        <property name="mappedNames" value="hellKitty,helloBoy"></property>-->
+        <property name="mappedNames" value="hellKitty"></property>
+        ```
+
+    *   测试方法不变
+
+    *   结果
+
+        ![image-20210222162733309](第三章-Spring-AOP.assets/image-20210222162733309.png)
+
+    
+
+#### 多种方式进行切入点方法的指定
+
+1.  指定多个方法进行切入
+
+    ```xml
+    <!-- 指定多个方法进行切入  方式一 -->
+    <property name="mappedNames" value="hellKitty,helloBoy"></property>
+    <!-- 指定多个方法进行切入  方式二 -->
+    <property name="mappedNames">
+        <list>
+            <value>hellKitty</value>
+            <value>helloBoy</value>
+        </list>
+    </property>
+    <!-- *匹配方法 -->
+    <property name="mappedNames" value="hell*"/>
+    ```
+
+2.  指定单个方法进行切入
+
+    ```xml
+    <!-- 指定一个方法进行切入 -->
+    <property name="mappedNames" value="hellKitty"></property>
+    ```
+
+    
+
+### 按照   正则表达式   匹配具体方法   切入 顾问  -- 全限定方法名
+
+
+
+>   实现类  ： RegexpMethodPointcutAdvisor  
+>
+>   全限定方法名 ： 包含包名、类名、接口名的那种
+
+`正则运算符`
+
+![image-20210222172127928](第三章-Spring-AOP.assets/image-20210222172127928.png)
+
+
+
+1.  切入点 保持一致
+
+2.  顾问保持一致
+
+3.  修改xml
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+        <!--  测试 CGLIB 动态代理  切入点为类  -->
+    
+        <!-- 切入点 类  -->
+        <bean id="targetClass" class="com.shuai.springaop.adviser.regular.clazz.TargetClass"/>
+    
+        <!-- 通知 -->
+        <bean id="logClass" class="com.shuai.springaop.adviser.regular.handle.Log"/>
+    
+        <!-- 顾问 -->
+        <bean id="adviser" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor  ">
+            <!-- 通知 -->
+            <property name="advice" ref="logClass"></property>
+            <!-- 指定方法进行切入 : 匹配方法名字符串中包含hello字符串的方法名 -->
+            <property name="patterns" value=".*hell.*"></property>
+            <!-- 指定方法进行切入 : 匹配方法名字符串中包含Kitty字符串的方法名 或者 包含Boy字符串的方法名-->
+            <property name="patterns" value=".*Kitty.*|.*Boy.*"/>
+            <!-- 指定方法进行切入 : 匹配方法名字符串中包含Kitty字符串的方法名 或者 包含Boy字符串的方法名-->
+            <property name="patterns" >
+                <list>
+                    <value>.*Kitty.*</value>
+                    <value>.*Boy.*</value>
+                </list>
+            </property>
+        </bean>
+    
+        <!-- 配置代理工厂 -->
+        <bean id="proxy_cglib_class" class="org.springframework.aop.framework.ProxyFactoryBean">
+            <property name="target" ref="targetClass"/>
+            <!-- 指定顾问 -->
+            <property name="interceptorNames" value="adviser"/>
+            <!-- 指定是否对类进行代理 -->
+            <property name="proxyTargetClass" value="true"/>
+            <!-- 强制使用cglib -->
+            <property name="optimize" value="true"/>
+        </bean>
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration(locations = "classpath:adviser-cglib-regular.xml")
+    public class AdviserClassClient {
+        @Test
+        public void AdviserTest(){
+            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("adviser-cglib-regular.xml");
+    
+            TargetClass aClass = (TargetClass) applicationContext.getBean("proxy_cglib_class");
+            aClass.hellKitty();
+            aClass.helloBoy();
+        }
+    }
+    ```
+
+5.  结果
+
+    ![image-20210222172030772](第三章-Spring-AOP.assets/image-20210222172030772.png)
+
+
+
+## 自动代理生成器
+
+`引言:`
+
+​	通过上面我们知道了：AOP 是通过 动态代理(JDK的反射|多态运行时加载给目标方法进行增强、CGLIB的ASM字节码框架创建目标类的子类来复写目标方法) 来实现，而CGLIB强于JDK动态代理是因为比 JDK动态代理多了 ==即可以代理类也可以代理接口==增强。并且动态代理对于静态代理的【代理类成倍增加、接口改变代理类修改】问题得到了解决。
+
+​	AOP的实现由两种方式 通知和顾问。顾问是通知的加强版。加强的功能有 **指定方法** 增强。
+
+
+
+`缺陷:`
+
+​	可以说是 两者动态代理都存在的问题 ： **都是针对某一个类 [接口] 进行 [指定] 方法增强，并不能做到批量 类 [接口] 指定方法增强。**即对多个切入点进行多个或者单个 通知|顾问 切入
+
+
+
+`解决:`
+
+​	使用自动代理生成器，我们上面用到的 通知以及顾问 默认的代理类使用的是 <code>ProxyFactoryBean</code> ，为了解决上诉的问题，有提供了两个 自动代理生成器来替代 <code> ProxyFactoryBean </code>
+
+*   默认 advisor 自动代理生成器  
+*   Bean 名称自动代理生成器  
+
+
+
+`原理:`
+
+​	使用Bean后处理器，默认为所有的Bean进行方法增强，将  批量的类 | 接口  加入到 集合中，然后在Bean后处理器中进行筛选即可。
+
+
+
+`优点:`
+
+*   批量对 切入点 类 进行增强
+*   多个 切入点 类 切入 多个通知及顾问
+
+
+
+### 默认 advisor 自动代理生成器  
+
+`实现方式`
+
+​	DefaultAdvisorAutoProxyCreator 代理的生成方式是，将所有的目标对象与 Advisor 自动结合，生成代理对象。无需给生成器做任何的注入配置。**注意，只能与 Advisor 配合使用。  **
+
+
+
+`缺点:`
+
+*   会为每一个目标对象织入所有匹配的 Advisor，不具有选择性
+*   只能与 Advisor 配合使用
+*   切面只能是顾问 Advisor
+
+
+
+`流程：`
+
+1.  切入点 类
+
+    ```java
+    @Component
+    @Scope("prototype")
+    @Slf4j
+    public class Medium {
+        public void sellHouse(){
+            log.error("中介小智 卖房中 ~~~");
+        }
+    }
+    ```
+
+    ```java
+    @Component
+    @Slf4j
+    public class CarShop {
+        public void sellCar(){
+            log.error("小智 又去卖车了 ~~~");
+        }
+    }
+    ```
+
+    
+
+2.  顾问
+
+    ```java
+    @Slf4j
+    public class Check implements MethodBeforeAdvice {
+    
+        @Override
+        public void before(Method method, Object[] objects, Object o) throws Throwable {
+            log.error("卖房前 平台 进行用户真实性校验   校验通过 ~~");
+        }
+    }
+    ```
+
+    ```java
+    @Slf4j
+    public class Log implements AfterReturningAdvice {
+        @Override
+        public void afterReturning(Object o, Method method, Object[] objects, Object o1) throws Throwable {
+            log.error("小智 卖房 卖车 成功获得500万 佣金");
+        }
+    }
+    ```
+
+3.  配置信息
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+        <!--  测试 CGLIB 动态代理  切入点为类  -->
+    
+        <!-- 多个 切入点 类  -->
+        <bean id="houseClass" class="com.shuai.springaop.autoProxy.clazz.Medium"/>
+        <bean id="carClass" class="com.shuai.springaop.autoProxy.clazz.CarShop"/>
+    
+        <!-- 通知 -->
+        <bean id="checkClass" class="com.shuai.springaop.autoProxy.notice.Check"/>
+        <bean id="logClass" class="com.shuai.springaop.autoProxy.notice.Log"/>
+    
+        <!-- 顾问 1 -->
+        <bean id="adviser" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">
+            <!-- 通知 -->
+            <property name="advice" ref="checkClass"></property>
+    
+            <property name="mappedNames" value="sellHouse,sellCar"/>
+        </bean>
+        <!-- 顾问 2 -->
+        <bean id="adviser2" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">
+            <!-- 通知 -->
+            <property name="advice" ref="logClass"></property>
+    
+            <property name="mappedNames" value="sellHouse,sellCar"/>
+        </bean>
+    
+    
+        <!-- 配置自动默认代理工厂 -->
+        <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+    
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    //@ContextConfiguration(locations = "classpath:auto-proxy-adviser.xml")
+    public class Client {
+        @Test
+        public void test(){
+            ApplicationContext context = new ClassPathXmlApplicationContext("auto-proxy-adviser.xml");
+            // 注意 ： 这里使用的是切入点类ID  切入点一
+            Medium house = (Medium) context.getBean("houseClass");
+            house.sellHouse();
+    
+            // 注意 ： 这里使用的是切入点类ID  切入点二
+            CarShop car = (CarShop) context.getBean("carClass");
+            car.sellCar();
+    
+        }
+    }
+    ```
+
+5.  结果
+
+    ![image-20210223160328662](第三章-Spring-AOP.assets/image-20210223160328662.png)
+
+
+
+
+
+### Bean 名称自动代理生成器
+
+`实现方式:`
+
+​	BeanNameAutoProxyCreator 的代理生成方式是，根据bean 的 id，来为符合相应名称的类生成相应代理对象，且**切面既可以是顾问 Advisor 又可以是通知 Advice  **
+
+
+
+`优点:`
+
+*   弥补了默认自动代理生成器 的缺点  切面 既可以是通知  也可以是 顾问
+*   多个 切入类 切入多个 通知及其顾问
+
+
+
+`流程:`
+
+1.  新建配置文件
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+        <!--  测试 CGLIB 动态代理  切入点为类  -->
+    
+        <!-- 多个 切入点 类  -->
+        <bean id="houseClass" class="com.shuai.springaop.autoProxy.clazz.Medium"/>
+        <bean id="carClass" class="com.shuai.springaop.autoProxy.clazz.CarShop"/>
+    
+        <!-- 通知 -->
+        <bean id="checkClass" class="com.shuai.springaop.autoProxy.notice.Check"/>
+        <bean id="logClass" class="com.shuai.springaop.autoProxy.notice.Log"/>
+    
+        <!-- 顾问 1 -->
+        <bean id="adviser" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">
+            <!-- 通知 -->
+            <property name="advice" ref="checkClass"></property>
+    
+            <property name="mappedNames" value="sellHouse,sellCar"/>
+        </bean>
+        <!-- 顾问 2 -->
+        <bean id="adviser2" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">
+            <!-- 通知 -->
+            <property name="advice" ref="logClass"></property>
+    
+            <property name="mappedNames" value="sellHouse,sellCar"/>
+        </bean>
+    
+    
+        <!-- 配置自动默认代理工厂 -->
+        <bean class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+            <property name="beanNames" value="houseClass,carClass"/>
+            <property name="interceptorNames" value="adviser,adviser2"></property>
+        </bean>
+    
+    </beans>
+    ```
+
+2.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    //@ContextConfiguration(locations = "classpath:auto-proxy-adviser.xml")
+    public class Client {
+        @Test
+        public void test(){
+            ApplicationContext context = new ClassPathXmlApplicationContext("auto-proxy-notice.xml");
+            // 注意 ： 这里使用的是切入点类ID  切入点一
+            Medium house = (Medium) context.getBean("houseClass");
+            house.sellHouse();
+    
+            // 注意 ： 这里使用的是切入点类ID  切入点二
+            CarShop car = (CarShop) context.getBean("carClass");
+            car.sellCar();
+    
+        }
+    }
+    ```
+
+    
+
+
+
+## AspectJ
+
+`引言`
+
+​	aop作为oop的补充 ，很好的实现了Spring的业务解耦，通知和顾问作为 aop 的两种实现，在上面的使用过程中隐约感觉到为什么这两种实现都依赖于 Spring Bean，即只能对 被Spring管理的Bean做切入。并且基于xml配置进行操作。现在流行了AOP框架 有 **Spring AOP** 和 **AspectJ** 
+
+
+
+
+
+`Spring AOP 缺陷:`
+
+*   切入类 必须是 Spring Bean
+*   只能基于xml配置文件进行管理
+*   指定切入点比较拘谨(先要配置切入类，再指定切入类中方法)
+
+
+
+`AspectJ`
+
+*   切入类可以使普通类也可以是Spring Bean
+*   可以使用注解也可以使用配置文件进行配置
+*   在指定切入点时更加灵活(可以匹配任意包下任意类下任意方法)
+*   属于静态织入，它是通过修改代码来实现的，它的织入时机可以是：
+    -   Compile-time weaving：编译期织入，如类 A 使用 AspectJ 添加了一个属性，类 B 引用了它，这个场景就需要编译期的时候就进行织入，否则没法编译类 B。
+    -   Post-compile weaving：也就是已经生成了 .class 文件，或已经打成 jar 包了，这种情况我们需要增强处理的话，就要用到编译后织入。
+    -   Load-time weaving：指的是在加载类的时候进行织入，要实现这个时期的织入，有几种常见的方法。1、自定义类加载器来干这个，这个应该是最容易想到的办法，在被织入类加载到 JVM 前去对它进行加载，这样就可以在加载的时候定义行为了。2、在 JVM 启动的时候指定 AspectJ 提供的 agent：`-javaagent:xxx/xxx/aspectjweaver.jar`。
+
+
+
+`AspectJ缺陷`
+
+*   谨慎 使用 防止将通知应用于一个 已配置的通知配置类
+
+
+
+| Spring AOP                                   | AspectJ AOP                                                  |
+| :------------------------------------------- | :----------------------------------------------------------- |
+| 在Java中实现                                 | 使用Java编程语言的扩展实现                                   |
+| 不需要单独的编译过程                         | 需要AspectJ编译器（ajc），设置LTW不需要                      |
+| 使用运行时织入                               | 运行时织入不可用，支持编译时、编译后和加载时织入             |
+| 功能不强，仅支持方法级编织                   | 功能更强大，可以编织字段、方法、构造函数、静态初始值设定项及最终类/方法等 |
+| 在Spring容器管理的bean上实现                 | 可以在所有域对象上实现                                       |
+| 支持方法执行切入点                           | 支持所有切入点                                               |
+| 代理是由目标对象创建的，切面应用在这些代理上 | 在执行应用程序之前（在运行时），各方面直接在代码中进行织入   |
+| 性能不如AspectJ                              | 性能更好                                                     |
+| 简单，易于学习和应用                         | 相对于Spring AOP要复杂很多                                   |
+
+
+
+### AspectJ通知类型
+
+>   比 Spring AOP 通知类型多了一种，即 **最终通知(无论目标方法是否执行又或者程序是否有异常都会执行，类似于finally代码块)**
+
+
+
+*   前置通知（JoinPoint  ）
+*   后置通知（returning ）
+*   环绕通知（ProceedingJoinPoint  ）
+*   异常通知（throwing ）
+*   最终通知  
+
+
+
+
+
+
+
+### AspectJ 切入点表达式
+
+`语法:`
+
+```bash
+# 着重于方法  其表达式都是用来限制方法的	[] 为可选，下面五个 限制项 使用  空格  隔开
+execution ( [modifiers-pattern] 访问权限类型 ①
+			ret-type-pattern 返回值类型 ②
+    		[declaring-type-pattern] 全限定性类名 ③
+    		name-pattern(param-pattern) 方法名(参数名) ④
+   			[throws-pattern] 抛出异常类型 ⑤
+		  )  
+```
+>   当然也可以使用 以下字符：
+
+![image-20210224113817383](第三章-Spring-AOP.assets/image-20210224113817383.png)
+
+`举例:`
+
+```bash
+execution(public * *(..))      #指定 public 任意返回值 任意包下任意类 任意方法(任意参数) 任意异常      的方法进行切入
+指定切入点为：任意公共方法。
+
+execution(* set *(..))
+指定切入点为：任何一个以“set”开始的方法。
+
+execution(* com.xyz.service.*.*(..))
+指定切入点为：定义在 service 包里的任意类的任意方法。
+
+execution(* com.xyz.service..*.*(..))
+指定切入点为：定义在 service 包或者子包里的任意类的任意方法。“..”出现在类名中时，后面必须跟“*”，表示包、子包下的所有类。
+
+execution(* *.service.*.doSome())
+指定只有一级包下的 serivce 子包下所有类中的 doSome()方法为切入点
+
+execution(* *..service.*.doSome())
+指定所有包下的 serivce 子包下所有类中的 doSome()方法为切入点
+
+execution(* com.xyz.service.IAccountService.*(..))
+指定切入点为： IAccountService 接口中的任意方法。
+
+execution(* com.xyz.service.IAccountService+.*(..))
+指定切入点为： IAccountService 若为接口，则为接口中的任意方法及其所有实现类中的任意方法；若为类，则为该类及其子类中的任意方法。
+
+execution(* joke(String,int)))
+指定切入点为：所有的 joke(String,int)方法，且 joke()方法的第一个参数是 String，第二个参数是 int。如果方法中的参数类型是 java.lang 包下的类，可以直接使用类名，否则必须使用全限定类名，如 joke( java.util.List, int)。
+
+execution(* joke(String,*)))
+指定切入点为：所有的 joke()方法，该方法第一个参数为 String，第二个参数可以是任意类型，如joke(String s1,String s2)和joke(String s1,double d2)都是，但joke(String s1,double d2,Strings3)不是。
+
+execution(* joke(String,..)))
+指定切入点为：所有的 joke()方法，该方法第 一个参数为 String，后面可以有任意个参数且参数类型不限，如 joke(String s1)、 joke(String s1,String s2)和 joke(String s1,double d2,String s3)都是。
+
+execution(* joke(Object))
+指定切入点为：所有的 joke()方法，方法拥有一个参数，且参数是 Object 类型。 joke(Objectob)是，但， joke(String s)与 joke(User u)均不是。
+execution(* joke(Object+)))指定切入点为：所有的 joke()方法，方法拥有一个参数，且参数是 Object 类型或该类的子类。不仅 joke(Object ob)是， joke(String s)和 joke(User u)也是。
 ```
 
-这里, **@Before** 引用了一个 pointcut, 即 "com.xys.aspect.PointcutDefine.dataAccessOperation()" 是一个 pointcut 的名字. 如果我们在 advice 在内置 pointcut, 则可以:
 
-```java
-@Component
-@Aspect
-public class AdviseDefine {
-    // 将 pointcut 和 advice 同时定义
-    @Before("within(com.xys.service..*)")
-    public void doAccessCheck(JoinPoint joinPoint) {
-        System.out.println("*****doAccessCheck, Before advise, method: " + joinPoint.getSignature().toShortString() + " *****");
+
+### AspectJ 使用 （xml）
+
+>   <font color=ff00aa>目标：</font>
+>
+>   *   多个切面切入到多个目标类 (多个切面对应多个配置文件)
+
+1.  目标类
+
+    ```java
+    public interface SayService {
+        void sayByMouth();
+        void sayByHand();
     }
-}
-```
+    ```
 
-#### [around advice](https://dunwu.github.io/spring-tutorial/#/core/spring-aop?id=around-advice)
-
-around advice 比较特别, 它可以在一个方法的之前之前和之后添加不同的操作, 并且甚至可以决定何时, 如何, 是否调用匹配到的方法.
-
-```java
-@Component
-@Aspect
-public class AdviseDefine {
-    // 定义 advise
-    @Around("com.xys.aspect.PointcutDefine.dataAccessOperation()")
-    public Object doAroundAccessCheck(ProceedingJoinPoint pjp) throws Throwable {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        // 开始
-        Object retVal = pjp.proceed();
-        stopWatch.stop();
-        // 结束
-        System.out.println("invoke method: " + pjp.getSignature().getName() + ", elapsed time: " + stopWatch.getTotalTimeMillis());
-        return retVal;
+    ```java
+    @Slf4j
+    public class SayHelloImpl implements SayService {
+        @Override
+        public void sayByMouth() {
+            log.error("SayHelloImpl  ---   sayByMouth");
+        }
+    
+        @Override
+        public void sayByHand() {
+            log.error("SayHelloImpl  ---   sayByHand");
+        }
     }
-}
-```
+    ```
 
-around advice 和前面的 before advice 差不多, 只是我们把注解 **@Before** 改为了 **@Around** 了.
+    ```java
+    @Slf4j
+    public class SayHiImpl implements SayService {
+        @Override
+        public void sayByMouth() {
+            log.error("SayHiImpl  ---   sayByMouth");
+        }
+    
+        @Override
+        public void sayByHand() {
+            log.error("SayHiImpl  ---   sayByHand");
+        }
+    }
+    ```
+
+    ```java
+    @Slf4j
+    public class SayMyGodImpl implements SayService {
+        @Override
+        public void sayByMouth() {
+            log.error("SayMyGodImpl  ---   sayByMouth");
+        }
+    
+        @Override
+        public void sayByHand() {
+            log.error("SayMyGodImpl  ---   sayByHand");
+        }
+    }
+    
+    ```
+
+2.  切面
+
+    ```java
+    @Slf4j
+    public class Check {
+    
+        /*前置增强*/
+        public void frontCheck(JoinPoint joinpoint){
+            log.error("检查  -----   前置增强 {}",joinpoint.getTarget());
+        }
+        /*后置增强*/
+        public void afterCheck(){
+            log.error("检查  -----   后置增强");
+        }
+        /*环绕通知*/
+        public void embrace(){
+            log.error("检查  -----   环绕通知");
+        }
+        /*异常通知*/
+        public void exception(){
+            log.error("检查  -----   exception");
+        }
+        /*异常通知*/
+        public void finall(){
+            log.error("检查  -----   finall");
+        }
+    }
+    ```
+
+    ```java
+    @Slf4j
+    public class Log {
+        /*前置增强*/
+        public void frontLog(JoinPoint joinpoint){
+            log.error("日志  -----   前置增强 {} ",joinpoint.getTarget());
+        }
+        /*后置增强*/
+        public void afterLog(){
+            log.error("日志  -----   后置增强");
+        }
+        /*环绕通知*/
+        public void embrace(){
+            log.error("日志  -----   环绕通知");
+        }
+        /*异常通知*/
+        public void exception(){
+            log.error("日志  -----   exception");
+        }
+        /*异常通知*/
+        public void finall(){
+            log.error("日志  -----   finall");
+        }
+    }
+    ```
+
+3.  配置文件
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:p="http://www.springframework.org/schema/p"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+        <!--  测试 AspectJ AOP  -->
+    
+        <!-- 目标对象   -->
+        <bean id="sayHello" class="com.shuai.springaop.aspectj.service.impl.SayHelloImpl"/>
+        <bean id="sayHi" class="com.shuai.springaop.aspectj.service.impl.SayHiImpl"/>
+        <bean id="sayMyGod" class="com.shuai.springaop.aspectj.service.impl.SayMyGodImpl"/>
+    
+        <!-- 切面 -->
+        <bean id="logClass" class="com.shuai.springaop.aspectj.section.Log"/>
+        <bean id="checkClass" class="com.shuai.springaop.aspectj.section.Check"/>
+    
+        <!-- 配置AOP -->
+        <aop:config>
+            <!-- 定义切入点  ：对目标方法进行拦截   ：对impl下所有类的sayByHand方法拦截-->
+            <aop:pointcut id="anyClass-anyMethod" expression="execution(* com.shuai.springaop.aspectj.service.impl.*.sayByHand(..))"/>
+            <!-- 配置切面 ref为切面类   1-->
+            <aop:aspect ref="logClass">
+                <!-- 前置通知 -->
+                <aop:before method="frontLog(org.aspectj.lang.JoinPoint)" pointcut-ref="anyClass-anyMethod"></aop:before>
+                <!-- 后置通知 -->
+                <aop:after-returning method="afterLog" pointcut-ref="anyClass-anyMethod" returning="result"></aop:after-returning>
+                <!-- 环绕通知 -->
+                <aop:around method="embrace" pointcut-ref="anyClass-anyMethod"></aop:around>
+                <!-- 异常通知 -->
+                <aop:after-throwing method="exception" pointcut-ref="anyClass-anyMethod" throwing="e"></aop:after-throwing>
+                <!-- 最终通知 -->
+                <aop:after method="finall" pointcut-ref="anyClass-anyMethod"></aop:after>
+            </aop:aspect>
+        </aop:config>
+    
+    </beans>
+    ```
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:p="http://www.springframework.org/schema/p"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+        <!--  测试 AspectJ AOP  -->
+    
+        <!-- 目标对象   -->
+        <bean id="sayHello" class="com.shuai.springaop.aspectj.service.impl.SayHelloImpl"/>
+        <bean id="sayHi" class="com.shuai.springaop.aspectj.service.impl.SayHiImpl"/>
+        <bean id="sayMyGod" class="com.shuai.springaop.aspectj.service.impl.SayMyGodImpl"/>
+    
+        <!-- 切面 -->
+        <bean id="logClass" class="com.shuai.springaop.aspectj.section.Log"/>
+        <bean id="checkClass" class="com.shuai.springaop.aspectj.section.Check"/>
+    
+    
+        <!-- 配置AOP -->
+        <aop:config>
+            <!-- 定义切入点  ：对目标方法进行拦截   ：对impl下所有类的sayByHand方法拦截-->
+            <aop:pointcut id="anyClass-anyMethod" expression="execution(* com.shuai.springaop.aspectj.service.impl.*.sayByHand(..))"/>
+            <!-- 配置切面 2-->
+            <aop:aspect ref="checkClass">
+                <!-- 前置通知 -->
+                <aop:before method="frontCheck(org.aspectj.lang.JoinPoint)" pointcut-ref="anyClass-anyMethod"></aop:before>
+                <!-- 后置通知 -->
+                <aop:after-returning method="afterCheck" pointcut-ref="anyClass-anyMethod"></aop:after-returning>
+                <!-- 环绕通知 -->
+                <aop:around method="embrace" pointcut-ref="anyClass-anyMethod"></aop:around>
+                <!-- 异常通知 -->
+                <aop:after-throwing method="exception" pointcut-ref="anyClass-anyMethod"></aop:after-throwing>
+                <!-- 最终通知 -->
+                <aop:after method="finall" pointcut-ref="anyClass-anyMethod"></aop:after>
+            </aop:aspect>
+        </aop:config>
+    
+    
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    public class Client {
+        @Test
+        public void test(){
+            ApplicationContext context = new ClassPathXmlApplicationContext("aspectj.xml");
+            //目标类id    这里必须是接口
+            SayService sayHello = (SayService) context.getBean("sayHello");
+            sayHello.sayByHand();
+            sayHello.sayByMouth();
+    
+            SayService sayHi = (SayService) context.getBean("sayHi");
+            sayHi.sayByHand();
+            sayHi.sayByMouth();
+    
+            SayService sayMyGod = (SayService) context.getBean("sayMyGod");
+            sayMyGod.sayByHand();
+            sayMyGod.sayByMouth();
+    
+            ApplicationContext context1 = new ClassPathXmlApplicationContext("aspectj2.xml");
+            //目标类id    这里必须是接口
+            SayService sayHello1 = (SayService) context1.getBean("sayHello");
+            sayHello1.sayByHand();
+            sayHello1.sayByMouth();
+    
+            SayService sayHi1 = (SayService) context1.getBean("sayHi");
+            sayHi1.sayByHand();
+            sayHi1.sayByMouth();
+    
+            SayService sayMyGod1 = (SayService) context1.getBean("sayMyGod");
+            sayMyGod1.sayByHand();
+            sayMyGod1.sayByMouth();
+        }
+    }
+    ```
+
+    
+
+
+
+
+
+### AspectJ使用（注解）
+
+>   <font color=ff00aa>目标：</font>
+>
+>   *   多个切面切入到多个目标类 (多个切面对应多个配置文件)
+>   *   普通类切入切面
+
+
+
+`流程:` 
+
+1.  定义 目标类 
+
+    *   接口及其实现类
+
+        >   如上
+
+    *   普通类
+
+        >   不是spring bean 类，不交由spring管理，用来测试AspectJ是否能够给普通类进行切入 切面
+
+        ```java
+        @Slf4j
+        public class Normal {
+            public void Method(){
+                log.error("我只是一个普通类的普通方法");
+            }
+        }
+        ```
+
+        
+
+2.  定义 切面  
+
+    `@Aspect`     定义类为 切面
+
+    `@Before`
+
+    `@AfterReturning`
+
+    `@Around`
+
+    `@AfterThrowing`
+
+    `@After`
+
+    ```java
+    @Slf4j
+    @Aspect   //切面   作用于 接口(非spring bean)
+    public class Check {
+    
+        /*前置增强  --  此方法作用于 impl下所有类的sayByHand方法*/
+        @Before("execution(* com.shuai.springaop.aspectjAnnotation.clazz.*.Method(..))")
+        public void frontCheck(){
+            log.error("检查  -----   前置增强 {}");
+        }
+        /*后置增强*/
+        @AfterReturning("execution(* com.shuai.springaop.aspectjAnnotation.service.impl.*.sayByHand(..))")
+        public void afterCheck(){
+            log.error("检查  -----   后置增强");
+        }
+    //    /*环绕通知*/
+    //    @Around("execution(* com.shuai.springaop.aspectjAnnotation.service.impl.*.sayByHand(..))")
+    //    public void embrace(){
+    //        log.error("检查  -----   环绕通知");
+    //    }
+        /*异常通知*/
+        @AfterThrowing("execution(* com.shuai.springaop.aspectjAnnotation.service.impl.*.sayByHand(..))")
+        public void exception(){
+            log.error("检查  -----   exception");
+        }
+        /*异常通知*/
+        @After("execution(* com.shuai.springaop.aspectjAnnotation.service.impl.*.sayByHand(..))")
+        public void finall(){
+            log.error("检查  -----   finall");
+        }
+    }
+    ```
+
+    ```java
+    @Slf4j
+    @Aspect    //切面   作用于 普通类(非spring bean)
+    public class Log {
+        /*前置增强  --  此方法作用于 impl下所有类的sayByHand方法*/
+        @Before("execution(* com.shuai.springaop.aspectjAnnotation.clazz.*.Method(..))")
+        public void frontLog(){
+            log.error("日志  -----   前置增强 {}");
+        }
+        /*后置增强*/
+        @AfterReturning("execution(* com.shuai.springaop.aspectjAnnotation.clazz.*.Method(..))")
+        public void afterLog(){
+            log.error("日志  -----   后置增强");
+        }
+    //    /*环绕通知*/
+    //    @Around("execution(* com.shuai.springaop.aspectjAnnotation.clazz.*.Method(..))")
+    //    public void embrace(){
+    //        log.error("日志  -----   环绕通知");
+    //    }
+        /*异常通知*/
+        @AfterThrowing("execution(* com.shuai.springaop.aspectjAnnotation.clazz.*.Method(..))")
+        public void exception(){
+            log.error("日志  -----   exception");
+        }
+        /*异常通知*/
+        @After("execution(* com.shuai.springaop.aspectjAnnotation.clazz.*.Method(..))")
+        public void finall(){
+            log.error("日志  -----   finall");
+        }
+    }
+    ```
+
+    
+
+3.  将目标对象和切面类 注入
+
+    ```xml
+    # 多个目标类对应一个切面
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:p="http://www.springframework.org/schema/p"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+        <!--  测试 AspectJ AOP  注解  -->
+        <!--  todo 多个目标类对应一个切面  -->
+        <!-- 包扫描 -->
+        <context:component-scan base-package="com.shuai.springaop.aspectjAnnotation"/>
+    
+        <!-- 配置自动代理 -->
+        <aop:aspectj-autoproxy/>
+        <!-- 目标对象   -->
+        <bean id="sayHello" class="com.shuai.springaop.aspectjAnnotation.service.impl.SayHelloImpl"/>
+        <bean id="sayHi" class="com.shuai.springaop.aspectjAnnotation.service.impl.SayHiImpl"/>
+        <bean id="sayMyGod" class="com.shuai.springaop.aspectjAnnotation.service.impl.SayMyGodImpl"/>
+    
+    
+        <!-- 切面 -->
+        <bean id="checkClass" class="com.shuai.springaop.aspectjAnnotation.section.Check"/>
+    
+    </beans>
+    ```
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:p="http://www.springframework.org/schema/p"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+        <!--  测试 AspectJ AOP  注解  -->
+        <!-- 包扫描 -->
+        <!--  todo 多个切面对应一个目标方法  -->
+        <context:component-scan base-package="com.shuai.springaop.aspectjAnnotation"/>
+    
+        <!-- 配置自动代理 -->
+        <aop:aspectj-autoproxy/>
+    
+        <bean id="normal" class="com.shuai.springaop.aspectjAnnotation.clazz.Normal"/>
+    
+        <!-- 切面 -->
+        <bean id="logClass" class="com.shuai.springaop.aspectjAnnotation.section.Log"/>
+        <bean id="checkClass" class="com.shuai.springaop.aspectjAnnotation.section.Check"/>
+    
+    </beans>
+    ```
+
+4.  测试
+
+    ```java
+    @RunWith(SpringRunner.class)
+    public class Client {
+        @Test
+        public void test(){
+            //todo 多个目标类对应一个切面
+            ApplicationContext context = new ClassPathXmlApplicationContext("aspectj2-annotation.xml");
+            //目标类id    这里必须是接口
+            SayService sayHello = (SayService) context.getBean("sayHello");
+            sayHello.sayByHand();
+            sayHello.sayByMouth();
+    
+    
+            SayService sayHi = (SayService) context.getBean("sayHi");
+            sayHi.sayByHand();
+            sayHi.sayByMouth();
+    
+    
+            SayService sayMyGod = (SayService) context.getBean("sayMyGod");
+            sayMyGod.sayByHand();
+            sayMyGod.sayByMouth();
+    
+    
+            //todo 多个切面对应一个目标方法
+            ApplicationContext context1 = new ClassPathXmlApplicationContext("aspectj-annotation.xml");
+    
+            //目标类id
+            Normal normal = (Normal) context1.getBean("normal");
+            normal.Method();
+        }
+    }
+    ```
+
+5.  结果
+
+    ![image-20210225180550533](第三章-Spring-AOP.assets/image-20210225180550533.png)
+
+    ![image-20210225180601778](第三章-Spring-AOP.assets/image-20210225180601778.png)

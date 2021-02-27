@@ -1,4 +1,4 @@
-## IOC能干什么
+##  IOC能干什么
 
 * 松耦合
 	* 以前我们都是在类中实例其他依赖类从而获取其对象进行调用。有了IOC容器帮我们管理对象后，我们将和业务代码不相干的通用的服务类或者工具类交由IOC容器管理。实现`依赖倒置原则`和`松耦合`.
@@ -65,6 +65,22 @@
 
 	* `AnnotationConfigApplicationContext`:实现基于Java的配置类加载Spring的应用上下文.避免使用application.xml进行配置
 
+	    ```java
+	    @Configuration
+	    @ComponentScan(basePackageClasses = {ServiceImpl.class, ServiceImpl2.class})
+	    public class AnnotationScanConfig {
+	    }
+	    
+	    @Test
+	    public void test(){
+	        AnnotationConfigApplicationContext ann = new AnnotationConfigApplicationContext(AnnotationScanConfig.class);
+	        ServiceImpl serviceImpl = (ServiceImpl) ann.getBean("serviceImpl");
+	        serviceImpl.sayHello("hellloooo");
+	    }
+	    ```
+	
+	    
+	
 	* `XmlWebApplicationContext`:在Web应用中使用Spring容器
 
 > * ApplicationContext容器会在初始化容器时将bean所有对象一次性装配好，执行效率高，占内存
@@ -442,7 +458,7 @@
 
         ```java
         @Configuration
-        @ComponentScan(basePackageClasses = {Cause.class,Medium.class})
+        @ComponentScan(basePackageClasses = {ServiceImpl.class, ServiceImpl2.class})
         public class AnnotationScanConfig {
         }
         ## 如果为配置类进行扫描则在测试时候 @ContextConfiguration(classes=AnnotationScanConfig.class)
@@ -496,7 +512,7 @@
     }
     ```
 
-4.  定义测试类 -- 在spring boot环境下进行测试
+4.  定义测试类 -- 在spring环境下进行测试
 
     ```java
     @RunWith(SpringRunner.class)//让测试运行于spring测试环境
@@ -721,7 +737,7 @@ class B {
 
 ### Bean后处理器
 
->   Bean 后处理器是一种特殊的 Bean，容器中所有的 Bean 在初始化时，均会自动执行该类的两个方法。  
+>   Bean 后处理器是一种特殊的 Bean，**容器中所有的 Bean** 在初始化时，均会自动执行该类的两个方法。  
 
 Spring后处理器，是Spring定义的**功能接口Interface**，包括两种：
 
@@ -757,13 +773,18 @@ Spring后处理器，是Spring定义的**功能接口Interface**，包括两种�
     <bean class="com.shuai.springioc.processor.MyBeanPostProcessor"></bean>
     ```
 
-    
+
+
+
+`用途:`
+
+​	可以为容器中的  所有Bean  进行方法增强。比如 三层架构中所有的 dao层 进行日志、sql查询语句输出。比如 自动代理生成器  为指定的Bean(通过beanName参数进行过滤)进行代理、方法增强等等
 
 
 
 ### Bean生命始末
 
->   可以为 ==每个Bean== 定制初始化后的生命行为，也可以为 ==每个Bean== 定制销毁前的生命行为。  
+>   可以为 **每个Bean** 定制初始化后的生命行为，也可以为 **每个Bean** 定制销毁前的生命行为。  
 
 
 
