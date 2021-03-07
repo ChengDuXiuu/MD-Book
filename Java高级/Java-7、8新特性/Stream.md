@@ -170,7 +170,7 @@ public void filter(){
 ### 3、映射 map
 
 ```java
-/* 映射 */
+/* 映射 -- 处理自身元素*/
 @Test
 public void map(){
     // 1. 生成流
@@ -180,6 +180,17 @@ public void map(){
     // 3. 数据处理 -- 遍历
     stream1.forEach(ele -> System.out.println(ele));
 }
+```
+
+```java
+/* 映射 -- 转换为其他元素*/
+List<CategoryBrandRelationEntity> brandList = categoryBrandRelationService.getBrandListByCategoryId(categoryId);
+List<BrandRespVo> brandRespVos = brandList.stream().map(ele -> {
+  BrandRespVo brandRespVo = new BrandRespVo();
+  BeanUtils.copyProperties(ele, brandRespVo);
+  return brandRespVo;
+}).collect(Collectors.toList());
+return CommonResult.ok(brandRespVos);
 ```
 
 

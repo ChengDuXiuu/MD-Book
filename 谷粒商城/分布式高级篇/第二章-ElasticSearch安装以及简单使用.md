@@ -7,6 +7,8 @@
 	docker pull kibana:7.4.2
 	```
 
+	
+
 2. ElasticSearch数据卷
 
 	```bash
@@ -19,11 +21,15 @@
 	docker run --privileged=true -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -v /root/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml -v /root/elasticsearch/data:/usr/share/elasticsearch/data -v /root/elasticsearch/plugins:/usr/share/elasticsearch/plugins -d --name es elasticsearch:7.4.2
 	```
 
+	
+
 3. 修改宿主机es目录权限
 
 	```bash
 	chmod -R 777 /root/elasticsearch/
 	```
+
+	
 
 4. 访问 宿主机IP:9200
 
@@ -46,11 +52,14 @@
 	docker run --name kibana -e ELASTICSEARCH_HOSTS=http://192.168.124.3:9200 -p 5601:5601 -d kibana:7.4.2
 	```
 
+	
+
 7. 访问 192.168.124.3:5610
 
 	![image-20210127232614502](第二章-ElasticSearch安装以及简单使用.assets/image-20210127232614502.png)
 
-	
+
+​	
 
 
 
@@ -59,9 +68,14 @@
 ### 1、_cat
 
 * GET /_cat/nodes  ：查看所有节点
+
 * GET /_cat/health  ：查看es健康状况 
+
 * GET /_cat/master ：查看主节点
-* GET /_cat/indices ：查看所有索引(数据库)![image-20210127205845415](第二章-ElasticSearch安装以及简单使用.assets/image-20210127205845415.png)![image-20210127205930107](第二章-ElasticSearch安装以及简单使用.assets/image-20210127205930107.png)![image-20210127211916628](第二章-ElasticSearch安装以及简单使用.assets/image-20210127211916628.png)
+
+* GET /_cat/indices ：查看所有索引(数据库
+
+	)![image-20210127205845415](第二章-ElasticSearch安装以及简单使用.assets/image-20210127205845415.png)![image-20210127205930107](第二章-ElasticSearch安装以及简单使用.assets/image-20210127205930107.png)![image-20210127211916628](第二章-ElasticSearch安装以及简单使用.assets/image-20210127211916628.png)
 
 
 

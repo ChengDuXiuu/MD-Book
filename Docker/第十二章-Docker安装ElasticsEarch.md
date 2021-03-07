@@ -19,25 +19,28 @@
 	docker run --privileged=true -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -v /root/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml -v /root/elasticsearch/data:/usr/share/elasticsearch/data -v /root/elasticsearch/plugins:/usr/share/elasticsearch/plugins -d --name es elasticsearch
 	```
 
+	
+
 3. 修改宿主机es目录权限
 
 	```bash
 	chmod -R 777 /root/elasticsearch/
 	```
 
-	
+
+
 
 4. 访问 宿主机IP:9200
 
-	![image-20210127203308661](第十二章-Docker安装ElasticsEarch.assets/image-20210127203308661.png)
+![image-20210127203308661](第十二章-Docker安装ElasticsEarch.assets/image-20210127203308661.png)
 
 
 
 5. 使用postman测试ElasticSearch
 
-	![image-20210127204219324](第十二章-Docker安装ElasticsEarch.assets/image-20210127204219324.png)
+![image-20210127204219324](第十二章-Docker安装ElasticsEarch.assets/image-20210127204219324.png)
 
-	![image-20210127204247710](第十二章-Docker安装ElasticsEarch.assets/image-20210127204247710.png)
+![image-20210127204247710](第十二章-Docker安装ElasticsEarch.assets/image-20210127204247710.png)
 
 
 
@@ -48,8 +51,11 @@
 	docker run --name kibana -e ELASTICSEARCH_HOSTS=http://192.168.124.3:9200 -p 5601:5601 -d kibana
 	```
 
+	
+
 7. 访问 192.168.124.3:5610
 
-	![image-20210127205023811](第十二章-Docker安装ElasticsEarch.assets/image-20210127205023811.png)
+![image-20210127205023811](第十二章-Docker安装ElasticsEarch.assets/image-20210127205023811.png)
 
-	
+
+​	
