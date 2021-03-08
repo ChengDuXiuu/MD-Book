@@ -331,11 +331,6 @@
 	    <encoding>UTF-8</encoding>
 	    <annotationProcessorPaths>
 	      <path>
-	        <groupId>org.mapstruct</groupId>
-	        <artifactId>mapstruct-processor</artifactId>
-	        <version>1.3.0.Final</version>
-	      </path>
-	      <path>
 	        <groupId>org.projectlombok</groupId>
 	        <artifactId>lombok</artifactId>
 	        <version>1.18.18</version>
@@ -344,5 +339,46 @@
 	  </configuration>
 	</plugin>
 	```
-
 	
+6. <font color=ff00aa>所有的坑 大概率是因为 之前1.3.0版本埋得坑，故而使用了曲线救国 jar包，导致能用但是坑很多。。</font>
+
+    ```java
+    ###################################### 此种引入方式会有很多坑。###################################
+    ## todo 1  ： 引入曲线救国包    
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct-processor</artifactId>
+      <version>1.3.0.Final</version>
+    </dependency>
+    <!-- 解决springboot 项目使用 lombok 插件后，添加 mapstruct  插件，maven 编译时 mapstruct 插件不起作用 -->
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct-jdk8</artifactId>
+      <version>1.3.0.Final</version>
+    </dependency>
+    ## todo 2   ：  编译时加入包    
+    <annotationProcessorPaths>
+          <path>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>1.3.0.Final</version>
+          </path>
+          <path>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.8</version>
+        </path>
+    </annotationProcessorPaths>         
+    
+    ########################################### 正确做法   ############################################
+    ## todo 1  ：直接引入1.4.1版本
+    <!-- https://mvnrepository.com/artifact/org.mapstruct/mapstruct -->
+    <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct</artifactId>
+        <version>1.4.1.Final</version>
+    </dependency>    
+    ## todo 2   ：  去掉上诉步骤一和步骤二    
+    ```
+
+    

@@ -1022,7 +1022,7 @@ public class ClientCglibInterface {
 
 *   切入类可以使普通类也可以是Spring Bean
 *   可以使用注解也可以使用配置文件进行配置
-*   在指定切入点时更加灵活(可以匹配任意包下任意类下任意方法)
+*   在指定切入点时更加灵活(可以匹配任意包下任意类下任意方法) **完全得益于 AspectJ 的 切入点表达式，操作粒度更细化、功能更加强大**
 *   属于静态织入，它是通过修改代码来实现的，它的织入时机可以是：
     -   Compile-time weaving：编译期织入，如类 A 使用 AspectJ 添加了一个属性，类 B 引用了它，这个场景就需要编译期的时候就进行织入，否则没法编译类 B。
     -   Post-compile weaving：也就是已经生成了 .class 文件，或已经打成 jar 包了，这种情况我们需要增强处理的话，就要用到编译后织入。
@@ -1606,3 +1606,30 @@ execution(* joke(Object+)))指定切入点为：所有的 joke()方法，方法�
     ![image-20210225180550533](第三章-Spring-AOP.assets/image-20210225180550533.png)
 
     ![image-20210225180601778](第三章-Spring-AOP.assets/image-20210225180601778.png)
+
+
+
+
+
+## 总结
+
+*   <font color=ff00aa>Spring 默认为jdk动态代理，其目标对象为接口实现类，但是必须使用接口来申明【就和jdk实现原理一样】。如下</font>
+
+    ```java
+    <!-- 配置 service -->
+    <bean id="stockProcessServiceImpl" class="com.shuai.springdao.affairAnnotation.service.impl.StockProcessServiceImpl">
+        <property name="accountDao" ref="accountDao"/>
+        <property name="stockDao" ref="stockDao"/>
+    </bean>
+        
+    @Autowired
+    private IStockProcessService iStockProcessService;    
+    ```
+
+
+
+>   技术进阶 ：jdk动态代理 - ->cglib动态代理      
+>
+>   ​				 通知 - ->顾问 - ->自动代理生成器 - ->AspectJ	
+>
+>   使用最优解 ：AspectJ  +  cglib动态代理

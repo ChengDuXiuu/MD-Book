@@ -916,6 +916,8 @@ spring boot JdbcTemplate，使用参考 ： https://www.iocoder.cn/Spring-Boot/J
 
 ## 事务操作流程 - 注解方式
 
+>   配置文件方式始终存在一个问题，即一个目标类就需要一个  事务代理
+
 通过@Transactional 注解方式，也可将事务织入到相应方法中。而使用注解方式，只需在配置文件中加入一个 tx 标签，以告诉 spring 使用注解来完成事务的织入。该标签只需指定一个属性，事务管理器。
 
 ```java
@@ -934,3 +936,265 @@ spring boot JdbcTemplate，使用参考 ： https://www.iocoder.cn/Spring-Boot/J
 *   noRollbackFor： 指定不需要回滚的异常类。类型为 Class[]，默认值为空数组。当然，若只有一个异常类时，可以不使用数组。
 *   noRollbackForClassName： 指定不需要回滚的异常类类名。类型为 String[]，默认值为空数组。当然，若只有一个异常类时，可以不使用数组。
     需要注意的是， @Transactional 若用在方法上，只能用于 public 方法上。对于其他非 public方法，如果加上了注解@Transactional，虽然 Spring 不会报错，但不会将指定事务织入到该方法中。因为 Spring 会忽略掉所有非 public 方法上的@Transaction 注解。若@Transaction 注解在类上，则表示该类上所有的方法均将在执行时织入事务  
+
+
+
+1.  表 、实体类 、dao层接口不变 
+
+2.  dao层实现类  【实现类直接使用 JdbcTemplate去操作数据库，不需要继承JdbcDaoSupport然后在获取其属性JdbcTemplate】
+
+    ```java
+    @Repository
+    public class AccountDaoImpl implements IAccountDao {
+        @Resource
+        private JdbcTemplate jdbcTemplate;
+    
+        @Override
+        public void insertAccount(Account account) {
+            String sql = "insert into account(name,balance) values(?,?)";
+    //        this.getJdbcTemplate().update(sql,account.getName(),account.getBalance());
+            jdbcTemplate.update(sql,account.getName(),account.getBalance());
+        }
+    
+        @Override
+        public Account selectAccount(String name) {
+            String sql = "select * from account where name =?";
+    //        Account account = this.getJdbcTemplate().queryForObject(sql, Account.class,name);
+            Account account = jdbcTemplate.queryForObject(sql, Account.class,name);
+            return account;
+        }
+    
+        @Override
+        public void updateAccount(Account account) {
+            String sql = "update account set balance=? where name =?";
+    //        this.getJdbcTemplate().update(sql,account.getBalance(),account.getName());
+            jdbcTemplate.update(sql,account.getBalance(),account.getName());
+        }
+    }
+    ```
+
+    ```java
+    @Repository
+    public class StockDaoImpl implements IStockDao {
+        @Resource
+        private JdbcTemplate jdbcTemplate;
+    
+        @Override
+        public void insertStock(Stock stock) {
+            String sql = "insert into stock(name,count) values(?,?)";
+    //        this.getJdbcTemplate().update(sql,stock.getName(),stock.getCount());
+            jdbcTemplate.update(sql,stock.getName(),stock.getCount());
+        }
+    
+        @Override
+        public Stock selectStock(String name) {
+            String sql = "select * from stock where name =?";
+    //        Stock stock = this.getJdbcTemplate().queryForObject(sql, Stock.class,name);
+            Stock stock = jdbcTemplate.queryForObject(sql, Stock.class,name);
+            return stock;
+        }
+    
+        @Override
+        public void updateStock(Stock stock) {
+            String sql = "update stock set count=? where name =?";
+    //        this.getJdbcTemplate().update(sql,stock.getCount(),stock.getName());
+            jdbcTemplate.update(sql,stock.getCount(),stock.getName());
+        }
+    }
+    ```
+
+3.  service层接口不变
+
+4.  service层实现类修改，全部注解 【事务注解、DI注解】
+
+    ```java
+    @Service
+    public class StockProcessServiceImpl implements IStockProcessService {
+    
+        @Autowired
+        private IAccountDao accountDao;
+        @Autowired
+        private IStockDao stockDao;
+    
+        public void setAccountDao(IAccountDao accountDao) {
+            this.accountDao = accountDao;
+        }
+    
+        public void setStockDao(IStockDao stockDao) {
+            this.stockDao = stockDao;
+        }
+    
+        @Override
+        @Transactional(propagation = Propagation.REQUIRED)
+        public void openAccout(Account account) {
+            accountDao.insertAccount(account);
+        }
+    
+        @Override
+        @Transactional(propagation = Propagation.REQUIRED)
+        public void openStock(Stock stock) {
+            stockDao.insertStock(stock);
+        }
+    
+        @Override
+        @Transactional(propagation = Propagation.REQUIRED,rollbackFor = StockException.class)
+        public void buyStock(String aname, String sname, int money, int count) throws StockException {
+            accountDao.updateAccount(new Account(aname,money));
+            /* 测试事务 */
+            if (true){
+                throw new StockException("自定义异常抛出！！");
+            }
+    
+            stockDao.updateStock(new Stock(sname,count));
+        }
+    
+        @Override
+        @Transactional(propagation = Propagation.SUPPORTS,readOnly = true)
+        public Account findAccount(String name) {
+            return accountDao.selectAccount(name);
+        }
+    
+        @Override
+        public Stock findStock(String name) {
+            return stockDao.selectStock(name);
+        }
+    }
+    ```
+
+5.  配置文件 修改了【jdbc模板注入  DI 自动装配  cglib动态代理   事务注解管理器】
+
+    ```java
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:tx="http://www.springframework.org/schema/tx"
+           xsi:schemaLocation="
+                http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans.xsd
+                http://www.springframework.org/schema/context
+                http://www.springframework.org/schema/context/spring-context.xsd
+                http://www.springframework.org/schema/tx
+                http://www.springframework.org/schema/tx/spring-tx.xsd
+                http://www.springframework.org/schema/aop
+                http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+            <!--  注册属性文件 -->
+            <context:property-placeholder location="classpath:/dao/jdbc.properties"/>
+    
+            <!-- 使用值：配置c3p0 -->
+            <bean id="c3p0DataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+                <property name="driverClass" value="${jdbc.driver}"/>
+                <property name="jdbcUrl" value="${jdbc.url}"/>
+                <property name="user" value="${jdbc.user}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </bean>
+    
+            <!-- 配置jdbc模板 -->
+            <bean id="myjdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+            <!--  基于注解的DI  -->
+            <context:component-scan base-package="com.shuai.springdao.affairAnnotation"/>
+    
+            <!-- 配置 事务管理器 -->
+            <!--事务管理工厂
+            TransactionProxyFactoryBean，该类需要初始化如下一些属性：
+            （1） transactionManager：事务管理器
+            （2） target：目标对象，即 Service 实现类对象
+            （3） transactionAttributes：事务属性设置
+            对于 XML 配置代理方式实现事务管理时， 受查异常的回滚方式，
+            程序员可以通过以下 方式进行设置：通过“-异常”方式，可使发生指定的异常时事务回滚；通过“+异常”方式， 可使发生指定的异常时事务提交。-->
+            <bean id="myTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+            <!-- 使用cglib代理 -->
+            <aop:aspectj-autoproxy proxy-target-class="true"/>
+    
+            <!--  开启事务注解 并指定事务管理器 -->
+            <tx:annotation-driven transaction-manager="myTransactionManager"/>
+    
+            <!-- 给目标对象 添加切面 【事务代理】 -->
+    <!--        <bean id="myServiceProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">-->
+    <!--            <property name="transactionManager" ref="myTransactionManager"/>-->
+    <!--            <property name="target" ref="stockProcessServiceImpl"/>-->
+    <!--            <property name="transactionAttributes">-->
+    <!--                <props>-->
+    <!--                    <prop key="open*">PROPAGATION_REQUIRED</prop>-->
+    <!--                    <prop key="find*">PROPAGATION_SUPPORTS,readOnly</prop>-->
+    <!--                    <prop key="buyStock">PROPAGATION_REQUIRED,-StockException</prop>-->
+    <!--                </props>-->
+    <!--            </property>-->
+    <!--        </bean>-->
+    
+    </beans>
+    ```
+
+6.  测试
+
+    ```java
+    @Slf4j
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration("classpath:dao/affair-accotation.xml")
+    public class Client {
+    
+        //默认jdk动态代理使用接口
+    //    @Autowired
+    //    private IStockProcessService stockProcessService;
+        //cglib动态代理使用实现类
+        @Autowired
+        private StockProcessServiceImpl stockProcessService;
+    
+        @Test
+        public void noAffair(){
+            stockProcessService.openAccout(new Account("account1",11));
+            stockProcessService.openStock(new Stock("stock1",11));
+        }
+        /*
+         * @Author No1.shuai
+         * @Description //TODO 事务 测试
+         * @Date 16:07 16:07
+         **/
+        @Test
+        public void yesAffair(){
+            Account account = new Account("account1",10);
+            Stock stock= new Stock("stock1",12);
+    
+            try {
+                stockProcessService.buyStock(account.getName(),stock.getName(),account.getBalance(),stock.getCount());
+            } catch (StockException e) {
+                e.printStackTrace();
+            }
+    
+        }
+    }
+    ```
+
+
+
+## 事务操作流程 - AspectJ-xml
+
+>   得益于 AspectJ 的 切入点表达式，操作粒度更细化、功能更加强大
+
+1.  在上面代码基础上操作
+
+2.  修改配置文件
+
+    *    注释掉下面的配置 ：使用aspecgj 配置
+
+        ```xml
+        <!--  开启事务注解 并指定事务管理器 -->
+        <tx:annotation-driven transaction-manager="myTransactionManager"/>
+        ```
+
+    *   将事务作为通知切入
+
+        ![image-20210308151339319](第三章-Spring-Dao.assets/image-20210308151339319.png)
+
+    *   配置顾问
+
+        ![image-20210308151410718](第三章-Spring-Dao.assets/image-20210308151410718.png)
+
+    

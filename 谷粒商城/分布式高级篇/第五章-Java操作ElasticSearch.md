@@ -40,7 +40,7 @@
 	```xml
 	<properties>
 	  <spring-cloud.version>Hoxton.SR9</spring-cloud.version>
-	  <!-- 修改 spring boot 自动依赖版本 和你安装的版本保持一致-->
+	  <!-- 修改 spring boot 自动依赖版本 和你安装的版本保持一致  如果Maven依赖版本冲突不好解决，直接使用7.6.2也可以-->
 	  <elasticsearch.version>7.4.2</elasticsearch.version>
 	</properties>
 	
@@ -100,13 +100,32 @@
 
 4. 编写配置类 注入 esClient  类似于MongoDBClient和RedisClient
 
-	```java
-	// package com.shuai.gulimall.search.config;
-	
-	@Configuration
-	public class GulimallElasticsearchConfig {
-	}
-	```
+  ```java
+  // package com.shuai.gulimall.search.config;
+  
+  @Configuration
+  public class GulimallElasticsearchConfig {
+          /* 请求配置项 */
+      public static final RequestOptions COMMON_OPTIONS;
+  
+      static {
+          RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
+  //        builder.addHeader("Authorization", "Bearer " + TOKEN);
+  //        builder.setHttpAsyncResponseConsumerFactory(
+  //                new HttpAsyncResponseConsumerFactory
+  //                        .HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
+          COMMON_OPTIONS = builder.build();
+      }
+      @Bean
+      public RestHighLevelClient esRestClient(){
+          RestHighLevelClient client = new RestHighLevelClient(
+                  RestClient.builder(
+  //                        new HttpHost("localhost", 9200, "http"),  只有一个es 没有集群，以后有集群可以配置多个es
+                          new HttpHost("172.18.2.79", 9200, "http")));
+          return client;
+      }
+  }
+  ```
 
 5. 加入到Necos服务注册中心
 
@@ -234,6 +253,34 @@
 
 	`测试:`
 
+	```java
+/*
+	     * TODO <p> 操作es --  新增数据 </p>
+	     * @author mac
+	     * @date 2021/3/7 11:08 下午
+	     * @return void
+	     */
+	@Test
+	public void esIndexTest() throws IOException {
+	    //todo 1. 创建 索引
+	    IndexRequest indexRequest = new IndexRequest("users");
+	    //todo 2. 创建数据ID
+	    indexRequest.id("1");
+	    //todo 3. 构造数据内容
+	    User user = new User("测试 -- es新增数据","男",45);
+	    String jsonString = JSON.toJSONString(user);
+	    indexRequest.source(jsonString, XContentType.JSON);
 	
-
+	    //todo 4. 执行操作  第二个参数为 请求头配置项
+	    IndexResponse index = esClient.index(indexRequest, GulimallElasticsearchConfig.COMMON_OPTIONS);
+	
+	    //todo 5.获取相应数据
+	    System.out.println(index);
+	}
+	```
+	
+	![image-20210308213005276](第五章-Java操作ElasticSearch.assets/image-20210308213005276.png)
+	
+	
+	
 	
