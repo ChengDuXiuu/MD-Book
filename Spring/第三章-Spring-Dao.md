@@ -4,9 +4,9 @@
 
 
 
-## JdbcTemplate
+## JdbcTemplate、Mybatis、SpringBoot JPA、Mybatis-Plus对比
 
-这里就不多介绍了，我不太喜欢这个框架。使用参考 ： https://www.iocoder.cn/Spring-Boot/JdbcTemplate/?github
+spring boot JdbcTemplate，使用参考 ： https://www.iocoder.cn/Spring-Boot/JdbcTemplate/?github
 
 `mybatis流程`
 
@@ -53,10 +53,320 @@
 
 *   都差不多，都需要写SQL，jdbcTemplate封装了xml文件
 *   jdbcTemplate 属于spring 生态，高度利用了spring IOC
+*   jdbcTemplate 操作太原始，
 
 
 
 
+
+## JdbcTemplate使用流程
+
+>   JDBC 模板对象是多例的。
+
+1.  导入包
+
+    ```xml
+    <properties>
+        <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <spring.version>4.2.1.RELEASE</spring.version>
+        <cglib.version>3.3.0</cglib.version>
+        <aspecgj.version>1.9.4</aspecgj.version>
+        <c3p0.version>0.9.5.2</c3p0.version>
+        <jdbc.version>8.0.21</jdbc.version>
+    </properties>
+    
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring IOC 依赖 -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-expression</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aop</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <!--  @Resource依赖 -->
+            <dependency>
+                <groupId>javax.annotation</groupId>
+                <artifactId>jsr250-api</artifactId>
+                <version>${annotation.version}</version>
+            </dependency>
+            <!-- 日志 -->
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <!-- 测试 -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <!--<scope>test</scope>-->
+            </dependency>
+            <!-- LOMBOK -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <!-- 动态代理cglib -->
+            <dependency>
+                <groupId>cglib</groupId>
+                <artifactId>cglib</artifactId>
+                <version>${cglib.version}</version>
+            </dependency>
+    
+            <!-- AspecgJ -->
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+                <version>${aspecgj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aspects</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+    
+            <!-- 数据源 -->
+            <dependency>
+                <groupId>com.mchange</groupId>
+                <artifactId>c3p0</artifactId>
+                <version>${c3p0.version}</version>
+            </dependency>
+    
+            <!-- template -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-jdbc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <!-- spring 事务 -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-tx</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+    
+            <!-- jdbc  -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${jdbc.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ```
+
+2.  实体类
+
+    ```java
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @RequiredArgsConstructor
+    public class User {
+        private int id;
+        @NotNull
+        private String name;
+        @NotNull
+        private Integer age;
+    }
+    ```
+
+3.  创表
+
+    ```sql
+    CREATE TABLE `dao_user` (
+      `id` int(36) NOT NULL AUTO_INCREMENT,
+      `name` varchar(255) DEFAULT NULL,
+      `age` int(4) DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    ```
+
+4.  servcie 层 
+
+    ```java
+    public interface IUserServer {
+        void insert(User user);
+        void delete(User user);
+        void update(User user);
+        List<Map<String, Object>> list();
+    }
+    public class UserServerImpl implements IUserServer {
+    
+        @Autowired
+        private IUserDao iUserDao;
+    
+        @Override
+        public void insert(User user) {
+            iUserDao.insert(user);
+        }
+    
+        @Override
+        public void delete(User user) {
+            iUserDao.delete(user);
+        }
+    
+        @Override
+        public void update(User user) {
+            iUserDao.update(user);
+        }
+    
+        @Override
+        public List<Map<String, Object>> list() {
+            return iUserDao.list();
+        }
+    }
+    ```
+
+5.  dao 层 : 使用模板对象查询 省掉了xml文件
+
+    ```java
+    public interface IUserDao {
+        void insert(User user);
+        void delete(User user);
+        void update(User user);
+        List<Map<String, Object>> list();
+    }
+    public class UserDaoImpl extends JdbcDaoSupport implements IUserDao {
+        @Override
+        public void insert(User user) {
+            String sql = "insert into dao_user(name,age) values(?,?)";
+            this.getJdbcTemplate().update(sql,user.getName(),user.getAge());
+        }
+    
+        @Override
+        public void delete(User user) {
+            String sql = "delete from dao_user where id =?";
+            this.getJdbcTemplate().update(sql,user.getId());
+        }
+    
+        @Override
+        public void update(User user) {
+        }
+    
+        @Override
+        public List<Map<String, Object>> list() {
+            String sql = "select * from dao_user";
+            List<Map<String, Object>> maps = this.getJdbcTemplate().queryForList(sql);
+            return maps;
+        }
+    }
+    ```
+
+6.  数据库配置信息  及  配置文件
+
+    ```properties
+    # src/main/resources/dao/jdbc.properties
+    jdbc.driver=com.mysql.cj.jdbc.Driver
+    jdbc.url=jdbc:mysql://127.0.0.1:3306/spring-dao?useSSL=false&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    jdbc.user=root
+    jdbc.password=1314
+    ```
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.1.xsd"
+    >
+    
+    
+            <!--  注册属性文件 -->
+            <context:property-placeholder location="classpath:/dao/jdbc.properties"/>
+    
+            <!-- 使用值：配置c3p0 -->
+            <bean id="c3p0DataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+                <property name="driverClass" value="${jdbc.driver}"/>
+                <property name="jdbcUrl" value="${jdbc.url}"/>
+                <property name="user" value="${jdbc.user}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </bean>
+    
+            <!-- 配置jdbc模板 -->
+            <bean id="myjdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+    
+            <bean id="userServerImpl" class="com.shuai.springdao.jdbctemplate.service.impl.UserServerImpl"></bean>
+    
+    
+            <!-- 配置dao类 ：继承JdbcTemplate 使用其提供的方法 -->
+            <bean id="userDaoImpl" class="com.shuai.springdao.jdbctemplate.dao.impl.UserDaoImpl">
+                <property name="jdbcTemplate" ref="myjdbcTemplate"></property>
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+    </beans>
+    ```
+
+7.  测试
+
+    ```java
+    @Slf4j
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration(locations = "classpath:dao/spring-dao.xml")
+    public class Client {
+        @Autowired
+        UserServerImpl userServer;
+    
+        @Test
+        public void test(){
+            ApplicationContext context = new ClassPathXmlApplicationContext("dao/spring-dao.xml");
+    
+    
+             //检测数据源配置是否成功
+            DataSource ds = (DataSource) context.getBean("c3p0DataSource");
+            System.out.println(ds);
+            //检测JdbcTemplate配置是否成功
+            JdbcTemplate jt = (JdbcTemplate) context.getBean("myjdbcTemplate");
+            System.out.println(jt);
+    
+            //测试服务类运行
+    //        IUserDao userServer = (IUserDao) context.getBean("userDaoImpl");
+    //        System.out.println(userServer.list());
+            log.error(userServer.list().toString());
+    
+        }
+    }
+    
+    ```
+
+    
 
 
 
@@ -287,3 +597,340 @@
 **事务默认超时时限**
 
 ​	常量 TIMEOUT_DEFAULT 定义了事务底层默认的超时时限，及不支持事务超时时限设置的 none 值。注意，事务的超时时限起作用的条件比较多，且超时的时间计算点较复杂。所以，该值一般就使用默认值即可  
+
+
+
+## 事务操作流程 - xml方式
+
+>   银行中的A用户购买了B的股票
+
+1.  创表
+
+    ```sql
+    CREATE TABLE `account` (
+      `id` int(11) NOT NULL AUTO_INCREMENT,
+      `name` varchar(255) DEFAULT NULL,
+      `balance` varchar(255) DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    ```
+
+    ```sql
+    CREATE TABLE `stock` (
+      `id` int(11) NOT NULL AUTO_INCREMENT,
+      `name` varchar(255) DEFAULT NULL,
+      `count` int(11) DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    ```
+
+2.  实体类
+
+    ```java
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @RequiredArgsConstructor
+    public class Account {
+        private int id;
+        @NotNull
+        private String name;
+        @NotNull
+        private int balance;
+    }
+    ```
+
+    ```java
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @RequiredArgsConstructor
+    public class Stock {
+        private int id;
+        @NotNull
+        private String name;
+        @NotNull
+        private int count;
+    }
+    ```
+
+    ```java
+    public class StockException extends Exception{
+        public StockException(String message) {
+            super(message);
+        }
+        public StockException(){
+            super();
+        }
+    }
+    ```
+
+3.  dao 层
+
+    ```java
+    public interface IStockDao {
+        void insertStock(Stock stock);
+        Stock selectStock(String name);
+        void updateStock(Stock stock);
+    }
+    ```
+
+    ```java
+    public interface IAccountDao {
+        void insertAccount(Account account);
+        Account selectAccount(String name);
+        void updateAccount(Account account);
+    }
+    ```
+
+    ```java
+    public class StockDaoImpl extends JdbcDaoSupport implements IStockDao {
+        @Override
+        public void insertStock(Stock stock) {
+            String sql = "insert into stock(name,count) values(?,?)";
+            this.getJdbcTemplate().update(sql,stock.getName(),stock.getCount());
+        }
+    
+        @Override
+        public Stock selectStock(String name) {
+            String sql = "select * from stock where name =?";
+            Stock stock = this.getJdbcTemplate().queryForObject(sql, Stock.class,name);
+            return stock;
+        }
+    
+        @Override
+        public void updateStock(Stock stock) {
+            String sql = "update stock set count=? where name =?";
+            this.getJdbcTemplate().update(sql,stock.getCount(),stock.getName());
+        }
+    }
+    ```
+
+    ```java
+    public class AccountDaoImpl extends JdbcDaoSupport implements IAccountDao {
+        @Override
+        public void insertAccount(Account account) {
+            String sql = "insert into account(name,balance) values(?,?)";
+            this.getJdbcTemplate().update(sql,account.getName(),account.getBalance());
+        }
+    
+        @Override
+        public Account selectAccount(String name) {
+            String sql = "select * from account where name =?";
+            Account account = this.getJdbcTemplate().queryForObject(sql, Account.class,name);
+            return account;
+        }
+    
+        @Override
+        public void updateAccount(Account account) {
+            String sql = "update account set balance=? where name =?";
+            this.getJdbcTemplate().update(sql,account.getBalance(),account.getName());
+        }
+    }
+    ```
+
+4.  service 层 【定义接口】
+
+    ```java
+    /*
+     * @Author No1.shuai
+     * @Description //TODO 定义一个事务 buyStock【操作多个数据的集合】  事务建议放在server层，方便业务控制，否则放在dao层会配置很多的事务传播行为
+     *                银行中的A用户购买了B的股票
+     * @Date 14:22 14:22
+     **/
+    public interface IStockProcessService {
+        void openAccout(Account account);
+        void openStock(Stock stock);
+        void buyStock(String aname,String sname,int money,int count) throws StockException;
+        Account findAccount(String name);
+        Stock findStock(String name);
+    }
+    ```
+
+    ```java
+    public class StockProcessServiceImpl implements IStockProcessService {
+        private IAccountDao accountDao;
+        private IStockDao stockDao;
+    
+        public void setAccountDao(IAccountDao accountDao) {
+            this.accountDao = accountDao;
+        }
+    
+        public void setStockDao(IStockDao stockDao) {
+            this.stockDao = stockDao;
+        }
+    
+        @Override
+        public void openAccout(Account account) {
+            accountDao.insertAccount(account);
+        }
+    
+        @Override
+        public void openStock(Stock stock) {
+            stockDao.insertStock(stock);
+        }
+    
+        @Override
+        public void buyStock(String aname, String sname, int money, int count) throws StockException {
+            accountDao.updateAccount(new Account(aname,money));
+            /* 测试事务 */
+            if (true){
+                throw new StockException("自定义异常抛出！！");
+            }
+    
+            stockDao.updateStock(new Stock(sname,count));
+        }
+    
+        @Override
+        public Account findAccount(String name) {
+            return accountDao.selectAccount(name);
+        }
+    
+        @Override
+        public Stock findStock(String name) {
+            return stockDao.selectStock(name);
+        }
+    }
+    ```
+
+5.  定义配置文件
+
+    ```xml
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:tx="http://www.springframework.org/schema/tx"
+           xsi:schemaLocation="
+                http://www.springframework.org/schema/beans
+                http://www.springframework.org/schema/beans/spring-beans.xsd
+                http://www.springframework.org/schema/context
+                http://www.springframework.org/schema/context/spring-context.xsd
+                http://www.springframework.org/schema/tx
+                http://www.springframework.org/schema/tx/spring-tx.xsd
+                http://www.springframework.org/schema/aop
+                http://www.springframework.org/schema/aop/spring-aop.xsd">
+    
+            <!--  注册属性文件 -->
+            <context:property-placeholder location="classpath:/dao/jdbc.properties"/>
+    
+            <!-- 使用值：配置c3p0 -->
+            <bean id="c3p0DataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+                <property name="driverClass" value="${jdbc.driver}"/>
+                <property name="jdbcUrl" value="${jdbc.url}"/>
+                <property name="user" value="${jdbc.user}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </bean>
+    
+            <!-- 配置jdbc模板 -->
+            <bean id="myjdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+    
+            <!-- 配置 dao -->
+            <bean id="accountDao" class="com.shuai.springdao.affair.dao.impl.AccountDaoImpl">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+            <bean id="stockDao" class="com.shuai.springdao.affair.dao.impl.StockDaoImpl">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+    
+            <!-- 配置 service -->
+            <bean id="stockProcessServiceImpl" class="com.shuai.springdao.affair.service.impl.StockProcessServiceImpl">
+                <property name="accountDao" ref="accountDao"/>
+                <property name="stockDao" ref="stockDao"/>
+            </bean>
+    
+            <!-- 配置 事务管理器 -->
+            <!--事务管理工厂
+            TransactionProxyFactoryBean，该类需要初始化如下一些属性：
+            （1） transactionManager：事务管理器
+            （2） target：目标对象，即 Service 实现类对象
+            （3） transactionAttributes：事务属性设置
+            对于 XML 配置代理方式实现事务管理时， 受查异常的回滚方式，
+            程序员可以通过以下 方式进行设置：通过“-异常”方式，可使发生指定的异常时事务回滚；通过“+异常”方式， 可使发生指定的异常时事务提交。-->
+            <bean id="myTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+                <property name="dataSource" ref="c3p0DataSource"/>
+            </bean>
+    
+            <!-- 给目标对象 添加切面 【事务代理】 -->
+            <bean id="myServiceProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+                <property name="transactionManager" ref="myTransactionManager"/>
+                <property name="target" ref="stockProcessServiceImpl"/>
+                <property name="transactionAttributes">
+                    <props>
+                        <prop key="open*">PROPAGATION_REQUIRED</prop>
+                        <prop key="find*">PROPAGATION_SUPPORTS,readOnly</prop>
+                        <prop key="buyStock">PROPAGATION_REQUIRED,-StockException</prop>
+                    </props>
+                </property>
+            </bean>
+    
+    </beans>
+    ```
+
+6.  测试
+
+    ```java
+    
+    @Slf4j
+    @RunWith(SpringRunner.class)
+    @ContextConfiguration("classpath:dao/affair.xml")
+    public class Client {
+    
+        private IStockProcessService iStockProcessService;
+    
+        @Before
+        public void init(){
+            ApplicationContext context = new ClassPathXmlApplicationContext("dao/affair.xml");
+            iStockProcessService = (IStockProcessService) context.getBean("myServiceProxy");
+        }
+        @Test
+        public void noAffair(){
+            iStockProcessService.openAccout(new Account("account1",11));
+            iStockProcessService.openStock(new Stock("stock1",11));
+        }
+        /*
+         * @Author No1.shuai
+         * @Description //TODO 事务 测试
+         * @Date 15:57 15:57
+         **/
+        @Test
+        public void yesAffair(){
+            Account account = new Account("account1",10);
+            Stock stock= new Stock("stock1",12);
+            try {
+                iStockProcessService.buyStock(account.getName(),stock.getName(),account.getBalance(),stock.getCount());
+            } catch (StockException e) {
+                log.error(e.getLocalizedMessage());
+            }
+        }
+    }
+    ```
+
+
+
+
+
+## 事务操作流程 - 注解方式
+
+通过@Transactional 注解方式，也可将事务织入到相应方法中。而使用注解方式，只需在配置文件中加入一个 tx 标签，以告诉 spring 使用注解来完成事务的织入。该标签只需指定一个属性，事务管理器。
+
+```java
+ <!--  开启事务注解 并指定事务管理器 -->
+<tx:annotation-driven transaction-manager="myTransactionManager"/>
+```
+
+@Transactional 的所有可选属性如下所示：
+
+*   propagation： 用于设置事务传播属性。该属性类型为 Propagation 枚举，默认值为Propagation.REQUIRED。
+*   isolation： 用于设置事务的隔离级别。该属性类型为 Isolation 枚举 ，默认值为Isolation.DEFAULT。
+*   readOnly： 用于设置该方法对数据库的操作是否是只读的。该属性为 boolean，默认值为 false。
+*   timeout： 用于设置本操作与数据库连接的超时时限。单位为秒，类型为 int，默认值为-1，即没有时限。
+*   rollbackFor： 指定需要回滚的异常类。类型为 Class[]，默认值为空数组。当然，若只有一个异常类时，可以不使用数组。
+*   rollbackForClassName： 指定需要回滚的异常类类名。类型为 String[]，默认值为空数组。当然，若只有一个异常类时，可以不使用数组。
+*   noRollbackFor： 指定不需要回滚的异常类。类型为 Class[]，默认值为空数组。当然，若只有一个异常类时，可以不使用数组。
+*   noRollbackForClassName： 指定不需要回滚的异常类类名。类型为 String[]，默认值为空数组。当然，若只有一个异常类时，可以不使用数组。
+    需要注意的是， @Transactional 若用在方法上，只能用于 public 方法上。对于其他非 public方法，如果加上了注解@Transactional，虽然 Spring 不会报错，但不会将指定事务织入到该方法中。因为 Spring 会忽略掉所有非 public 方法上的@Transaction 注解。若@Transaction 注解在类上，则表示该类上所有的方法均将在执行时织入事务  

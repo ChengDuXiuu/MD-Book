@@ -117,6 +117,36 @@ Lombok 的注解非常多，我们逐个来看看。
 
 `@AllArgsConstructor`、`@RequiredArgsConstructor`、`@NoArgsConstructor` 注解，添加在**类**上，为类自动生成对应参数的构造方法。
 
+`@RequiredArgsConstructor` 搭配 ` @NonNull` 以及 final 来使用，如下代码：
+
+```java
+@RequiredArgsConstructor
+public class User {
+    private final String gender;
+    @NonNull
+    private String username;
+    private String password;
+}
+
+// 编译后：
+public class User {
+    private final String gender;
+    @NonNull
+    private String username;
+    private String password;
+
+    public User(String gender, @NonNull String username) {
+        if (username == null) {
+            throw new NullPointerException("username is marked @NonNull but is null");
+        } else {
+            this.gender = gender;
+            this.username = username;
+        }
+    }
+}
+
+```
+
 [`@Data`](https://github.com/rzwitserloot/lombok/blob/master/src/core/lombok/Data.java) 注解，添加在**类**上，是 5 个 Lombok 注解的组合。
 
 - 为所有属性，添加 `@Getter`、`@ToString`、`@EqualsAndHashCode` 注解的效果
