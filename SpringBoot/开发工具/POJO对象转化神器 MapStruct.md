@@ -378,7 +378,7 @@
         <artifactId>mapstruct</artifactId>
         <version>1.4.1.Final</version>
     </dependency>    
-    ## todo 2   ：  去掉上诉步骤一和步骤二    
+    ## todo 2   ：  步骤二中也必须要有并且mapstruct-processor的版本也要为1.4.1.Final
     ```
 
-    
+    ![image-20210313160429729](POJO对象转化神器 MapStruct.assets/image-20210313160429729.png)
