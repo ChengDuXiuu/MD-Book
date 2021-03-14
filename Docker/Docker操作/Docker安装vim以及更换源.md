@@ -36,10 +36,18 @@
 * 替换软件源:最好先备份:see_no_evil:
 
 	```bash
-	echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free\ndeb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free\ndeb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free\ndeb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free" > /etc/apt/sources.list
+	echo -e "deb http://mirrors.163.com/debian/ buster main non-free contrib
+	deb http://mirrors.163.com/debian/ buster-updates main non-free contrib
+	deb http://mirrors.163.com/debian/ buster-backports main non-free contrib
+	deb http://mirrors.163.com/debian-security/ buster/updates main non-free contrib
+	
+	deb-src http://mirrors.163.com/debian/ buster main non-free contrib
+	deb-src http://mirrors.163.com/debian/ buster-updates main non-free contrib
+	deb-src http://mirrors.163.com/debian/ buster-backports main non-free contrib
+	deb-src http://mirrors.163.com/debian-security/ buster/updates main non-free contrib" > /etc/apt/sources.list
 	```
 
-
+> 上面源地址失效后。可以搜索  debian buster 163源 更换成最新的163源即可
 
 ## 安装vim
 
