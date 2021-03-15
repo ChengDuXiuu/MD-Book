@@ -204,7 +204,7 @@
 
 
 
-* 数据存储
+* 索引存储|更新
 
 	`方式:`
 
@@ -283,4 +283,62 @@
 	
 	
 	
-	
+* 数据查询 DSL
+
+    ![image-20210130181750689](第三章-ElasticSearch进阶使用.assets/image-20210130181750689.png)
+
+    >   上图中有四个根操作 ①query  ②名称为ageAgg的terms  ③ 名称为ageAvg的 avg 。API中为每个根操作都有工具类
+
+```java
+ 
+/*
+     * @Author No1.shuai
+     * @Description //TODO 查询操作
+     * @Date 19:45 19:45
+     **/
+@Test
+public void esSearch() throws IOException {
+    // todo 1.构建检索请求
+    SearchRequest request =new SearchRequest();
+    // todo 2.指定索引
+    request.indices("bank");
+    // todo 3.指定DSL
+    SearchSourceBuilder builder = new SearchSourceBuilder();
+    // query根操作 工具类-- QueryBuilders   执行操作  match  对应的方法为 matchQuery
+    builder.query(QueryBuilders.matchQuery("address","mill"));
+    // 按照年龄的值进行分组|聚合
+    //aggs根操作  工具类 AggregationBuilders   执行操作  terms  对应的方法 terms
+    TermsAggregationBuilder aggAge = AggregationBuilders.terms("aggAge").field("age").size(10);
+    builder.aggregation(aggAge);
+    // 求平均值
+    //aggs根操作  工具类AggregationBuilders   执行从挨揍   avg   对应的方法avg
+    AvgAggregationBuilder balanceAvg = AggregationBuilders.avg("balanceAvg").field("age");
+    builder.aggregation(balanceAvg);
+    System.out.println("检索条件："+builder.toString());
+    request.source(builder);
+    // todo 4.解析结果
+    SearchResponse response = esClient.search(request, GulimallElasticsearchConfig.COMMON_OPTIONS);
+    System.out.println("全部的数据："+response.toString());
+    // 解析结果数据  --  源数据
+    SearchHits hits = response.getHits();// 最外层hit
+    SearchHit[] searchHits = hits.getHits();// 命中hit数据
+    for (SearchHit hit : searchHits) {
+        //数据封装  可以利用在线转换工具
+        String sourceAsString = hit.getSourceAsString();
+        System.out.println(sourceAsString);
+        Account account = JSON.parseObject(sourceAsString, Account.class);
+        System.out.println(account.toString());
+    }
+    // 解析结果数据  --  分析数据【即聚合、平均值】
+    Aggregations aggregations = response.getAggregations();
+    Terms aggAge1 = aggregations.get("aggAge");
+    aggAge1.getBuckets().forEach(x ->{
+        String keyAsString = x.getKeyAsString();
+        System.out.println("年龄："+keyAsString);
+    });
+    Avg balanceAvg1 = aggregations.get("balanceAvg");
+    System.out.println(balanceAvg1.getValue());
+}
+```
+
+>   返回的数据  以及  检索条件和上图一致
