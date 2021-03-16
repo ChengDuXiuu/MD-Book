@@ -129,8 +129,6 @@ redis-cli
 	docker run --privileged=true --name redis -v /root/redis/data:/data -v /root/redis:/usr/local/etc/redis -p 6379:6379 -d redis redis-serve /usr/local/etc/redis/redis.conf  
 ```
 
-### 
-
 
 
 ## 使用SpringBoot连接Docker-Redis
