@@ -358,3 +358,137 @@ public void deleCache(){
 默认无加锁，即你一个服务，任然会有多次读取数据库存在。
 
 猜想 可以使用 Spring Cache + Redisson 解决
+
+
+
+
+
+
+
+## 序列化反序列化坑
+
+`背景`
+
+service实现类中 返回值为  **List<PcapIf> **  其为 org.jnetpcap包下实体类，该类绝了，<font color=ff00aa>只有get方法，没有set方法。也没有 implement Serialization </font>
+
+
+
+### 序列化实现类
+
+*   OxmSerializer
+
+    >   以xml格式存储（**但还是String类型~**），解析起来也比较复杂，效率也比较低。因此几乎没有人再使用此方式了
+
+*   JdkSerializationRedisSerializer
+
+    >   RestTemplate类**默认的**序列化方式。
+    >
+    >   *   存储对象必须实现java.io.Serializable
+    >   *   二进制看不懂
+    >   *   占用大量内存空间
+
+*   StringRedisSerializer
+
+    >   是StringRedisTemplate默认的序列化方式，key和value都会采用此方式进行序列化，是被推荐使用的，对开发者友好，轻量级，效率也比较高。
+
+*   GenericToStringSerializer
+
+    >   需要调用者给传一个对象到字符串互转的Converter（相当于转换为字符串的操作交给转换器去做），个人觉得使用起来其比较麻烦，还不如直接用字符串呢。所以不太推荐使用
+
+*   Jackson2JsonRedisSerializer
+
+    >   把一个对象以Json的形式存储，效率高且对调用者友好
+    >
+    >   *   需要传入存储类型参数，不能全局使用，使用一次则设置一次。
+    >   *   不需要在存储数据中心额外添加类型信息(包名)即可反序列化成功
+    >   *   序列化 泛型的List数据 List<UserToken> 反序列化报错  java.util.LinkedHashMap cannot be cast to com.com.baisq.model.UserToken。解决办法为：序列化存储时，转成JSON字符串  JSON.toJSONString(userToken)
+
+*   GenericJackson2JsonRedisSerializer
+
+    >   基本和上面的Jackson2JsonRedisSerializer功能差不多，使用方式也差不多。
+    >
+    >   *   序列化后数据额外添加了类型信息(包名)
+    >   *   序列化 泛型的List数据 List<UserToken> 反序列化正常，因为它指定了包名。
+    >   *   序列化类必须包含 set 和 get。否则报错Unrecognized field “xxx”   网上推荐GenericFastJsonRedisSerializer ，但是我这仍然不行。
+
+
+
+`总结`
+
+*   弄没辙了，最后修改了 service实现类的返回值。
+
+*   key 使用 StringRedisSerializer  value 使用 GenericJackson2JsonRedisSerializer
+
+
+
+`配置如下`
+
+```java
+@Configuration
+public class RedisConfig {
+    @Autowired
+    private RedisConnectionFactory factory;
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.setConnectionFactory(factory);
+        
+        return redisTemplate;
+    }
+}   
+```
+
+
+
+```java
+/**
+ * @program: renren-fast
+ * @description: Spring-Cache 序列化存储配置--不使用jdk序列化
+ * @author: NO.Shuai
+ * @create: 2021-04-01 17:52
+ */
+@Configuration
+@EnableCaching
+@EnableConfigurationProperties(CacheProperties.class)
+public class CacheConfig {
+    @Bean
+    RedisCacheConfiguration redisCacheConfiguration(CacheProperties cacheProperties) {
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig();
+
+        config = config.serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()));
+        config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+//        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+//        ObjectMapper om = new ObjectMapper();
+//        om.activateDefaultTyping(om.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL);
+//        jackson2JsonRedisSerializer.setObjectMapper(om);
+
+//        config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer));
+        // 将配置文件中的所有配置重新配置，使其生效
+        CacheProperties.Redis redisProperties = cacheProperties.getRedis();
+        if (redisProperties.getTimeToLive() != null) {
+            config = config.entryTtl(redisProperties.getTimeToLive());
+        }
+
+        if (redisProperties.getKeyPrefix() != null) {
+            config = config.prefixKeysWith(redisProperties.getKeyPrefix());
+        }
+
+        if (!redisProperties.isCacheNullValues()) {
+            config = config.disableCachingNullValues();
+        }
+
+        if (!redisProperties.isUseKeyPrefix()) {
+            config = config.disableKeyPrefix();
+        }
+
+        return config;
+    }
+}    
+```
+
