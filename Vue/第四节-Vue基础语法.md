@@ -1222,3 +1222,481 @@ filters: {
     color: #999;
     padding: 2px;">效果图 </div>
 </center>  
+
+
+### 表单验证
+
+```vue
+<el-form :model="ruleForm" :rules="rules" ref="ruleForm" @keyup.enter.native="dataFormSubmit()"
+         label-width="80px">
+    <el-form-item label="资源类型" prop="resourceTypeRule">
+        <el-select v-model="ruleForm.resourceTypeRule" @change="resourceTypeChange()" placeholder="请选择资源类型">
+            <el-option
+                       v-for="item in resourceType.data"
+                       :key="item.value"
+                       :label="item.label"
+                       :value="item.value">
+            </el-option>
+        </el-select>
+    </el-form-item>
+    <el-form-item label="显示名称" prop="nameRule">
+        <el-input v-model="ruleForm.nameRule" placeholder="显示名称"></el-input>
+    </el-form-item>
+    <el-form-item label="排序" prop="sortRule">
+        <el-input v-model="ruleForm.sortRule" placeholder="排序"></el-input>
+    </el-form-item>
+    <el-form-item v-if="ascription.visible" label="所属子网" prop="ascriptionRule">
+        <!--查询所有以及分类-->
+        <el-select v-model="ruleForm.ascriptionRule" ref="ascriptionSelect" placeholder="请选择所属子网">
+            <el-option
+                       v-for="item in ascription.data"
+                       :key="item.id"
+                       :label="item.name"
+                       :value="item.name">
+            </el-option>
+        </el-select>
+    </el-form-item>
+</el-form>
+<script>
+data() {
+      let checkAscription = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请选择所属子网'))
+        }
+        return callback()
+      }
+      return {
+        visible: false,
+        ruleForm: {
+          id: 0,
+          nameRule: '',
+          sortRule: '',
+          resourceTypeRule:'',
+          ascriptionRule:''
+        },
+        rules: {
+          resourceTypeRule: [
+            {required: true, message: '请选择区域类型', trigger: 'change'}
+          ],
+          nameRule: [
+            {required: true, message: '显示名称不能为空', trigger: 'blur'}
+          ],
+          sortRule: [
+            {required: true, message: '排序不能为空', trigger: 'blur'}
+          ],
+          ascriptionRule: [
+            {validator: checkAscription, trigger: 'change'}
+          ]
+        }
+    },
+</script>
+```
+
+```bash
+<el-form :model="form" :rules="rules"> 
+  <el-form-item prop="input">
+      <el-input v-model="form.input"></el-input>
+  </el-form-item>
+</el-form>
+如上面的代码
+
+1、标签绑定内容必须通过 :model='form' 绑定，不能使用v-model="form"。（:model是v-bind:model的缩写，本身是属性绑定；v-model是用于表单标签元素相关的数据的双向绑定，v-model 和 :model 的区别）
+
+2、中 prop 后面的字符必须和 标签中需要验证的值的参数名一样
+
+3、需要验证的值必须是包含在 标签 :model 绑定的值里面，比如 form.input 是 form 的参数
+```
+
+## 常用vue表单校验
+
+```javascript
+//是否合法IP地址
+export function validateIP(rule, value, callback) {
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    const reg = /^(d{1,2}|1dd|2[0-4]d|25[0-5]).(d{1,2}|1dd|2[0-4]d|25[0-5]).(d{1,2}|1dd|2[0-4]d|25[0-5]).(d{1,2}|1dd|2[0-4]d|25[0-5])$/;
+    if ((!reg.test(value)) && value != '') {
+      callback(new Error('请输入正确的IP地址'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//是否手机号码或者固话
+export function validatePhoneTwo(rule, value, callback) {
+  const reg = /^((0d{2,3}-d{7,8})|(1[34578]d{9}))$/;
+  ;
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    if ((!reg.test(value)) && value != '') {
+      callback(new Error('请输入正确的电话号码或者固话号码'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//是否固话
+export function validateTelphone(rule, value, callback) {
+  const reg = /0d{2,3}-d{7,8}/;
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    if ((!reg.test(value)) && value != '') {
+      callback(new Error('请输入正确的固定电话)'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//是否手机号码
+export function validatePhone(rule, value, callback) {
+  const reg = /^[1][3-9][0-9]{9}$/;
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    if ((!reg.test(value)) && value != '') {
+      callback(new Error('请输入正确的电话号码'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//是否身份证号码
+export function validateIdNo(rule, value, callback) {
+  const reg = /(^d{15}$)|(^d{18}$)|(^d{17}(d|X|x)$)/;
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    if ((!reg.test(value)) && value != '') {
+      callback(new Error('请输入正确的身份证号码'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//是否邮箱
+export function validateEMail(rule, value, callback) {
+  const reg = /^([a-zA-Z0-9]+[-_.]?)+@[a-zA-Z0-9]+.[a-z]+$/;
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    if (!reg.test(value)) {
+      callback(new Error('请输入正确的邮箱'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//验证内容是否包含英文数字以及下划线
+export function isPassword(rule, value, callback) {
+  const reg = /^[_a-zA-Z0-9]+$/;
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else {
+    if (!reg.test(value)) {
+      callback(new Error('仅由英文字母，数字以及下划线组成'));
+    } else {
+      callback();
+    }
+  }
+}
+
+//自动检验数值的范围
+export function checkMax20000(rule, value, callback) {
+  if (value == '' || value == undefined || value == null) {
+    callback();
+  } else if (!Number(value)) {
+    callback(new Error('请输入[1,20000]之间的数字'));
+  } else if (value < 1 || value > 20000) {
+    callback(new Error('请输入[1,20000]之间的数字'));
+  } else {
+    callback();
+  }
+}
+
+//验证数字输入框最大数值
+export function checkMaxVal(rule, value, callback) {
+  if (value < 0 || value > 最大值) {
+    callback(new Error('请输入[0,最大值]之间的数字'));
+  } else {
+    callback();
+  }
+}
+
+//验证是否1-99之间
+export function isOneToNinetyNine(rule, value, callback) {
+  if (!value) {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入正整数'));
+    } else {
+      const re = /^[1-9][0-9]{0,1}$/;
+      const rsCheck = re.test(value);
+      if (!rsCheck) {
+        callback(new Error('请输入正整数，值为【1,99】'));
+      } else {
+        callback();
+      }
+    }
+  }, 0);
+}
+
+//验证是否整数
+export function isInteger(rule, value, callback) {
+  if (!value) {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入正整数'));
+    } else {
+      const re = /^[0-9]*[1-9][0-9]*$/;
+      const rsCheck = re.test(value);
+      if (!rsCheck) {
+        callback(new Error('请输入正整数'));
+      } else {
+        callback();
+      }
+    }
+  }, 0);
+}
+
+//验证是否整数,非必填
+export function isIntegerNotMust(rule, value, callback) {
+  if (!value) {
+    callback();
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入正整数'));
+    } else {
+      const re = /^[0-9]*[1-9][0-9]*$/;
+      const rsCheck = re.test(value);
+      if (!rsCheck) {
+        callback(new Error('请输入正整数'));
+      } else {
+        callback();
+      }
+    }
+  }, 1000);
+}
+
+// 验证是否是[0-1]的小数
+export function isDecimal(rule, value, callback) {
+  if (!value) {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入[0,1]之间的数字'));
+    } else {
+      if (value < 0 || value > 1) {
+        callback(new Error('请输入[0,1]之间的数字'));
+      } else {
+        callback();
+      }
+    }
+  }, 100);
+}
+
+// 验证是否是[1-10]的小数,即不可以等于0
+export function isBtnOneToTen(rule, value, callback) {
+  if (typeof value == 'undefined') {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入正整数，值为[1,10]'));
+    } else {
+      if (!(value == '1' || value == '2' || value == '3' || value == '4' || value == '5' || value == '6' || value == '7' || value == '8' || value == '9' || value == '10')) {
+        callback(new Error('请输入正整数，值为[1,10]'));
+      } else {
+        callback();
+      }
+    }
+  }, 100);
+}
+
+//验证是否是[1-100]的小数,即不可以等于0
+export function isBtnOneToHundred(rule, value, callback) {
+  if (!value) {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入整数，值为[1,100]'));
+    } else {
+      if (value < 1 || value > 100) {
+        callback(new Error('请输入整数，值为[1,100]'));
+      } else {
+        callback();
+      }
+    }
+  }, 100);
+}
+
+//验证是否是[0-100]的小数
+export function isBtnZeroToHundred(rule, value, callback) {
+  if (!value) {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (!Number(value)) {
+      callback(new Error('请输入[1,100]之间的数字'));
+    } else {
+      if (value < 0 || value > 100) {
+        callback(new Error('请输入[1,100]之间的数字'));
+      } else {
+        callback();
+      }
+    }
+  }, 100);
+}
+
+//验证端口是否在[0,65535]之间
+export function isPort(rule, value, callback) {
+  if (!value) {
+    return callback(new Error('输入不可以为空'));
+  }
+  setTimeout(() => {
+    if (value == '' || typeof (value) == undefined) {
+      callback(new Error('请输入端口值'));
+    } else {
+      const re = /^([0-9]|[1-9]d|[1-9]d{2}|[1-9]d{3}|[1-5]d{4}|6[0-4]d{3}|65[0-4]d{2}|655[0-2]d|6553[0-5])$/;
+      const rsCheck = re.test(value);
+      if (!rsCheck) {
+        callback(new Error('请输入在[0-65535]之间的端口值'));
+      } else {
+        callback();
+      }
+    }
+  }, 100);
+}
+
+
+//验证端口是否在[0,65535]之间，非必填,isMust表示是否必填
+export function isCheckPort(rule, value, callback) {
+  if (!value) {
+    callback();
+  }
+  setTimeout(() => {
+      if (value == '' || typeof (value) == undefined) {
+        callback(new Error('请输入端口值'));
+      } else {
+        const re = /^([0-9]|[1-9]d|[1-9]d{2}|[1-9]d{3}|[1-5]d{4}|6[0-4]d{3}|65[0-4]d{2}|655[0-2]d|6553[0-5])$/;
+        const rsCheck = re.test(value);
+          if (!rsCheck) {
+            callback(new Error('请输入在[0-65535]之间的端口值'));
+          } else {
+            callback();
+          }
+      }
+    }, 100);
+}
+
+//小写字母
+export function validateLowerCase(val) {
+  const reg = /^[a-z]+$/;
+  return reg.test(val);
+}
+
+//两位小数验证
+const validateValidity = (rule, value, callback) => {
+  if (!/(^[1-9]([0-9]+)?(.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9].[0-9]([0-9])?$)/.test(value)) {
+    callback(new Error('最多两位小数！！！'));
+  } else {
+    callback();
+  }
+};
+
+//是否大写字母
+export function validateUpperCase(val) {
+  const reg = /^[A-Z]+$/;
+  return reg.test(val);
+}
+
+//是否大小写字母
+export function validatAlphabets(val) {
+  const reg = /^[A-Za-z]+$/;
+  return reg.test(val);
+}
+
+//密码校验
+export const validatePsdReg = (rule, value, callback) => {
+  if (!value) {
+    return callback(new Error('请输入密码'))
+  }
+  if (!/^(?![d]+$)(?![a-zA-Z]+$)(?![^da-zA-Z]+$)([^一-龥s]){6,20}$/.test(value)) {
+    callback(new Error('请输入6-20位英文字母、数字或者符号(除空格)，且字母、数字和标点符号至少包含两种'))
+  } else {
+    callback()
+  }
+}
+//中文校验
+export const validateContacts = (rule, value, callback) => {
+  if (!value) {
+    return callback(new Error('请输入中文'))
+  }
+  if (!/^[Α-￥A-Za-z]+$/.test(value)) {
+    callback(new Error('不可输入特殊字符'))
+  } else {
+    callback()
+  }
+}
+//身份证校验
+export const ID = (rule, value, callback) => {
+  if (!value) {
+    return callback(new Error('身份证不能为空'))
+  }
+  if (!/(^d{15}$)|(^d{18}$)|(^d{17}(d|X|x)$)/.test(value)) {
+    callback(new Error('请输入正确的二代身份证号码'))
+  } else {
+    callback()
+  }
+}
+// 账号校验
+export const validateCode = (rule, value, callback) => {
+  if (!value) {
+    return callback(new Error('请输入账号'))
+  }
+  if (!/^(?![0-9]*$)(?![a-zA-Z]*$)[a-zA-Z0-9]{6,20}$/.test(value)) {
+    callback(new Error('账号必须为6-20位字母和数字组合'))
+  } else {
+    callback()
+  }
+}
+//纯数字校验
+export const validateNumber = (rule, value, callback) => {
+  let numberReg = /^d+$|^d+[.]?d+$/
+  if (value !== '') {
+    if (!numberReg.test(value)) {
+      callback(new Error('请输入数字'))
+    } else {
+      callback()
+    }
+  } else {
+    callback(new Error('请输入值'))
+  }
+}
+//最多一位小数
+export const onePoint = (rule, value, callback) => {
+  if (!/^[0-9]+([.]{1}[0-9]{1})?$/.test(value)) {
+    callback(new Error('最多一位小数！！！'));
+  } else {
+    callback();
+  }
+}
+```
+
+
+
