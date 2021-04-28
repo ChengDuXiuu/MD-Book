@@ -576,7 +576,6 @@ computed: {
     color: #999;
     padding: 2px;">vue计算属性setter</div>
 </center>  
-
 #### <font color=ff00aa>``计算属性的缓存：``</font>
 
 计算属性和methods区别
@@ -642,6 +641,32 @@ computed: {
     color: #999;
     padding: 2px;">vue计算属性缓存 </div>
 </center>  
+#### <font color=ff00aa>``ui组件属性使用计算属性：``</font>
+
+```vue
+<el-tree
+         :data="treeDataList"
+         :props="props"
+         node-key="id"
+         :default-expanded-keys=defaultExpandedKeys()  ## 要用（）可以传参
+         ref="tree"
+         >
+</el-tree>
+```
+
+```javascript
+ computed: {
+     defaultExpandedKeys: {
+         get () {
+             // return this.$store.state.browsingVueData.count  # 不行
+             return function () {
+                 return this.$store.state.browsingVueData.count  ## 可以传参
+             }
+         }
+     }
+ },
+```
+
 
 
 ### 事件监听
@@ -1258,6 +1283,7 @@ filters: {
     </el-form-item>
 </el-form>
 <script>
+import {portType} from "@/utils/verification.js"
 data() {
       let checkAscription = (rule, value, callback) => {
         if (!value) {
@@ -1284,8 +1310,9 @@ data() {
           sortRule: [
             {required: true, message: '排序不能为空', trigger: 'blur'}
           ],
-          ascriptionRule: [
-            {validator: checkAscription, trigger: 'change'}
+         ascriptionRule: [
+            { required: true, message: '请输入目标端口', trigger: 'blur' },
+            { validator: portType, trigger: 'blur' }
           ]
         }
     },
@@ -1697,6 +1724,4 @@ export const onePoint = (rule, value, callback) => {
   }
 }
 ```
-
-
 
