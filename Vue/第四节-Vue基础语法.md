@@ -1283,6 +1283,7 @@ filters: {
     </el-form-item>
 </el-form>
 <script>
+import {portType} from "@/utils/verification.js"
 data() {
       let checkAscription = (rule, value, callback) => {
         if (!value) {
@@ -1309,8 +1310,9 @@ data() {
           sortRule: [
             {required: true, message: '排序不能为空', trigger: 'blur'}
           ],
-          ascriptionRule: [
-            {validator: checkAscription, trigger: 'change'}
+         ascriptionRule: [
+            { required: true, message: '请输入目标端口', trigger: 'blur' },
+            { validator: portType, trigger: 'blur' }
           ]
         }
     },

@@ -24,7 +24,7 @@
     }
     ```
 
-3.  @PathVariable
+3.  @PathVariable  : 适用于 请求中携带简单参数，例如ID查询
 
     >   从映射路径中获取参数，需要在映射路径中配合
 
@@ -43,7 +43,7 @@
     }
     ```
 
-4.  @RequestParam
+4.  @RequestParam ： 适用于Map结构，类似于分页参数
 
     >   *   `常用来处理简单类型的绑定`，通过Request.getParameter() 获取的String可直接转换为简单类型的情况（ String--> 简单类型的转换操作由ConversionService配置的转换器来完成）；因为使用request.getParameter()方式获取参数，所以可以处理get 方式中queryString的值，也可以处理post方式中 body data的值；
     >   *   用来处理Content-Type: 为 application/x-www-form-urlencoded编码的内容，提交方式GET、POST；
@@ -55,28 +55,52 @@
     public R test1(@RequestParam("aaa")String aaa,@RequestParam("bbb")String bbb) {
     }
     
-    #适配
-    export function ResourceInfoApi(params) {
+    #前台接口
+    export function NetworkCardListApi(params) {
       return request({
-        url: request.adornUrl(`${BASE_URL}/info`),
+        url: request.adornUrl(`${BASE_URL}/list`),
         method: "get",
-        params : request.adornParams(params , false )
+        params: request.adornParams(params)
       })
-    }  
+    }
+    #前台使用
+        NetworkCardListApi({
+            page: this.pageIndex,
+            limit: this.pageSize,
+            key: this.dataForm.key
+        }).then((data => {
+    
+    	})    
+    
+    #后台
+    public R list(@RequestParam Map<String, Object> params) {
+        PageUtils page = networkCardService.queryPage(params);
+    	String key = params.get("key").toString()	;
+        return R.ok().put("page", page);
+    }    
     ```
 
-5.  @RequestBody
+5.  @RequestBody ：适用于 存储POST或者更新PUT
 
     >   *   `该注解常用来处理Content-Type: 不是application/x-www-form-urlencoded编码的内容，例如application/json, application/xml等`；
     >   *   它是通过使用HandlerAdapter 配置的HttpMessageConverters来解析post data body，然后绑定到相应的bean上的。
 
     ```java
-    http://localhost:8080/0919/test3?firstName=zhang&lastName=san
-    @RequestMapping("/test2")
-    public R test1(@RequestBody Student student) {
+    export function NetworkCardSaveApi(data) { # data为实体类对象
+      return request({
+        url:request.adornUrl(`${BASE_URL}/save`),
+        method:"post",
+        data:request.adornData(data,false)
+  })
+    }
+    
+    public R save(@RequestBody List<NetworkCardVO> networkCardVOS) {
+        List<NetworkCardPO> networkCardPOS = NetworkCardConvert.INSTANCE.vo2po(networkCardVOS);
+        networkCardService.saveBatch(networkCardPOS);
+        return R.ok();
     }
     ```
-
+    
     
 
 ### 2、处理请求其他
