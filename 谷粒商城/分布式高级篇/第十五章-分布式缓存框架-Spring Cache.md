@@ -328,6 +328,8 @@ public void deleCache(){
 
 没有必要，我么可以使用 @Cacheable(value = {"product5"},key = "#root.methodName") 进行分组，即 product5指定这组key都为5分钟。设置多个分组即可
 
+### 1、通过配置文件实现
+
 1. 在配置文件中创建各个分组
 
 	```xml
@@ -341,7 +343,144 @@ public void deleCache(){
 	@Cacheable(value = {"key1"},key = "#root.methodName")
 	```
 
-	
+
+### 2、通过Java配置类实现
+
+1.  配置类
+
+    ```java
+    /**
+     * @program: renren-fast
+     * @description: Spring-Cache 序列化存储配置--不使用jdk序列化  --  自定义缓存时间
+     * @author: NO.1
+     * @create: 2021-04-01 17:52
+     */
+    @Configuration
+    @EnableCaching
+    @EnableConfigurationProperties(CacheProperties.class)
+    public class CacheConfig {
+        @Bean
+        RedisCacheConfiguration redisCacheConfiguration(CacheProperties cacheProperties) {
+            RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig();
+    
+            config = config.serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()));
+            config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+    
+    //        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+    //        ObjectMapper om = new ObjectMapper();
+    //        om.activateDefaultTyping(om.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL);
+    //        jackson2JsonRedisSerializer.setObjectMapper(om);
+    
+    //        config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer));
+            // 将配置文件中的所有配置重新配置，使其生效
+            CacheProperties.Redis redisProperties = cacheProperties.getRedis();
+            if (redisProperties.getTimeToLive() != null) {
+                config = config.entryTtl(redisProperties.getTimeToLive());
+            }
+    
+            if (redisProperties.getKeyPrefix() != null) {
+                config = config.prefixKeysWith(redisProperties.getKeyPrefix());
+            }
+    
+            if (!redisProperties.isCacheNullValues()) {
+                config = config.disableCachingNullValues();
+            }
+    
+            if (!redisProperties.isUseKeyPrefix()) {
+                config = config.disableKeyPrefix();
+            }
+    
+            return config;
+    
+        }
+    
+    
+        @Bean
+        @Primary
+        public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+            RedisCacheConfiguration config = instanceConfig(1800L);
+            return RedisCacheManager.builder(connectionFactory)
+                    .cacheDefaults(config)
+                    .transactionAware()
+                    .build();
+        }
+    
+        @Bean
+        public RedisCacheManager cacheManager1d(RedisConnectionFactory connectionFactory) {
+    
+            RedisCacheConfiguration config = instanceConfig(3600 * 24 * 1L);
+            return RedisCacheManager.builder(connectionFactory)
+                    .cacheDefaults(config)
+                    .transactionAware()
+                    .build();
+        }
+    
+        @Bean
+        public RedisCacheManager cacheManager15d(RedisConnectionFactory connectionFactory) {
+    
+            RedisCacheConfiguration config = instanceConfig(3600 * 24 * 15L);
+            return RedisCacheManager.builder(connectionFactory)
+                    .cacheDefaults(config)
+                    .transactionAware()
+                    .build();
+        }
+    
+        private RedisCacheConfiguration instanceConfig(Long ttl) {
+    
+            Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            objectMapper.registerModule(new JavaTimeModule());
+            // 去掉各种@JsonSerialize注解的解析
+            objectMapper.configure(MapperFeature.USE_ANNOTATIONS, false);
+            // 只针对非空的值进行序列化
+            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            // 将类型序列化到属性json字符串中
+            objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+    
+            jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
+            return RedisCacheConfiguration.defaultCacheConfig()
+                    .entryTtl(Duration.ofSeconds(ttl))
+                    .disableCachingNullValues()
+                    .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer));
+    
+        }
+    
+    }
+    ```
+
+2.  使用 -- 新增
+
+    ```java
+    //一般在service impl  中使用   cacheManager指定15天
+    @Cacheable(value = {"topoView"},key = "#resourceId",cacheManager ="cacheManager15d" )
+    ```
+
+3.  使用 -- 双删模式
+
+    ```java
+    //删除分组 下所有key
+    @CacheEvict(cacheNames = {"topoView"},allEntries = true,beforeInvocation = true)
+    
+    //删除分组 下指定key    cacheManager指定15天
+    @Cacheable(value = {"resource"},key = "#resourceId",cacheManager = "cacheManager1d")
+    @CacheEvict(value = {"resource"},key = "#resource.id",beforeInvocation = true)
+    ```
+
+4.  配置
+
+    ```java
+        ##缓存
+        cache:
+            type: redis
+            redis:
+    #            time-to-live: 86400000    #一天
+    #            key-prefix: CACHE_
+    #            use-key-prefix: true
+                cache-null-values: true
+    ```
+
+    >   想要实现 分组删除，配置文件中不得配置key-prefix：XXX
 
 
 
