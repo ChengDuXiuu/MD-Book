@@ -785,6 +785,10 @@ Spring后处理器，是Spring定义的**功能接口Interface**，包括两种�
 ### Bean生命始末
 
 >   可以为 **每个Bean** 定制初始化后的生命行为，也可以为 **每个Bean** 定制销毁前的生命行为。  
+>
+>   @PostConstruct : 在构造方法和init方法（如果有的话）之间得到调用，且只会执行一次。
+>
+>    @PreDestory : 注解的方法在destory()方法调用后得到执行。
 
 
 
