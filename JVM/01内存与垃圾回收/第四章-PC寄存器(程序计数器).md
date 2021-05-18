@@ -155,6 +155,10 @@ public class PCRegisterTest {
 
 
 
+* dup 复制栈顶元素
+
+
+
 
 
 ### 2、类型转换
