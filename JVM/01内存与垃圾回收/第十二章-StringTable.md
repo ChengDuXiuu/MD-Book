@@ -56,6 +56,7 @@ String name = "字面量创建字符串";
 ```
 
 * 直接在 字符串常量池中进行创建，JDK7之后都是堆中。
+* ==不可以重复==
 
 > -Xmx10m -Xms10m -Xss10m -XX:MetaspaceSize=10m -XX:MaxMetaspaceSize=10m
 
@@ -82,6 +83,7 @@ String a = new String("new对象创建字符串");
 ```
 
 * 所有new的对象都存放在堆中，并不是和字符串常量池中内存一块
+* ==可以重复==
 
 > -Xmx10m -Xms10m -Xss10m -XX:MetaspaceSize=10m -XX:MaxMetaspaceSize=10m
 
@@ -109,7 +111,72 @@ public static void main(String[] args) throws InterruptedException {
 new String("字符串").intern();//将创建的对象放入到字符串常量池中并返回此常量池中的地址，而不是对象中地址
 ```
 
-> <font color=ff00aa size=5>此种方式比较特殊，先会在堆内存中创建对象，然后调用intern方法后存放在字符串常量池中一份。会创建两份，内存地址并不一样</font>
+> <font color=ff00aa size=5>以上代码比较特殊，先会在堆内存中创建对象，然后调用intern方法后存放在字符串常量池中一份【前提是串池中没有改字符串】。会创建两份，内存地址并不一样</font>
+
+JDK1.6 : 
+
+-   如果串池中有，则并不会放入。返回已有的串池中的对象的地址
+-   如果没有，会把此**对象复制一份**，放入串池，并返回串池中的对象地址
+
+JDK1.7 之后 :
+
+-   如果串池中有，则并不会放入。返回已有的串池中的对象的地址
+-   如果没有，则会把**对象的引用地址**复制一份，放入串池，并返回串池中的引用地址
+
+
+
+`例1`
+
+```java
+String s = new String("a")+new String("b");
+String s1 = s.intern();
+System.out.println(s=="ab"); 
+System.out.println(s1=="ab");
+```
+
+jdk1.6 中 如下图示 ：
+
+![image-20210519201541448](第十二章-StringTable.assets/image-20210519201541448.png)
+
+```java
+System.out.println(s=="ab"); //false    这里的“ab”为字面量，属于串池
+System.out.println(s1=="ab");//true
+```
+
+
+
+jdk1.7之后 如下图示
+
+![image-20210519201956883](第十二章-StringTable.assets/image-20210519201956883.png)
+
+```java
+System.out.println(s=="ab"); //true    最终引用内容都在对象内存块。
+System.out.println(s1=="ab");//true
+```
+
+
+
+`例2`
+
+```java
+String x = "ab";
+String s = new String("a") + new String("b");
+String s1 = s.intern();// 串池用已有，不会放入，s1为s的地址，即对象内存块地址
+System.out.println(s==x); 
+System.out.println(s1==x);
+
+*   先在串池中创建“ab”对象
+*   对象内存块中 创建 “a” “b”“ab” 对象，StringBuilder 指向“ab”，StringBuilder地址赋予 s，
+*   即 内存块中有“a”“b”“ab”对象，串池中有“ab”对象，而x指向串池中“ab”，s指向对象内存块中“ab”
+*   s1 因为串池中已有“ab”，因此直接返回串池中“ab”，最终，s1指向串池中“ab”
+
+![image-20210519203147437](第十二章-StringTable.assets/image-20210519203147437.png)
+
+```java
+System.out.println(s==x); //false
+System.out.println(s1==x);//true
+//jdk 6/7/8 都一样，因为 s.intern(); 已经存在，并没有 对象和对象地址区分。仍然使用的是原来的地址
+```
 
 
 
@@ -318,7 +385,60 @@ String的string Pool是一个固定大小的Hashtable，默认值大小长度是
 > * 如果字符串拼接频繁并且容量大，则最好使用stringBuilder.
 > * 千万不要使用 变量字符串进行拼接
 
+`面试题:`
 
+```java
+/**
+ * new String("ab") 会创建几个对象？ 看字节码就知道是2个对象
+ *
+ * @author: 陌溪
+ * @create: 2020-07-11-11:17
+ */
+public class StringNewTest {
+    public static void main(String[] args) {
+        String str = new String("a") + new String("b");
+    }
+}
+```
+
+字节码文件为
+
+```bash
+ 0 new #2 <java/lang/StringBuilder>
+ 3 dup
+ 4 invokespecial #3 <java/lang/StringBuilder.<init>>
+ 7 new #4 <java/lang/String>
+10 dup
+11 ldc #5 <a>
+13 invokespecial #6 <java/lang/String.<init>>
+16 invokevirtual #7 <java/lang/StringBuilder.append>
+19 new #4 <java/lang/String>
+22 dup
+23 ldc #8 <b>
+25 invokespecial #6 <java/lang/String.<init>>
+28 invokevirtual #7 <java/lang/StringBuilder.append>
+31 invokevirtual #9 <java/lang/StringBuilder.toString>
+34 astore_1
+35 return
+```
+
+我们创建了6个对象
+
+-   对象1：new StringBuilder()
+-   对象2：new String("a")
+-   对象3：常量池的 a
+-   对象4：new String("b")
+-   对象5：常量池的 b
+-   对象6：toString中会创建一个 new String("ab")
+    -   调用toString方法，不会在常量池中生成ab
+
+
+
+## StringTable 中的GC
+
+*   GC中字符串指的是堆中对象内存块的字符串，本身字符串常量池就不允许重复字符串。因此不需要GC
+*   GC主要作用是去重，即祛除堆中对象内存块中重复的字符串。
+*   因此我们在使用字符串时，尽量使用字面量的方式进行创建
 
 
 

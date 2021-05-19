@@ -174,11 +174,10 @@
     >   B） @ModelAttribute 用于方法上时指定的model对象；
     >
     >   C） 上述两种情况都没有时，new一个需要绑定的bean对象，然后把request中按名称对应的方式把值绑定到bean中。
-    >
-
-    用在方法上
-
-    ```java
+    
+用在方法上
+    
+```java
     // Add one attribute
     // The return value of the method is added to the model under the name "account"
     // You can customize the name via @ModelAttribute("myAccount")
@@ -188,15 +187,38 @@
         return accountManager.findAccount(number);
     }
     ```
-
-    用在参数上
-
-    ```java
+    
+用在参数上
+    
+```java
     
     @RequestMapping(value="/owners/{ownerId}/pets/{petId}/edit", method = RequestMethod.POST)
     public String processSubmit(@ModelAttribute Pet pet) {
        
     }
     ```
-
     
+
+
+## 请求参数中域属性
+
+>   解决pojo中嵌套pojo 参数映射。
+
+```java
+@Data
+public class Student {
+    private String name;
+    private String age;
+    private School school;
+}
+```
+
+```json
+{
+  "name": "张三",
+  "age": 18,
+  "school.name": "清华青鸟",
+  "school.address": "北京"
+}
+```
+

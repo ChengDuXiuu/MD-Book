@@ -96,6 +96,12 @@ Bean Validation 和我们很久以前学习过的 JPA 一样，只提供规范�
 	- `@NotEmpty` ：集合对象的元素不为 0 ，即集合不为空，也可以用于字符串不为 `null` 。
 	- `@NotNull` ：不能为 `null` 。
 	- `@Null` ：必须为 `null` 。
+	
+	>   **@NotEmpty 用在集合类上面** : CharSequence, Collection, Map 和 Array 对象不能是 null 并且相关对象的 size 大于 0。
+	>
+	>   **@NotBlank 用在String上面** : 不能是 null 且去除两端空白字符后的长度（trimmed length）大于 0。
+	>
+	>   **@NotNull 用在基本类型上** : CharSequence, Collection, Map 和 Array 对象不能是 null, 但可以是空集（size = 0）。 
 - 数值检查
 	- `@DecimalMax(value)` ：被注释的元素必须是一个数字，其值必须小于等于指定的最大值。
 	- `@DecimalMin(value)` ：被注释的元素必须是一个数字，其值必须大于等于指定的最小值。
