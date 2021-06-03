@@ -792,6 +792,16 @@ Spring后处理器，是Spring定义的**功能接口Interface**，包括两种�
 
 
 
+### Bean生命周期
+
+先参考：
+
+https://www.jianshu.com/p/1dec08d290c1
+
+https://blog.csdn.net/weixin_39808803/article/details/111019967
+
+
+
 
 
 ## 应用场景
