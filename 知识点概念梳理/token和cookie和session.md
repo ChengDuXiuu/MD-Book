@@ -221,4 +221,4 @@
 >   另外，无论基于Session还是Cookie的登录验证都需要对HandlerInteceptor进行配置，增加对URL的拦截过滤机制。
 >
 >   版权声明：本文为CSDN博主「chao09_01」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
->   原文链接：https://blog.csdn.net/chao821/article/details/106892742/
+>   原文链接：https://blog.csdn.net/chao821/article/details/106892742/      https://www.cnblogs.com/moyand/p/9047978.html
