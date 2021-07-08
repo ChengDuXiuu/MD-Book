@@ -247,7 +247,7 @@ Netty是一个非阻塞、事件驱动的网络框架。Netty实际上是使用�
     可以处理更多的客户端请求。
 
 <center>
-    <img style="border-radius: 0.3125em;
+    <img style="border-radiu35s: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
     src="../资料/netty多线程.jpg">
     <br>
