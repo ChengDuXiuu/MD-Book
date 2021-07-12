@@ -80,50 +80,75 @@ jstat -<option> [-t] [-h<lines>] <vmid> [<interval> [<count>]]
 
 
 
-**option参数**
+`option参数`
 
-选项option可以由以下值构成。
+*   类装载相关的：
+    * -class：显示ClassLoader的相关信息：当前进程类的装载个数、占用空间、卸载个数、类装载所消耗的时间等
 
-==类装载相关的：==
+      ![image-20210708223048892](第二章-JVM监控及诊断工具-命令行.assets/image-20210708223048892.png)
 
-- -class：显示ClassLoader的相关信息：当前进程类的装载个数、占用空间、卸载个数、类装载所消耗的时间等
+*   垃圾回收相关的：
 
-	![image-20210708223048892](第二章-JVM监控及诊断工具-命令行.assets/image-20210708223048892.png)
+    ![image-20210709161554609](第二章-JVM监控及诊断工具-命令行.assets/image-20210709161554609.png)
 
-==垃圾回收相关的：==
+    *   ```java
+        public static void main(String[] args) throws InterruptedException {
+            List<byte[]> list = new ArrayList<>();
+        
+            for (int i = 0; i < 1000000; i++) {
+                byte[] bytes = new byte[1024*100];//100kb
+                list.add(bytes);
+                Thread.sleep(200);
+            }
+        }
+        ```
 
-- -gc：显示与GC相关的堆信息。包括Eden区、两个Survivor区、老年代、永久代等的容量、已用空间、GC时间合计等信息。
-- -gccapacity：显示内容与-gc基本相同，但输出主要关注Java堆各个区域使用到的最大、最小空间。
-- -gcutil：显示内容与-gc基本相同，但输出主要关注已使用空间占总空间的百分比。
-- -gccause：与-gcutil功能一样，但是会额外输出导致最后一次或当前正在发生的GC产生的原因。
-- -gcnew：显示新生代GC状况
-- -gcnewcapacity：显示内容与-gcnew基本相同，输出主要关注使用到的最大、最小空间
-- -geold：显示老年代GC状况
-- -gcoldcapacity：显示内容与-gcold基本相同，输出主要关注使用到的最大、最小空间
-- -gcpermcapacity：显示永久代使用到的最大、最小空间。
+    * -gc：显示与GC相关的堆信息。包括Eden区、两个Survivor区、老年代、永久代等的容量、已用空间、GC时间合计等信息。
 
-JIT相关的：
+        ![image-20210709162056225](第二章-JVM监控及诊断工具-命令行.assets/image-20210709162056225.png)
 
-- -compiler：显示JIT编译器编译过的方法、耗时等信息
-- -printcompilation：输出已经被JIT编译的方法
+        ![image-20210709162331091](第二章-JVM监控及诊断工具-命令行.assets/image-20210709162331091.png)
 
+    * -gccapacity：显示内容与-gc基本相同，但输出主要关注Java堆各个区域使用到的最大、最小空间。
 
+    * -gcutil：显示内容与-gc基本相同，但输出主要关注已使用空间占总空间的百分比。
 
-**interval参数：** 用于指定输出统计数据的周期，单位为毫秒。即：查询间隔
+        ![image-20210709165739532](第二章-JVM监控及诊断工具-命令行.assets/image-20210709165739532.png)
+
+    * -gccause：与-gcutil功能一样，但是会额外输出导致最后一次或当前正在发生的GC产生的原因。
+
+    * -gcnew：显示新生代GC状况
+
+    * -gcnewcapacity：显示内容与-gcnew基本相同，输出主要关注使用到的最大、最小空间
+
+    * -geold：显示老年代GC状况
+
+    * -gcoldcapacity：显示内容与-gcold基本相同，输出主要关注使用到的最大、最小空间
+
+    * -gcpermcapacity：显示永久代使用到的最大、最小空间。
+
+*   JIT相关的：
+    * -compiler：显示JIT编译器编译过的方法、耗时等信息
+
+    * -printcompilation：输出已经被JIT编译的方法
+
+        ![image-20210709161015580](第二章-JVM监控及诊断工具-命令行.assets/image-20210709161015580.png)
+
+`interval参数：`用于指定输出统计数据的周期，单位为毫秒。即：查询间隔
 
 > 如果没有指定interval 则默认打印一次
 
 ![jstat-interval](第二章-JVM监控及诊断工具-命令行.assets/jstat-interval.gif)
 
-**count参数：** 用于指定查询的总次数
+`count参数：`用于指定查询的总次数
 
 ![jstat-interval-count](第二章-JVM监控及诊断工具-命令行.assets/jstat-interval-count.gif)
 
-**-t参数：** 可以在输出信息前加上一个Timestamp列，显示程序的总体运行时间。单位：秒
+*   -t参数：可以在输出信息前加上一个Timestamp列，显示程序的总体运行时间。单位：秒
 
 ![image-20210708224313651](第二章-JVM监控及诊断工具-命令行.assets/image-20210708224313651.png)
 
-**-h参数：** 可以在周期性数据输出时，输出多少行数据后输出一个表头信息
+*   -h参数： 可以在周期性数据输出时，输出多少行数据后输出一个表头信息
 
 > 输出三行数据后打印表头
 
