@@ -462,7 +462,9 @@ tips:
 
 语法：chown  [用户] [文件或目录]  
 
-功能描述：改变文件或目录的所有者 范例：$ chown  shenchao fengjie               
+功能描述：改变文件或目录的所有者 
+
+范例：$ chown  shenchao fengjie               
 
  改变文件fengjie的所有者为shenchao
 
@@ -1157,7 +1159,7 @@ ce configure
 
 语法：setup 
 
-功能描述：配置网络 
+功能描述：配置网络 ，永久生效
 
 范例：# setup
 
