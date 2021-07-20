@@ -658,25 +658,37 @@ $  locate -i masichun.json           // -i 作用你不区分大小写类似 -in
 
 
 
-### grep
+#### grep
+
+>   搜索文件中有关键字的行，有就显示出
 
 命令所在路径：/bin/grep 
 
 执行权限：所有用户 
 
-语法：grep  -iv [指定字串] [文件] 
+`格式`
 
-功能描述：在文件中搜寻字串匹配的行并输出             
+```bash
+grep [选项] "搜索内容" 文件名
+```
 
-* -i  不区分大小写             
+`案例`
 
-* -v 排除指定字串 
+```bash
+grep "root" /etc/passwd
+```
 
-范例：# grep  mysql  /root/install.log
+![image-20210720142143681](第七章-Shell.assets/image-20210720142143681.png)
 
-   \# grep -v ^# /etc/inittab 去除以#开头的所有行信息 ,    ^表示以XXX开头 
+`选项：  `
 
+*   -i：  忽略大小写  
 
+*   -n：  输出行号  
+
+*   -v：  反向查找  
+
+*   --color=auto 搜索出的关键字用颜色显示
 
 ## 帮助命令
 
