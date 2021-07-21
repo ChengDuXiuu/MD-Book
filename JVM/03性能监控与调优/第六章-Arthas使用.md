@@ -33,18 +33,39 @@
 	```
 
 	![image-20210714212140548](第六章-Arthas使用.assets/image-20210714212140548.png)
+	
+	
 
+4. 退出和彻底退出
 
+	**退出**
 
+	```bash
+	ctrl + c  
+	或者
+	quit
+	或者exit
+	```
 
+	**彻底退出**
 
+	> 使用上面退出时，并不能把 arthas-server退出，该进程仍然在运行
 
+	```bash
+	stop   #完全退出arthas
+	```
 
-
+	![image-20210721210134977](第六章-Arthas使用.assets/image-20210721210134977.png)
 
 
 
 ## 相关指令
+
+`帮助指令`
+
+```bash
+指令 -h
+```
 
 ### 基础指令
 
@@ -140,6 +161,138 @@ wc 按行统计输出结果
 options 查看或设置Arthas全局开关
 profiler 使用async-profiler对应用采样，生成火焰图
 ```
+
+
+
+
+
+## 功能
+
+### 查看JVM信息
+
+`sysprop 系统信息`
+
+* 打印所有的System Properties信息
+
+	![image-20210721211031505](第六章-Arthas使用.assets/image-20210721211031505.png)
+
+* 指定单个key
+
+	![image-20210721211142130](第六章-Arthas使用.assets/image-20210721211142130.png)
+
+* 管道查询
+
+	![image-20210721211200137](第六章-Arthas使用.assets/image-20210721211200137.png)
+
+* 设置新的value
+
+	![image-20210721211352462](第六章-Arthas使用.assets/image-20210721211352462.png)
+
+
+
+`sysenv 环境变量`
+
+* 获取到环境变量。和`sysprop`命令类似
+
+	![image-20210721211529950](第六章-Arthas使用.assets/image-20210721211529950.png)
+
+
+
+`jvm jvm相关信息`
+
+![image-20210721211812737](第六章-Arthas使用.assets/image-20210721211812737.png)
+
+
+
+`dashboard 当前系统实时数据面板`
+
+![image-20210721211902029](第六章-Arthas使用.assets/image-20210721211902029.png)
+
+
+
+
+
+
+
+## 案例
+
+### 1、排查函数调用异常
+
+
+
+
+
+
+
+
+
+
+
+### 2、热更新代码
+
+
+
+
+
+
+
+
+
+
+
+### 3、动态更新应用的Logger Level
+
+
+
+
+
+
+
+
+
+
+
+### 4、获取spring context 然后在获取bean并调用函数
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 5、排查HTTP请求返回401
+
+
+
+
+
+
+
+
+
+
+
+### 6、排查HTTP请求返回404
+
+
+
+
+
+
+
+
+
+
+
+### 7、查找Top N线程
 
 
 
