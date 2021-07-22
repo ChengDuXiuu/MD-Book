@@ -1619,43 +1619,172 @@ profiler action [actionArg]
 
 ### 4、获取Spring Context 然后再获取Bean并调用函数
 
+1. 下载 
+
+	```java
+	wget https://code.aliyun.com/middleware-container/handsonLabExternedFiles/raw/master/demo-arthas-spring-boot.jar;java -jar demo-arthas-spring-boot.jar
+	```
+
+2. 启动
+
+	```java
+	java -jar demo-arthas-spring-boot.jar
+	```
+
+3. 访问
+
+	```html
+	http://localhost:61000/
+	```
+
+4. 下载Arthas 并启动
+
+	```java
+	wget https://arthas.aliyun.com/arthas-boot.jar;java -jar arthas-boot.jar
+	```
+
+5. 使用`tt`获取Spring Context
+
+	```bash
+	tt -t org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter invokeHandlerMethod
+	```
+
+6. 执行请求(任意)
+
+	```bash
+	http://localhost:61000/user/1
+	```
+
+	或者
+
+	![image-20210722215132217](第六章-Arthas使用.assets/image-20210722215132217.png)
+
+7. 捕获请求从中获取 target index
+
+	![image-20210722215342659](第六章-Arthas使用.assets/image-20210722215342659.png)
+
+	> 记下 index 后，ctrl +c 退出
 
 
 
+8. 获取 Spring Context 并获取 Bean调用方法
 
+	```bash
+	tt -i 1000 -w 'target.getApplicationContext().getBean("helloWorldService").getHelloMessage()'
+	```
 
+	![image-20210722215601893](第六章-Arthas使用.assets/image-20210722215601893.png)
 
+	`对应代码如下`
 
+	```java
+	@Component
+	public class HelloWorldService {
+	
+		@Value("${name:World}")
+		private String name;
+	
+		public String getHelloMessage() {
+			return "Hello " + this.name;
+		}
+	}
+	```
 
-
-
-
-
-
+	
 
 ### 5、排查HTTP请求返回401
 
+> 如案例4，步骤一、二、三、四省略
 
+`核心思想`
 
+> 像这种报错问题，直接定位到报错地方即可
 
+5. 跟踪Filter函数
 
+	> 我们知道`401`通常是被权限管理的`Filter`拦截了，那么到底是哪个`Filter`处理了这个请求，返回了401？
 
+	```bash
+	trace javax.servlet.Filter *
+	```
 
+	
 
+6. 执行请求  触发401错误
+
+	```html
+	http://localhost:61000/admin
+	```
+
+	或者
+
+	![image-20210722220417243](第六章-Arthas使用.assets/image-20210722220417243.png)
+
+7. 获取到 Filter调用链，找到最深处
+
+	![image-20210722220959300](第六章-Arthas使用.assets/image-20210722220959300.png)
+
+	> 发现是 .HttpServletResponse:sendError() 返回了401错误
+
+8. 获取 sendError 调用路径
+
+	```bash
+	stack javax.servlet.http.HttpServletResponse sendError 'params[0]==401'
+	```
+
+	再次执行步骤六，获取到具体的Filter
+
+	![image-20210722221922826](第六章-Arthas使用.assets/image-20210722221922826.png)
+
+9. 查看相关源码
+
+	```bash
+	jad com.example.demo.arthas.AdminFilterConfig$AdminFilter doFilter
+	```
+
+	![image-20210722222118284](第六章-Arthas使用.assets/image-20210722222118284.png)
 
 
 
 ### 6、排查HTTP请求返回404
 
+> 如案例4，步骤一、二、三、四省略
+
+`核心思想`
+
+> 像这种报错问题，直接定位到报错地方即可
+
+5. 跟踪所有的 servlet
+
+	```bash
+	trace javax.servlet.Servlet * > /tmp/servlet.txt
+	```
+
+6. 执行错误 请求 触发事件
+
+	```bash
+	http://localhost:61000/a.txt
+	```
+
+	或者
+
+	![image-20210722223238682](第六章-Arthas使用.assets/image-20210722223238682.png)
 
 
 
+7. 获取到 servlet 调用链
 
+	![image-20210722223759089](第六章-Arthas使用.assets/image-20210722223759089.png)
 
+	> 最深处发现调用了 FreeMarkerView$GenericServletAdapter
 
+8. 获取 FreeMarkerView$GenericServletAdapter 调用路径
 
+	```bash
+	stack javax.servlet.http.HttpServletResponse sendError 'params[0]==401'
+	```
 
-
+	![image-20210722224529475](第六章-Arthas使用.assets/image-20210722224529475.png)
 
 ### 7、查找Top N线程
 
