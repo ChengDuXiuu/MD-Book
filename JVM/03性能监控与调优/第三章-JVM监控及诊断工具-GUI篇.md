@@ -246,6 +246,348 @@
 
     >   用于在海量数据中，快速定位性能代码，解决性能瓶颈，最重要特性就是能够在指定时间内统计出你jvm的top method，而这些top method极有可能就是造成性能瓶颈的元凶
 
+
+
+## 工具对比
+
+* 远程连接
+* 死锁
+* 内存oom分析
+* CPU飙高分析
+* 普通异常分析
+
+|                  | JvisualVM                      | Jprofiler                                  | Arthas                                     |
+| ---------------- | ------------------------------ | ------------------------------------------ | ------------------------------------------ |
+| 远程连接         | 远程配置Tomcat并重启           | 远程配置Tomcat并重启                       | Web Console或者Telnet远程                  |
+| 死锁             | 支持并定位到具体线程具体代码   | 支持并定位到具体线程具体代码               | 支持(仅限synchronized)                     |
+| 内存OOM分析      | 定位到哪个线程和哪个对象(很泛) | 可从内外引用定位到GC Roots                 | 可从内外引用定位到GC Roots                 |
+| CPU飙高分析      | 定位到线程和方法               | 定位到线程和方法以及方法引用链以及执行时间 | 定位到线程和方法以及方法引用链以及执行时间 |
+| 数据处理异常分析 |                                |                                            |                                            |
+| 方法调用链       |                                |                                            |                                            |
+| 代码热部署       |                                |                                            |                                            |
+
+
+
+
+
+### 死锁
+
+`代码`
+
+```java
+public class ThreadBlock {
+    public static Object object1 = new Object();
+    public static Object object2 = new Object();
+
+    public static void main(String[] args) {
+        thread1();
+        thread2();
+    }
+    @SuppressWarnings(value = "all")
+    public static void thread1(){
+        new Thread(()->{
+            synchronized (object1){
+                System.out.println("线程  "+Thread.currentThread().getName()+"获取到 object1 的锁");
+                System.out.println("执行代码 。。。。");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (object2){
+                    System.out.println("线程  "+Thread.currentThread().getName()+"获取到 object2 的锁");
+                    System.out.println("执行代码 。。。。");
+                }
+            }
+        },"thread - 1").start();
+    }
+    @SuppressWarnings(value = "all")
+    public static void thread2(){
+        new Thread(()->{
+            synchronized (object2){
+                System.out.println("线程  "+Thread.currentThread().getName()+"获取到 object2 的锁");
+                System.out.println("执行代码 。。。。");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (object1){
+                    System.out.println("线程  "+Thread.currentThread().getName()+"获取到 object1 的锁");
+                    System.out.println("执行代码 。。。。");
+                }
+            }
+        },"thread - 2").start();
+    }
+
+}
+
+```
+
+
+
+#### 1、JvisualVM
+
+![image-20210724223020011](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223020011.png)
+
+![image-20210724223103836](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223103836.png)
+
+
+
+#### 2、Jprofiler
+
+![image-20210724223148812](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223148812.png)
+
+![image-20210724223222572](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223222572.png)
+
+
+
+#### 3、Arthas
+
+1. 查看所有线程
+
+	```bash
+	thread --all
+	```
+
+	![image-20210724223440597](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223440597.png)
+
+	或者
+
+	```bash
+	thread -b
+	```
+
+	![image-20210724223634920](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223634920.png)
+
+2. 查看阻塞线程信息
+
+	![image-20210724223806053](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724223806053.png)
+
+
+
+### 内存OOM分析
+
+`代码`
+
+```java
+public class MemoryLeak {
+    public static void main(String[] args){
+        new Thread(()->{
+            try {
+                threadStart();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+    public static void threadStart () throws InterruptedException {
+        while (true){
+            ArrayList beanList = new ArrayList();
+            for (int i = 0; i < 500; i++) {
+                Bean data = new Bean();
+                data.list.add(new byte[1024*10]);//10kb
+                beanList.add(data);
+            }
+            TimeUnit.MILLISECONDS.sleep(500);
+        }
+    }
+}
+class Bean{
+    int size=10;
+    String info = "hello world";
+    static ArrayList list = new ArrayList();
+}
+```
+
+`jvm参数`
+
+```bash
+-Xms2g -Xmx2g -XX:NewSize=50m -XX:MaxNewSize=50m -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/Users/mac/auto.hprof
+```
+
+
+
+#### 1、JvisualVM
+
+1. 定位
+
+![image-20210724224159674](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724224159674.png)
+
+> 持续增高，不健康
+
+
+
+2. 内存泄漏寻找大对象
+
+	![image-20210724224301589](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724224301589.png)
+
+![image-20210724224333869](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724224333869.png)
+
+3. 堆 dump 分析
+
+	![image-20210724224608980](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724224608980.png)
+
+	> 双击大对象，查看其具体信息
+
+	![image-20210724224717193](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724224717193.png)
+
+	> 500多个10264(10kb)的的实例
+
+> <font color=ff00aa>只能定位到这里，挺鸡肋，除非你是实实在在的自定义对象</font>
+
+
+
+#### 2、Jprofiler
+
+1. 定位
+
+![image-20210724225200371](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724225200371.png)
+
+> 指定不健康
+
+
+
+2. 分析大对象
+
+	![image-20210724225145181](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724225145181.png)
+
+
+
+3. 进一步分析内存泄漏对象
+
+	![image-20210724225515307](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724225515307.png)
+
+	> 执行GC后 byte[] 对象并没有回收一点点，因此此对象一定存在内存泄漏问题，着重搞他
+
+4. 内存泄漏对象的内存分析
+
+	![image-20210724225732365](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724225732365.png)
+
+	![image-20210724225745850](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724225745850.png)
+
+	![image-20210724230021653](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724230021653.png)
+
+	![image-20210724230147640](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724230147640.png)
+
+	> Bean对象太多导致
+
+#### 3、Arthas
+
+1. 定位
+
+	```bash
+	dashboard -i 2000 -n 5
+	```
+
+	![image-20210724231827603](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724231827603.png)
+
+	![image-20210724231852285](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724231852285.png)
+
+	![image-20210724231922422](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724231922422.png)
+
+	![image-20210724231933122](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724231933122.png)
+
+	> heap 的内存使用率一直提升。
+
+2. 导出dump文件
+
+	```bash
+	heapdump /tmp/dump.hprof
+	```
+
+3. 使用MAT或者JProfiler打开
+
+	![image-20210724234738799](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724234738799.png)
+
+	![image-20210724234803319](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724234803319.png)
+
+	![image-20210724234840489](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210724234840489.png)
+
+
+
+### CPU飙高分析
+
+`代码`
+
+```java
+public class CpuHitgh {
+    public static void main(String[] args) {
+        threadStart1();
+        threadStart2();
+    }
+    @SuppressWarnings(value = "all")
+    public static void threadStart1(){
+        new Thread(()->{
+            while (true){
+                System.out.println("执行代码。。。。");
+            }
+        }).start();
+    }
+    @SuppressWarnings(value = "all")
+    public static void threadStart2(){
+        new Thread(()->{
+            while (true){
+                System.out.println("执行代码。。。。");
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+}
+```
+
+
+
+#### 1、Jvisualvm
+
+* 粗略怀疑某些方法
+
+	![image-20210725175911327](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210725175911327.png)
+
+* 定位消耗CPU高的线程
+
+	![image-20210725175945673](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210725175945673.png)
+
+	> 如果线程没有赋予名字，则抓瞎。当然也可以通过如下获取线程对应代码
+
+	![image-20210725180058414](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210725180058414.png)
+
+	![image-20210725180132996](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210725180132996.png)
+
+
+
+#### 2、JProfiler
+
+![image-20210725180614714](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210725180614714.png)
+
+> 通过方法热点排序。可以排查出哪些方法占用了太多的CPU资源
+
+
+
+#### 3、Arthas
+
+1. 定位到具体线程
+
+	```bash
+	dashboard -i 2000 -n 5
+	或者
+	thread -n 5
+	```
+
+	![image-20210725182056375](第三章-JVM监控及诊断工具-GUI篇.assets/image-20210725182056375.png)
+
+2. 然后通过tt和watch等监听方法
+
+
+
+
+
+
+
 ## 案例分析
 
 ### 1、Tomcat堆溢出分析
