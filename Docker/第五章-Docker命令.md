@@ -15,7 +15,7 @@
 
 ~~~markdown
 # 1.安装完成辅助命令
-
+		systemctl start docker.service -------------启动docker
 		docker version	--------------------------	查看docker的信息
 		docker info		--------------------------	查看更详细的信息
 		docker --help	--------------------------	帮助命令
