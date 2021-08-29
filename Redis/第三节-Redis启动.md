@@ -6,7 +6,7 @@
     redis-server --port 端口号
 连接
 
-    redis-cli -p 端口号
+    redis-cli -h ipaddr -p 端口号
 
 ### 通过配置文件启动
 
@@ -28,6 +28,12 @@
 启动cli
 
     redis-cli -p 端口号
+
+
+
+### Redis连接策略
+
+Redis客户端的连接数量时候限制的，TCP连接保活策略,可以通过tcp-keepalive配置项进行设置，单位为秒，加入设置60s，则server端会每60s想连接空闲的客户端发起一次ACK请求，以检查客户端是否已经挂掉，对于无响应的客户端则会关闭连接。如果设置为0则不会进行保活检测。
 
 
 ### 常用命令
