@@ -550,7 +550,7 @@ tips: 新建文件是默认没有x权限（比如：防止木马病毒攻击）
 
 	在目录/etc中查找文件名init开头并有3个字符的   
 
-* $ find /etc -name init*
+*   find /etc -name init*
 
 	在目录/etc中查找文件名init开头的   
 
