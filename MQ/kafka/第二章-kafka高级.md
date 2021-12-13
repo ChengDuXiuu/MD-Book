@@ -603,7 +603,7 @@ Producer 拦截器(interceptor)是在 Kafka 0.10 版本被引入的，主要用�
 
 
 
-### 拦截器案例
+# 拦截器案例
 
 > `需求 ： `增加两个连接器，第一个拦截器负责将发出的消息增加时间戳，第二个拦截器统计生产者发送一批数据成功的数量和失败的数量
 
@@ -726,7 +726,7 @@ Producer 拦截器(interceptor)是在 Kafka 0.10 版本被引入的，主要用�
 
 
 
-## kafka监控 -Eagle
+# kafka监控 -Eagle
 
 > Eagle通过JMX方式拉取kafka数据，因此需要开启JMX
 
