@@ -79,7 +79,7 @@
 	SELECT DISTINCT department_id FROM employees;
 	```
 
-*   `+号的作用`
+*   `+号的作用 和concat函数`
 
 	>   MySQL中 + 只起运算符作用
 
