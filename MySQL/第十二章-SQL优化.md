@@ -522,6 +522,8 @@ explain select * from account where sex ='女' and balance = 100.00000;
 
 <img src="第十一章-SQL优化.assets/image-20211220170710008.png" alt="image-20211220170710008" style="zoom:150%;" />
 
+> 对于这种情况，可以再建立单列索引进行处理
+
 
 
 ##### 范围查询右边列不走索引  演示
@@ -532,6 +534,8 @@ explain select * from account where name like '%测试%' and sex ='男' and bala
 
 <img src="第十一章-SQL优化.assets/image-20211220170622800.png" alt="image-20211220170622800" style="zoom:150%;" />
 
+> 如果某个字段可能出现范围查询，尽量把这个字段的索引次序放在后面，避免范围查询后的字段索引失效。或者将范围缩小
+
 
 
 ##### 索引列进行运算操作不走索引  演示
@@ -541,6 +545,8 @@ explain select * from account where substr(name,1,2)='测试' and sex ='男' and
 ```
 
 <img src="第十一章-SQL优化.assets/image-20211220170556992.png" alt="image-20211220170556992" style="zoom:150%;" />
+
+> 尽量在代码里面进行处理逻辑，落到数据库最好使用 等于 等精确匹配条件
 
 
 
@@ -626,7 +632,84 @@ explain select * from account where name is not null;
 
 
 
+##### order by | group by造成索引失效
 
+```sql
+show index from account;
+```
+
+![image-20211226173328219](第十二章-SQL优化.assets/image-20211226173328219.png)
+
+
+
+```sql
+explain select * from account order by name;
+```
+
+<img src="第十二章-SQL优化.assets/image-20211226173355198.png" alt="image-20211226173355198" style="zoom:150%;" />
+
+
+
+> `无过滤，不索引`，即使用order by 时最好进行 where过滤。否则就用不到索引。或者使用limit进行过滤，如下
+
+```sql
+explain select * from account where name ='IT' order by name;
+explain select * from account order by name limit 100;
+```
+
+![image-20211226174224766](第十二章-SQL优化.assets/image-20211226174224766.png)
+
+![image-20211226174234168](第十二章-SQL优化.assets/image-20211226174234168.png)
+
+
+
+
+
+#### 3、多表关联查询索引失效
+
+> 多表关联查询 给 关联字段都弄上索引页无法做到两个表都走索引，必定有一张表会全表扫描。因为 关联原理需要扫描一张表去进行关联另一张表中数据，然后将符合条件的数据独立成表，然后对结果表进行数据处理。因此必须有一张表进行全盘扫描。
+
+```sql
+select * from A left join B where A.name=B.name;
+```
+
+* 驱动表
+
+	A 就是驱动表，**即需要全盘扫描的表。此表给name加索引无效**
+
+* 被驱动表
+
+	B 就是被驱动表，**给此表加索引有效**
+
+> 驱动表和被驱动表其实是由MySQL自己选择的，原则如下：1. 选择关联字段是索引的表为被驱动表。2. 选择小表为驱动表(全盘扫描更小)
+
+
+
+##### 演示关联查询索引失效
+
+```sql
+explain select * from employees inner join departments d on employees.first_name = d.department_name;
+```
+
+<img src="第十二章-SQL优化.assets/image-20211226170821245.png" alt="image-20211226170821245" style="zoom:150%;" />
+
+> 两张表都是 ALL ，全表扫描。
+
+1. 给驱动表和被驱动表建单值索引
+
+	```sql
+	create index index_departments_ame on departments(department_name);
+	
+	create index index_employees_firstName on employees(first_name);
+	```
+
+	
+
+2. 再次查询
+
+	<img src="第十二章-SQL优化.assets/image-20211226171443640.png" alt="image-20211226171443640" style="zoom:150%;" />
+
+	> 可见，驱动表有预选索引的但是没有使用。使用了全表扫描
 
 # SQL优化 -- 分类
 

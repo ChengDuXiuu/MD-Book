@@ -36,7 +36,7 @@
 | 行级锁 | 偏向InnoDB 存储引擎，开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低,并发度也最高。 |
 | 页面锁 | 开销和加锁时间界于表锁和行锁之间；会出现死锁；锁定粒度界于表锁和行锁之间，并发度一般。 |
 
-
+> InnoDB 与 MyISAM 的最大不同有两点：一是支持事务；二是 采用了行级锁。
 
 
 
@@ -76,3 +76,142 @@
 | Serializable            | ×        | ×    | ×          | ×    |
 
 > 备注 ： √ 代表可能出现 ， × 代表不会出现 。丢失更新问题并不和事务隔离级别挂钩，解决办法是乐观锁和悲观锁。
+
+
+
+
+
+## InnoDB行锁
+
+> 是InnoDB引擎默认开启的锁，当然也支持表锁。**和事务类似，MySQL执行新增、更新、删除等操作默认会添加事务和行锁。也就是排它锁。**
+>
+> 行锁具有如下特性：开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低,并发度也最高。
+
+
+
+
+
+### 行锁演示
+
+1. 表数据准备
+
+	```sql
+	insert into test_innodb_lock values(1,'200','0');
+	create index idx_test_innodb_lock_id on test_innodb_lock(id);
+	create index idx_test_innodb_lock_name on test_innodb_lock(name);
+	create table test_innodb_lock(
+		id int(11),
+		name varchar(16),
+		sex varchar(1)
+	)engine = innodb default charset=utf8;
+	
+	insert into test_innodb_lock values(1,'100','1');
+	insert into test_innodb_lock values(3,'3','1');
+	insert into test_innodb_lock values(4,'400','0');
+	insert into test_innodb_lock values(5,'500','1');
+	insert into test_innodb_lock values(6,'600','0');
+	insert into test_innodb_lock values(7,'700','0');
+	insert into test_innodb_lock values(8,'800','1');
+	insert into test_innodb_lock values(9,'900','1');
+	insert into test_innodb_lock values(1,'200','0');
+	```
+
+	
+
+2. 设置两列索引
+
+	```sql
+	create index idx_test_innodb_lock_id on test_innodb_lock(id);
+	create index idx_test_innodb_lock_name on test_innodb_lock(name);
+	```
+
+3. 开启两个终端(客户端)，并关闭自动提交
+
+	```sql
+	set autocommit = 0;  #必写
+	start transaction;  #可选
+	```
+
+	
+
+| Session-1                                                    | Session-2                                                    |
+| :----------------------------------------------------------- | ------------------------------------------------------------ |
+| ![image-20211225122214883](第十一章-MySQL锁.assets/image-20211225122214883.png)<br />关闭自动提交功能 | ![image-20211225122244764](第十一章-MySQL锁.assets/image-20211225122244764.png)<br /> 关闭自动提交功能 |
+| ![image-20211225122429073](第十一章-MySQL锁.assets/image-20211225122429073.png) <br />可以正常的查询出全部的数据 | ![image-20211225122433504](第十一章-MySQL锁.assets/image-20211225122433504.png)<br />可以正常的查询出全部的数据 |
+| ![image-20211225122702001](第十一章-MySQL锁.assets/image-20211225122702001.png)<br />查询id 为3的数据 ； | ![image-20211225122710145](第十一章-MySQL锁.assets/image-20211225122710145.png)<br />获取id为3的数据 ； |
+| ![image-20211225122833803](第十一章-MySQL锁.assets/image-20211225122833803.png)<br />更新id为3的数据，但是不提交； | ![image-20211225122905860](第十一章-MySQL锁.assets/image-20211225122905860.png) <br />**更新id为3 的数据， 处于等待状态**，表明有行锁。 |
+| ![image-20211225122942287](第十一章-MySQL锁.assets/image-20211225122942287.png) <br />通过commit， 提交事务 | ![image-20211225122954443](第十一章-MySQL锁.assets/image-20211225122954443.png) <br />解除阻塞，更新正常进行 |
+| ![image-20211225123232670](第十一章-MySQL锁.assets/image-20211225123232670.png)<br />再次查看id=3的数据，两个客户端name为啥不一样？因为session-2没有commit;读取的仍然是缓存中的数据。 | ![image-20211225123253415](第十一章-MySQL锁.assets/image-20211225123253415.png)<br />再次查看id=3的数据，两个客户端name为啥不一样？因为session-2没有commit;读取的仍然是缓存中的数据。 |
+| ![image-20211225123636110](第十一章-MySQL锁.assets/image-20211225123636110.png)<br />session-2和session-1提交后再次查看 | ![image-20211225123648666](第十一章-MySQL锁.assets/image-20211225123648666.png)<br />session-2和session-1提交后再次查看 |
+| ![image-20211225123817511](第十一章-MySQL锁.assets/image-20211225123817511.png)<br />更新id为3数据，正常的获取到行锁 ， 执行更新 ； | ![image-20211225123827478](第十一章-MySQL锁.assets/image-20211225123827478.png)<br /> 更新ID-4的数据，由于与Session-1 操作不是同一行，获取当前行锁，执行更新； |
+
+
+
+
+
+## InnoDB表锁（行锁失效）
+
+> 之前我们讲到，InnoDB默认是行锁，为什么要讲表锁呢？<font color=ff00aa>因为在某些特定条件下InnoDB是不会走行锁的。类似于索引失效一样，并不是用了索引MySQL就会给你走索引。</font>
+
+<font color=ffaa00 size=4>当不通过**索引**条件操作数据时，InnoDB将默认对表中所有记录加锁，实际效果和表锁一样。由此可见，`使用索引的重要性`</font>
+
+
+
+### 表锁演示
+
+| Session-1                                                    | Session-2                                                    |
+| :----------------------------------------------------------- | ------------------------------------------------------------ |
+| ![image-20211225122214883](第十一章-MySQL锁.assets/image-20211225122214883.png)<br />关闭自动提交功能 | ![image-20211225122244764](第十一章-MySQL锁.assets/image-20211225122244764.png)<br /> 关闭自动提交功能 |
+| ![image-20211225153012706](第十一章-MySQL锁.assets/image-20211225153012706.png) <br />不使用索引进行数据更新sex=1 | ![image-20211225153046659](第十一章-MySQL锁.assets/image-20211225153046659.png)<br />不使用索引更新数据 sex=2。发现阻塞，证明已经锁表。 |
+
+
+
+
+
+## InnoDB查看行锁争抢情况
+
+```sql
+show  status like 'innodb_row_lock%';
+```
+
+![image-20211225153412786](第十一章-MySQL锁.assets/image-20211225153412786.png)
+
+* Innodb_row_lock_current_waits: 当前正在等待锁定的数量
+* Innodb_row_lock_time: 从系统启动到现在锁定总时间长度
+* **Innodb_row_lock_time_avg:每次等待所花平均时长**
+* Innodb_row_lock_time_max:从系统启动到现在等待最长的一次所花的时间
+* **Innodb_row_lock_waits: 系统启动后到现在总共等待的次数**
+
+> 着重关注 等待次数 和每次等待平均时长。这样就能发现系统是否存在问题。然后根据分析结果着手制定优化计划。
+
+
+
+
+
+## 间隙锁的危害
+
+> 其实MySQL还有一种锁，叫间隙锁。何为间隙锁：**当我们用范围条件，而不是使用相等条件检索数据，并请求共享或排他锁时，InnoDB会给符合条件的已有数据进行加锁；**
+>
+> 例如：我去更新ID>=4 的数据，假如数据库中只存在ID等于1、3 的数据，但是使用范围操作的时候就会将【1，2，3，4】都会上锁，这个时候我去插入一条ID为2、4的数据就被阻塞。也很好理解，MySQL不可能再去进行查询数据库并筛选出然后只对存在的数据上锁，提高了性能损耗。
+
+
+
+### 间隙锁演示
+
+
+
+| Session-1                                                    | Session-2                                                    |
+| :----------------------------------------------------------- | ------------------------------------------------------------ |
+| ![image-20211225122214883](第十一章-MySQL锁.assets/image-20211225122214883.png)<br />关闭自动提交功能 | ![image-20211225122244764](第十一章-MySQL锁.assets/image-20211225122244764.png)<br /> 关闭自动提交功能 |
+| ![image-20211225154359176](第十一章-MySQL锁.assets/image-20211225154359176.png) <br />表中只存在【1，5，6，9】的数据 | ![image-20211225154402640](第十一章-MySQL锁.assets/image-20211225154402640.png)<br />表中只存在【1，5，6，9】的数据 |
+| ![image-20211225154718109](第十一章-MySQL锁.assets/image-20211225154718109.png)<br />范围更新ID<10 的数据。 | ![image-20211225154844600](第十一章-MySQL锁.assets/image-20211225154844600.png)<br />这里插入ID=2的数据，发现阻塞，因为间隙锁的原因导致。 |
+
+
+
+# 锁优化总结
+
+1. 尽可能让所有数据检索都能通过`索引`来完成，**避免无索引行锁升级为表锁**。
+2. 合理设计索引，尽量缩小锁的范围
+3. 尽可能减少检索条件，及`检索范围`，避免间隙锁
+4. 尽量控制事务大小，减少锁定资源量和时间长度
+5. 尽可使用低级别事务隔离（但是需要业务层面满足需求）

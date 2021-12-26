@@ -1187,23 +1187,98 @@ SELECT t_id,tname FROM t_ua WHERE tGender='male';
 
 
 
+## 正则表达式
+
+> MySQL同样只是正则表达式进行查询，之后会给出300w数据正则和like的性能对比。
+
+
+
+### 1、语法
+
+| 符号   | 含义                          |
+| ------ | ----------------------------- |
+| ^      | 在字符串开始处进行匹配        |
+| $      | 在字符串末尾处进行匹配        |
+| .      | 匹配任意单个字符, 包括换行符  |
+| [...]  | 匹配出括号内的任意字符        |
+| [^...] | 匹配不出括号内的任意字符      |
+| a*     | 匹配零个或者多个a(包括空串)   |
+| a+     | 匹配一个或者多个a(不包括空串) |
+| a?     | 匹配零个或者一个a             |
+| a1\|a2 | 匹配a1或a2                    |
+| a(m)   | 匹配m个a                      |
+| a(m,)  | 至少匹配m个a                  |
+| a(m,n) | 匹配m个a 到 n个a              |
+| a(,n)  | 匹配0到n个a                   |
+| (...)  | 将模式元素组成单一元素        |
+
+
+
+```sql
+select * from account where name regexp '^测试';
+select * from account where name regexp '[4,5]';
+select * from account where name regexp '1(2,5)';
+```
+
+
+
+### 2、正则和like 性能对比
+
+> 表中有数据300w。name都是以【测试...】开头。并且name_sex_balance 是联合索引
+
+![image-20211225160434349](第二章-DQL语言.assets/image-20211225160434349.png)
+
+#### 全量查询
+
+```sql
+select * from account where name regexp '^测试';
+select * from account where name like '测试%';
+```
+
+* 正则耗时以及分析计划
+
+	```sql
+	myemployees> select * from account where name regexp '^测试'
+	[2021-12-25 16:05:35] 3000003 rows retrieved starting from 1 in 34 s 741 ms (execution: 3 ms, fetching: 34 s 738 ms)
+	```
+
+<img src="第二章-DQL语言.assets/image-20211225160954076.png" alt="image-20211225160954076" style="zoom:150%;" />
+
+
+
+* like耗时以及分析计划
+
+	```sql
+	myemployees> select * from account where name like '测试%'
+	[2021-12-25 16:07:43] 3000003 rows retrieved starting from 1 in 29 s 678 ms (execution: 3 ms, fetching: 29 s 675 ms)
+	```
+
+<img src="第二章-DQL语言.assets/image-20211225161027388.png" alt="image-20211225161027388" style="zoom:150%;" />
 
 
 
 
 
+#### 部分查询
 
 
 
+* 正则耗时以及分析计划
+
+	```sql
+	myemployees> select * from account where name regexp '9+'
+	[2021-12-25 16:11:49] 1405677 rows retrieved starting from 1 in 14 s 302 ms (execution: 4 ms, fetching: 14 s 298 ms)
+	```
+
+<img src="第二章-DQL语言.assets/image-20211225161232929.png" alt="image-20211225161232929" style="zoom:150%;" />
 
 
 
+* like耗时以及分析计划
 
+	```sql
+	myemployees> select * from account where name like '%9%'
+	[2021-12-25 16:13:57] 1405677 rows retrieved starting from 1 in 14 s 300 ms (execution: 3 ms, fetching: 14 s 297 ms)
+	```
 
-
-
-
-
-
-
-
+	![image-20211225161431935](第二章-DQL语言.assets/image-20211225161431935.png)
