@@ -16,9 +16,9 @@ MySQL支持一台主库同时向多台从库进行复制， 从库同时也可�
 
 
 
-1. Master 主库在事务提交时，会把数据变更作为时间 Events 记录在二进制日志文件 Binlog 中。
-2. 主库推送二进制日志文件 Binlog 中的日志事件到从库的中继日志 Relay Log 。
-3. slave重做中继日志中的事件，将改变反映它自己的数据。
+1. Master 主库在事务提交时，会把数据变更作为时间 Events 记录在** ** 中。
+2. **主库推送二进制日志文件 Binlog 中的日志事件到从库的中继日志 Relay Log 。**
+3. slave重做**中继日志**中的事件，将改变反映它自己的数据。
 
 
 
@@ -246,8 +246,9 @@ FLUSH PRIVILEGES;
 ### Slave_SQL_Running 为 No
 
 ```sql
+# 一般为主从数据不一致导致的
 stop slave;  
-SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1; START SLAVE; 
 START SLAVE;
 FLUSH PRIVILEGES;
 show slave status\G;

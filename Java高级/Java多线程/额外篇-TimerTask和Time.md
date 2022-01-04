@@ -170,11 +170,11 @@ public static void timer6() {
 ### 注意点
 
     每一个Timer仅对应唯一一个线程。
-
+    
     Timer不保证任务执行的十分精确。
-
+    
     Timer类的线程安全的。
-
+    
     schedule方法：“fixed-delay”；如果第一次执行时间被delay了，随后的执行时间按 照 上一次 实际执行完成的时间点 进行计算
-
+    
     scheduleAtFixedRate方法：“fixed-rate”；如果第一次执行时间被delay了，随后的执行时间按照 上一次开始的 时间点 进行计算，并且为了”catch up”会多次执行任务,TimerTask中的执行体需要考虑同步
