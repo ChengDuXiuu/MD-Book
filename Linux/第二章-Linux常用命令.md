@@ -400,7 +400,9 @@ echo "this is a test" >> /etc/motd
 
 r  ---- 4      w ---- 2      x  ---- 1
 
-rwxrw-r--    7   6    4
+
+
+![image-20220120164307004](第二章-Linux常用命令.assets/image-20220120164307004.png)
 
 
 

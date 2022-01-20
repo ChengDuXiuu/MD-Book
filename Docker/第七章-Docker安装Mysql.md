@@ -1,3 +1,5 @@
+> 适用于5.7 和 8版本
+
 ## 拉取MySQL
 
 ```bash
@@ -504,4 +506,28 @@ docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:latest
 ```
 
 
+
+## 错误
+
+### 拉取MySQL8后启动报错
+
+* 错误信息
+
+	```bash
+	 Error starting userland proxy: listen tcp4 0.0.0.0:3306: bind: address already in use.
+	 
+	```
+
+* 原因
+
+	端口被占用
+
+* 解决
+
+	```bash
+	netstat -tanlp # 查看占用端口的进程
+	kill 进程
+	```
+
+	
 

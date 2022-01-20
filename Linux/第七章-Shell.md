@@ -37,6 +37,8 @@ echo [选项] [输出内容]
 
 `选项:`
 
+* -n:   默认换行输出，告诉解释器不需要换行
+
 * -e： 支持反斜线控制的字符转换,如下
 
 	![image-20210719225337630](第七章-Shell.assets/image-20210719225337630.png)
@@ -73,9 +75,7 @@ echo -e "\e[1;31m  abcd \e[0m"
 
 > `sh文件头必须有如下内容`
 >
-> ```shell
-> #!/bin/bash
-> ```
+> \# !/bin/bash  #定义脚本的执行环境
 
 
 
@@ -103,6 +103,12 @@ echo -e "\e[1;31m  abcd \e[0m"
 
 
 ## Bash的基本功能
+
+
+
+### Shell中的特殊符号
+
+![image-20220120164942608](第七章-Shell.assets/image-20220120164942608.png)
 
 ### 历史命令和命令补全
 
@@ -178,7 +184,7 @@ vi /root/.bashrc
 
 >   输出重定向适合于**有输出结果**得命令将结果进行输出到文件。日志就是这个原理，我们可以在脚本中进行日志监控。
 >
->   当然并不是所有的命令都适合输出重定向，必须得有输出内容的命令，例如ls等就可以，cd就不信
+>   **当然并不是所有的命令都适合输出重定向，必须得有输出内容的命令，例如ls等就可以，cd就不信**
 
 #### 标准输入输出
 
@@ -233,8 +239,44 @@ vi /root/.bashrc
     ```
 
     ![image-20210720113127849](第七章-Shell.assets/image-20210720113127849.png)
-
-
+    
+    #### 接收键盘输入
+    
+    `格式`
+    
+    ```bash
+    read [选项] [变量名] 
+    ```
+    
+    `选项：`  
+    
+    *   -p “提示信息”：在等待read输入时，输出提示信息  
+    
+    *   -t 秒数：  read命令会一直等待用户输入，使用此选项可以指定等待时间  
+    
+    *   -n 字符数： read命令只接受指定的字符数，就会 执行  
+    
+    *   -s：   隐藏输入的数据，适用于机密信息的输入  , 类似与html中password属性
+    
+    `案例`
+    
+    ```bash
+    #!/bin/bash 
+    
+    read -t 30 -p "Please input your name: " name 
+    #提示“请输入姓名”并等待30秒，把用户的输入保存入变量name中 
+    echo "Name is $name "  
+    read -s -t 30 -p "Please enter your age: " age 
+    #年龄是隐私，所以我们用“-s”选项隐藏输入 
+    echo -e "\n" 
+    echo "Age is $age "  
+    read -n 1 -t 30 -p "Please select your gender[M/F]: " gender
+    #使用“-n 1”选项只接收一个输入字符就会执行（都不用输入回车） 
+    echo -e "\n" 
+    echo "Sex is $gender"
+    ```
+    
+    
 
 ### 多命令顺序执行与管道符
 
@@ -380,7 +422,7 @@ netstat -an | grep "ESTABLISHED"
 
 
 
-## Bash的变量
+## 变量
 
 ### 变量设置规则
 
@@ -399,55 +441,62 @@ netstat -an | grep "ESTABLISHED"
 
 -   环境变量名建议大写，便于区分。
 
-### 用户自定义变量
 
->   只在当前shell(终端)生效，如果是其他终端或者子shell则不能使用
+
+### 变量分类
+
+#### 用户自定义变量
+
+> 只在当前shell(终端)生效，如果是其他终端或者子shell则不能使用
 >
->   怎么理解子shell呢？
+> 怎么理解子shell呢？
 >
->   ​	我打开一个终端比如说是bansh，然后申明了变量在执行 csh，进入子shell，此时csh就是bash的子shell
+> ​	我打开一个终端比如说是bansh，然后申明了变量在执行 csh，进入子shell，此时csh就是bash的子shell
 
 -   变量定义
 
-    name="shen chao"
+	name="shen chao"
 
 -   变量叠加
 
-    aa=123 
+	aa=123 
 
-    a="$aa"456 
+	a="$aa"456 
 
-    aa=${aa}789
+	aa=${aa}789
 
 -   变量调用 
 
-    echo $name  
+	echo $name  
 
 -   变量查看 
 
-    set  #查看当前系统全部变量，包括自定义、环境等边浪
+	set  #查看当前系统全部变量，包括自定义、环境等边浪
 
 -   变量删除
 
-    unset name
+	unset name
 
-### 环境变量
 
->   环境变量在当前shell和子shell都会生效，如果写入到相应的配置文件，那么该变量在所有的shell中生效
 
-*   申明变量  
+#### 本地变量
 
-    export 变量名=变量值 
+用户私有变量，是由本用户可以使用，保存在家目录下的.bash_profile、.bashrc文件中
 
-    export  用户自定义变量    #将自定义变量升级为环境变量
+> 只有登录成功后才回去加载两个文件中变量
 
-*   查询变量  
+#### 全局变量
 
-    env
+所有用户都可以使用，保存在/etc/profile、/etc/bashrc文件中
 
-*   删除变量
+> 系统启动后就会加载这两个文件内容
 
-    unset 变量名 
+```bash
+export name="test"
+# 将本地变量变为全局变量
+```
+
+
 
 `系统常见环境变量`
 
@@ -493,7 +542,7 @@ netstat -an | grep "ESTABLISHED"
 
     ![image-20210720150531891](第七章-Shell.assets/image-20210720150531891.png)
 
-### 位置参数变量
+#### 位置参数变量
 
 ![image-20210720150600342](第七章-Shell.assets/image-20210720150600342.png)
 
@@ -507,51 +556,67 @@ netstat -an | grep "ESTABLISHED"
 
 
 
-### 预定义变量
+#### 预定义变量
 
 ![image-20210720151738786](第七章-Shell.assets/image-20210720151738786.png)
 
 ![image-20210720151956938](第七章-Shell.assets/image-20210720151956938.png)
 
-### 接收键盘输入
 
-`格式`
+
+## 数组
+
+### 定义数组
 
 ```bash
-read [选项] [变量名] 
+array=('a','b','c')
 ```
 
-`选项：`  
+### 操作数组方法
 
-*   -p “提示信息”：在等待read输入时，输出提示信息  
+![image-20220120194031786](第七章-Shell.assets/image-20220120194031786.png)
 
-*   -t 秒数：  read命令会一直等待用户输入，使用此选项可以指定等待时间  
-
-*   -n 字符数： read命令只接受指定的字符数，就会 执行  
-
-*   -s：   隐藏输入的数据，适用于机密信息的输入  , 类似与html中password属性
-
-`案例`
+### 数组赋值
 
 ```bash
-#!/bin/bash 
-
-read -t 30 -p "Please input your name: " name 
-#提示“请输入姓名”并等待30秒，把用户的输入保存入变量name中 
-echo "Name is $name "  
-read -s -t 30 -p "Please enter your age: " age 
-#年龄是隐私，所以我们用“-s”选项隐藏输入 
-echo -e "\n" 
-echo "Age is $age "  
-read -n 1 -t 30 -p "Please select your gender[M/F]: " gender
-#使用“-n 1”选项只接收一个输入字符就会执行（都不用输入回车） 
-echo -e "\n" 
-echo "Sex is $gender"
+#赋一个值
+array[0]='tom'
+#将文件每一行作为一个元素赋值给数组
+array=(cat /etc/demo.txt) 
 ```
 
 
 
-## Bash的运算符
+## 关联数组Map
+
+类似于Map结构。
+
+
+
+### 定义
+
+```bash
+#! /bin/bash
+declare -A array1
+declare -A array2
+
+array1[name]="张三"
+array1[age]=18
+echo ${array1[name]}
+
+array2=([name]='hello' [age]=20)
+echo ${array2[name]}
+```
+
+### 操作
+
+和数组操作一样。 
+
+
+
+
+
+## 运算符
 
 ### 数值运算
 
@@ -603,13 +668,18 @@ aa=11
 bb=22 
 ff=$(( $aa+$bb )) 
 gg=$[ $aa+$bb ]
+mm=$((1*2))
 ```
 
 
 
-### 运算符
+### 数字运算符
 
 ![image-20210720153827971](第七章-Shell.assets/image-20210720153827971.png)
+
+### 逻辑运算符
+
+![image-20220120211843288](第七章-Shell.assets/image-20220120211843288.png)
 
 
 
@@ -617,12 +687,12 @@ gg=$[ $aa+$bb ]
 
 >   环境变量配置文件中主要是定义对系统的操作环境生效的系统默认环境变量，比如PATH、HISTSIZE、PS1、HOSTNAME等默认环境变量。
 >
->   环境变量配置文件需要重启后再回重新读取配置文件，很是麻烦，因此有了source命令
+>   **环境变量配置文件需要重启后再回重新读取配置文件，很是麻烦，因此有了source命令**
 
 ### 简介
 
-*   环境变量可以在所有的父子shell中生效，但是开关机后失效
-*   要想永久生效，必须要保存进入配置文件
+*   **环境变量可以在所有的父子shell中生效，但是开关机后失效**
+*   **要想永久生效，必须要保存进入配置文件**
 
 ### source命令
 
@@ -1050,9 +1120,35 @@ wc [选项] 文件名
 
 ## 条件判断
 
+### test命令
+
+> test - check file types and compare values。
+>
+> 该命令并没有返回值，需要配合echo $? 使用
+>
+> 返回结果：0为false ，1为true
+
+
+
+### 数字比较运算
+
+![image-20220120205358021](第七章-Shell.assets/image-20220120205358021.png)
+
+
+
+```bash
+test 1 -eq 1;echo $?  #获取最后一个命令的结果值
+```
+
+![image-20220120205626437](第七章-Shell.assets/image-20220120205626437.png)
+
+
+
+
+
 ### 按照文件类型进行判断
 
-![image-20210720170437019](第七章-Shell.assets/image-20210720170437019.png)
+![image-20210720170731348](第七章-Shell.assets/image-20210720170437019.png)
 
 >   标蓝为常用
 
@@ -1143,18 +1239,56 @@ aa=24
 
 ## 流程控制
 
+### seq命令
+
+> 类似于Random 数字生成器，从起始指定值以指定增量达到指定结尾值
+
+* 指定结束值
+
+	![image-20220120213952786](第七章-Shell.assets/image-20220120213952786.png) 
+
+	> 从默认值1到结尾值5。
+
+* 指定起始值和结束值
+
+	![image-20220120214413230](第七章-Shell.assets/image-20220120214413230.png)
+
+* 指定增量
+
+	![image-20220120214450964](第七章-Shell.assets/image-20220120214450964.png)
+
+	> 从2 到 11 每次增长3
+
+	![image-20220120214629540](第七章-Shell.assets/image-20220120214629540.png)
+
+	> 指定递减。18开始每次减3 直到3
+
+* 使用分隔符
+
+	![image-20220120214819836](第七章-Shell.assets/image-20220120214819836.png)
+
+	> 默认分隔符为换行，因此才能生成数组。可以替换为其他分隔符。
+
+* 生成字母
+
+	![image-20220120215224777](第七章-Shell.assets/image-20220120215224777.png)
+
+	
+
+
+
 ### if语句
 
 *   单分支if条件语句 
 
     ```shell
     if  [ 条件判断式 ] ; then
-    	程序 
+    	执行为true的语句
     fi  
     #或者
     if  [ 条件判断式 ]  
         then
-            	程序 
+       		执行为true的语句 
     fi 
     ```
 
@@ -1169,17 +1303,16 @@ aa=24
     `案例`
 
     ```shell
-    #!/bin/basn
-    统计根分区使用率 
-    Author: shenchao （E-mail: shenchao@qq.com）  
-     rate=$(df -h | grep "/dev/sda3" | awk '{print $5}' | cut -d "%" -f 1)  
-     # 把根分区使用率作为变量值赋予变量rate  
-     if [ $rate -ge 80]
-        then
-            echo "Warning! /dev/sda3 is full!"
-     fi
+    #! /bin/bash
+    #如果不存在则创建文件
+    if [ ! -e /tmp/abc.txt ];then
+      echo 'No File /tmp/abc.txt'
+      touch /tmp/abc.txt
+      echo 'create /tmp/abc.txt ok!'
+      rm -rf /tmp/abc.txt
+    fi
     ```
-
+    
 *   双分支if条件语句 
 
     ```bash
@@ -1191,53 +1324,7 @@ aa=24
     fi
     ```
 
-    `案例`
-
-    *   备份mysql数据库
-
-        ```bash
-        #!/bin/bash
-        #备份mysql数据库。
-        # Author:shenchao（E-mail:shenchao@lampbrother.net）
-        ntpdateasia.pool.ntp.org&>/dev/null
-        #同步系统时间
-        date=$(date+%y%m%d)
-        #把当前系统时间按照“年月日”格式赋予变量
-        datesize=$(du-sh/var/lib/mysql)
-        #统计mysql数据库的大小，并把大小赋予size变量
-        if [ -d/tmp/dbbak ]
-            then
-                echo"Date:$date!" > /tmp/dbbak/dbinfo.txt
-                echo"Datasize$size">>/tmp/dbbak/dbinfo.txt
-                cd/tmp/dbbak
-                tar -zcf mysql-lib-$date.tar.gz /var/lib/mysql dbinfo.txt &>/dev/null
-                rm -rf /tmp/dbbak/dbinfo.txt
-            else
-                mkdir /tmp/dbbak
-                echo"Date:date!">/tmp/dbbak/dbinfo.txt
-                echo"Datasize:size">>/tmp/dbbak/dbinfo.txt
-                cd/tmp/dbbak
-                tar -zcf mysql-lib-$date.tar.gz /var/lib/mysql  
-                 dbinfo.txt &> /dev/null
-                 rm -rf /tmp/dbbak/dbinfo.txt
-         fi
-        ```
-
-    *   判断apache是否启动
-
-        ```shell
-        #!/bin/bash
-        #Author:shenchao（E-mail:shenchao@lampbrother.net）
-        port=$(nmap -sT 192.168.1.156 | grep tcp | grep http |awk'{print$2}')
-        #使用nmap命令扫描服务器，并截取apache服务的状态，赋予变量port
-        if [ "$port"=="open" ]
-            then
-                echo“$(date)httpdisok!” >> /tmp/autostart-acc.log
-            else
-                /etc/rc.d/init.d/httpdstart &> /dev/null
-                echo"$(date)restarthttpd!!" >> /tmp/autostart-err.log
-        fi
-        ```
+    
 
 *   多分支if条件语句
 
@@ -1248,14 +1335,17 @@ aa=24
     elif [ 条件判断式2 ]
         then
             当条件判断式2成立时，执行程序2
-    „省略更多条件…
+    elif [ 条件判断式2 ]
+        then
+            当条件判断式2成立时，执行程序2       
+    ....
     else
         当所有条件都不成立时，最后执行此程序
     fi
     ```
-
+    
     `案例`
-
+    
     ```bash
     #!/bin/bash
     #判断用户输入的是什么文件
@@ -1284,7 +1374,7 @@ aa=24
         echo"$fileisanotherfile!"
     fi
     ```
-
+    
     
 
 ### **case语句** 
@@ -1347,7 +1437,38 @@ for city in beijing nanjing shanghai
     done 
 ```
 
+```bash
+#!/bin/bash
+#生成字母
+for num in {b..g}
+  do
+    echo $num
+  done
 
+#生成数字
+for num in $(seq 3 3 12)
+  do
+   echo "输出 ：$num"
+  done 
+  
+for ((i=1;i<10;i++))
+  do
+    echo $i
+  done
+  
+for ((i=1,y=10;i<10;i++,y--))
+  do
+    echo "输出 ：$i $y"
+  done 
+  
+#无线循环
+for ((;;)) 
+	do
+    echo "输出 "
+  done 
+```
+
+> <font color=ff00aa size=4>for循环列表  只要有空格的数据都可以进行循环输出，默认以空格进行识别。当然可以是一段话，然后按照空格进行输出。</font>
 
 ### **while循环**
 
@@ -1403,4 +1524,43 @@ echo"Thesumis:$s"
 ```
 
 
+
+## Shell函数
+
+```bash
+#! /bin/bash
+
+# 定义函数
+func_start(){
+  echo "Apache start .....              [OK]"
+}
+
+function func_stop {
+  echo "Apache stop .....              [FAIL]"
+}
+
+#调用函数
+func_start
+func_start
+func_start
+func_stop
+func_stop
+func_stop
+```
+
+
+
+## 练习
+
+### 变量练习模仿登录
+
+```bash
+#! /bin/bash
+clear
+# echo -n 'Login : '
+read -p 'Login : ' name
+# echo -n 'Password : '
+read -p 'Password : ' -s -n6 pass
+echo "你的用户名是:$name。密码是:$pass"
+```
 
