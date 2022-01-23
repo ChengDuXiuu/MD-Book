@@ -477,6 +477,14 @@ netstat -an | grep "ESTABLISHED"
 
 	unset name
 
+#### 局部变量
+
+定义在shell函数中的变量，其生命周期只在此函数中。
+
+```bash
+local var=value
+```
+
 
 
 #### 本地变量
@@ -542,11 +550,17 @@ export name="test"
 
     ![image-20210720150531891](第七章-Shell.assets/image-20210720150531891.png)
 
-#### 位置参数变量
+#### 参数变量
 
-![image-20210720150600342](第七章-Shell.assets/image-20210720150600342.png)
-
-
+| **参数处理** | **说明**                                                     |
+| ------------ | ------------------------------------------------------------ |
+| $#           | 传递到脚本的参数个数                                         |
+| $*           | 以一个单字符串显示所有向脚本传递的参数                       |
+| $$           | 脚本运行的当前进程ID号                                       |
+| $!           | 后台运行的最后一个进程的ID号                                 |
+| $@           | 与$*相同，但是使用时加引号，并在引号中返回每个参数。         |
+| $-           | 显示Shell使用的当前选项，与set命令功能相同                   |
+| $?           | 显示最后命令的退出状态。0表示没有错误，其他任何值表明有错误。 |
 
 ![image-20210720150848388](第七章-Shell.assets/image-20210720150848388.png)
 
@@ -1527,6 +1541,15 @@ echo"Thesumis:$s"
 
 ## Shell函数
 
+### 定义
+
+```bash
+[function] funname [()]{
+    函数体
+    [return int;]
+}
+```
+
 ```bash
 #! /bin/bash
 
@@ -1550,6 +1573,43 @@ func_stop
 
 
 
+### 函数传参
+
+```bash
+function show(){
+  echo "第一个参数为 $1 !"
+    echo "第二个参数为 $2 !"
+    echo "第十个参数为 $10 !"
+    echo "第十个参数为 ${10} !"
+    echo "第十一个参数为 ${11} !"
+    echo "参数总数有 $# 个!"
+    echo "作为一个字符串输出所有参数 $* !"
+}
+
+show 0 1 2 3 4 5 6 7 8 9 10 11
+```
+
+> $10 不能获取第十个参数，获取第十个参数需要${10}。当n>=10时，需要使用${n}来获取参数。
+
+
+
+### 函数返回值
+
+> 使用return进行 **整数值** 返回。只能返回整数
+
+```bash
+function getStr(){
+	return 5
+}
+ 
+#方法一
+getStr
+str=$?
+echo $str
+```
+
+
+
 ## 练习
 
 ### 变量练习模仿登录
@@ -1562,5 +1622,131 @@ read -p 'Login : ' name
 # echo -n 'Password : '
 read -p 'Password : ' -s -n6 pass
 echo "你的用户名是:$name。密码是:$pass"
+```
+
+
+
+### 批量启动docker下redis和MySQL
+
+```bash
+#docker_function
+#! /bin/sh
+
+#判断docker是否安装 1：安装。0：未安装
+function dokcerIsInstall(){
+  local res
+
+  #:> 清空文件内容 。2> 写入错误信息
+  local common=`:> /tmp/null;docker ps 2> /tmp/null`
+
+  #非空为真
+  if [ -s /tmp/null ]
+    then 
+      res=0
+    else
+      res=1
+  fi      
+
+  return $res
+}
+
+
+#判断docker是否启动 1：启动。0: 未启动
+function dockerIsRun(){
+  local res
+  local common=`ps aux | grep docker | grep -v "grep" -c`
+
+  if [ $common -eq 1 ]
+    then
+      return 1
+    else
+      return 0
+  fi      
+
+}
+
+
+#终止程序执行
+function exit(){
+  exit 1
+}
+
+#是否包含 1:包含  0:不包含
+function contain(){
+  local source=$1
+  local target=$2
+  echo $source
+  echo $target
+  result=$(echo $source | grep "${target}")
+  if [[ "$result" != "" ]]
+    then
+        retuen 1
+    else
+        return 0
+  fi
+}
+
+#docker ps -a 查看镜像是否存在容器，有容器则直接启动容器，否则生成镜像容器
+function imageDeal(){
+  
+  local redis=`docker ps -a | grep "redis"`
+  local mysql=`docker ps -a | grep "mysql"`
+  local redisArray=($redis)
+  local mysqlArray=($mysql)
+
+  if [[ "$redis" != ""  ]]
+    then 
+      echo "Exist Redis-image : ${redisArray[0]} and restart"
+      local common=`docker restart ${redisArray[0]}` 
+    else
+      echo "Run Redis-image,data->[/root/redis/data]。config->[/root/redis/config/redis.conf]"
+      local common=`docker run -d -p 6379:6379 -v /root/redis/config/redis.conf:/usr/local/etc/redis/redis.conf -v /root/redis/data:/data --privileged=true --name redis redis redis-server /usr/local/etc/redis/redis.conf`
+  fi 
+
+  if [[ "$mysql" != ""  ]]
+    then 
+      echo "Exist Mysql-image : ${mysqlArray[0]} and restart"
+      local common=`docker restart ${mysqlArray[0]}` 
+    else
+      echo "Run Redis-image,data->[/root/mysql/data]。config->[/root/mysql/conf.d]"
+      local common=`docker run --privileged=true --name mysql -v /root/mysql/data:/var/lib/mysql -v /root/mysql/conf.d:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -d mysql`
+  fi     
+
+}
+```
+
+```bash
+#batchStartDockerImg.sh
+#! /bin/sh
+
+#自定义启动docker redis和MySQL
+
+. ./docker_function
+
+#docker是否安装和启动，如果不存在则提示docker未安装，如果没有启动则提示docker没有启动
+dokcerIsInstall
+if [ $? -eq 0 ] ; then 
+    exit
+fi
+
+dockerIsRun
+if [ $? -eq 0 ] 
+  then 
+    exec1=`systemctl start docker.service;systemctl status docker | grep 'active (running)'`
+    contain "$exec1" "active (running)"
+    if [ $? -eq 0 ]
+      then
+        echo "Can not start docker ！"
+        exit
+      else
+        echo "Docker started successfully ！"  
+    fi
+  else
+    echo "Docker have already started !"      
+fi
+
+
+#docker ps -a 查看镜像是否存在容器，有容器则直接启动容器，否则生成镜像容器
+imageDeal
 ```
 
