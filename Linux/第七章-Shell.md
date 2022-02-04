@@ -599,6 +599,34 @@ array[0]='tom'
 array=(cat /etc/demo.txt) 
 ```
 
+### 数组遍历
+
+```shell
+for(( i=0;i<${#array[@]};i++)) do
+#${#array[@]}获取数组长度用于循环
+echo ${array[i]};
+done;
+```
+
+```shell
+for element in ${array[@]}
+#也可以写成for element in ${array[*]}
+do
+echo $element
+done
+```
+
+```shell
+for i in "${!arr[@]}";   
+do   
+    printf "%s\t%s\n" "$i" "${arr[$i]}"  
+done  
+```
+
+
+
+
+
 
 
 ## 关联数组Map
@@ -792,6 +820,60 @@ source 配置文件
 ## 字符截取命令
 
 >   grep提取模糊匹配到关键字的行
+
+
+
+### \#和%字符串截取
+
+* \#
+
+	```bash
+	${var#*string}
+	```
+
+	> 从左边开始，删除第一个string以及左边的所有字符。var为变量名，#表示截取的运算符。
+
+* \##
+
+	```bash
+	${var##*string}
+	```
+
+	>从左边开始，删除最后一个string以及左边的所有内容。
+
+	![image-20220201212824412](第七章-Shell.assets/image-20220201212824412.png)
+
+* %
+
+	```bash
+	${var%string*} 
+	```
+
+	> 从右边开始，删除遇到的第一个string以及右边所有的内容。
+
+* %%
+
+	```bash
+	${var%%string*} 
+	```
+
+	> 从右边开始，删除遇到的最后（也就是最左边）一个string以及右边所有内容。
+
+	![image-20220201212853111](第七章-Shell.assets/image-20220201212853111.png)
+
+```bash
+${var:n1:n2}  解释：截取n1和n2之间的字符串  
+
+例如：${var:0:5}表示：从左边第1个字符开始，截取5个字符 
+
+${var:7}表示：从左边第8个字符开始，一直到结束 
+
+${var:0-7:5}表示：从右边第7个字符开始，截取5个字符
+
+${var:0-5}表示：从右边第5个字符开始，一直到变量结束
+```
+
+![image-20220201213015310](第七章-Shell.assets/image-20220201213015310.png)
 
 ### cut字段提取
 
@@ -1610,6 +1692,10 @@ echo $str
 
 
 
+## 正则表达式
+
+
+
 ## 练习
 
 ### 变量练习模仿登录
@@ -1704,6 +1790,7 @@ function imageDeal(){
   fi 
 
   if [[ "$mysql" != ""  ]]
+    mysqld_detection
     then 
       echo "Exist Mysql-image : ${mysqlArray[0]} and restart"
       local common=`docker restart ${mysqlArray[0]}` 
@@ -1712,6 +1799,36 @@ function imageDeal(){
       local common=`docker run --privileged=true --name mysql -v /root/mysql/data:/var/lib/mysql -v /root/mysql/conf.d:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -d mysql`
   fi     
 
+}
+
+#检测并关闭3306端口
+function mysqld_detection(){
+  common=`netstat -tunpl | grep 3306 | grep -v "grep"`
+
+  cut_str "mysqld" "$common"
+
+  res=`cat /tmp/null`
+  if [ $res!="" ]
+    then
+    echo "3306 端口冲突，关闭相关进程！"
+    local port=${res%/*}
+    kill $port
+    kill $port
+    kill $port
+  fi  
+  echo ${res%/*}
+}
+
+#从返回值中获取指定内容 $2为内容，$1为截取字符串 结果在/tmp/null
+function cut_str(){
+  for word in $2
+    do
+      res=$(echo $word | grep $1)
+      if [[ "$res" != "" ]]
+        then 
+          :> /tmp/null;echo $word > /tmp/null
+      fi    
+  done
 }
 ```
 
@@ -1748,5 +1865,35 @@ fi
 
 #docker ps -a 查看镜像是否存在容器，有容器则直接启动容器，否则生成镜像容器
 imageDeal
+```
+
+
+
+### 输入网卡名称，输出对应IP
+
+```bash
+#! /bin/sh
+name_arr=(`ifconfig | awk -F ": " '/\d*: flags=/{print $1}'`)
+
+ip_arr=(`ifconfig | awk '$1=="inet",$3="netmask" {print $2}'`)
+
+
+# 将结果写入到文件
+# `:> /tmp/network_info;echo $name_arr> /tmp/network_info;echo $ip_arr >> /tmp/network_info`
+
+clear
+
+echo "有如下网卡 :"
+echo ${name_arr[@]:0:${#name_arr[@]}}
+read -p "请输入网卡以获取其IP地址 : " name_input
+
+# cat /tmp/network_info | awk -F " " '{print $1}'
+
+for((i=0,y=0;i<${#name_arr[@]};i++,y++)) do
+  if [ ${name_arr[i]} == $name_input ];then
+    echo "${name_arr[i]}  -->  ${ip_arr[y]}"
+  fi
+  echo "输入网卡不存在！"
+done;
 ```
 
