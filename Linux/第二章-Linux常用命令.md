@@ -947,7 +947,7 @@ cat file.txt| awk '{print}'
 #### 2、 迭代每一行中每一个单词
 
 ```bash
-for word in $line;
+for word in `cat ./shizhan/nowcoder.txt`;
 do
 echo $word;
 done
