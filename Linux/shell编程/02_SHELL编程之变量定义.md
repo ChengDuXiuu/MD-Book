@@ -1,5 +1,5 @@
 ---
-typora-copy-images-to: pictures
+ typora-copy-images-to: pictures
 typora-root-url: ./pictures
 ---
 
@@ -369,9 +369,8 @@ Input your name:tom
 tom
 ```
 
-
-用法2：变量值来自文件
 ```
+用法2：变量值来自文件
 [root@MissHou ~]# cat 1.txt 
 10.1.1.1 255.255.255.0
 
@@ -428,7 +427,7 @@ hello
 - **环境变量**：当前进程有效，并且能够被**子进程**调用。
   - `env`查看当前用户的环境变量
   -  `set`==查询当前用户的所有变量(临时变量与环境变量)== 
-  - `export 变量名=变量值`    或者  `变量名=变量值；export 变量名`
+  - `export 变量名=变量值`    或者  `变量名=变量值；export 变量名`  设值环境变量
 
 ~~~shell
 [root@MissHou ~]# export A=hello		临时将一个本地变量（临时变量）变成环境变量
@@ -455,10 +454,10 @@ export PATH=/usr/local/mysql/bin:$PATH
 
 | 文件名               | 说明                                   | 备注                                                       |
 | -------------------- | -------------------------------------- | ---------------------------------------------------------- |
-| $HOME/.bashrc        | 当前用户的bash信息,用户==登录==时读取  | 定义别名、umask、函数等                                    |
-| $HOME/.bash_profile  | 当前用户的环境变量，用户==登录==时读取 |                                                            |
-| $HOME/.bash_logout   | 当前用户==退出==当前shell时最后读取    | 定义用户退出时执行的程序等                                 |
-| /etc/bashrc          | 全局的bash信息，所有用户都生效         |                                                            |
+| $HOME/.bashrc        | 当前用户的bash信息,用户==登录==时读取  | 只针对当前用户生效，定义别名、umask、函数等                |
+| $HOME/.bash_profile  | 当前用户的环境变量，用户==登录==时读取 | 只针对当前用户生效                                         |
+| $HOME/.bash_logout   | 当前用户==退出==当前shell时最后读取    | 只针对当前用户生效，定义用户退出时执行的程序等             |
+| /etc/bashrc          | 全局的bash信息，所有用户都生效         | 所有用户生效                                               |
 | /etc/profile         | 全局环境变量信息                       | 系统和所有用户都生效                                       |
 | \$HOME/.bash_history | 用户的历史命令                         | history -w   保存历史记录         history -c  清空历史记录 |
 
@@ -536,7 +535,7 @@ a b c
 
 算术运算：默认情况下，shell就只能支持简单的==整数==运算
 
-运算内容：加(+)、减(-)、乘(*)、除(/)、求余数（%）
+运算内容：加(+)、减(-)、乘(*)**需要转义**、除(/)、求余数（%）
 
 ## 1. 四则运算符号
 
@@ -722,11 +721,11 @@ mem.txt
 
 举例说明：
 # url=www.taobao.com
-# echo ${#url}		     获取变量的长度
-# echo ${url#*.}
-# echo ${url##*.}
-# echo ${url%.*}
-# echo ${url%%.*}
+# echo ${#url}		     获取变量的长度    ->14
+# echo ${url#*.}       从左往右，去掉第一个.所有前面的内容      ->taobao.com
+# echo ${url##*.} 		 从左往右，去掉最后一个.所有前面的内容    ->com
+# echo ${url%.*}			 从右往左，去掉第一个.后面的所有内容			 ->www.taobao
+# echo ${url%%.*}			 从右往左，去掉最后一个.后面的所有内容		->www
 ```
 
 - 以下了解，自己完成

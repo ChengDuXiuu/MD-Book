@@ -143,15 +143,14 @@ c   替换指定的==整行==内容
 > 其中，==**s**==表示search搜索；斜杠==**/**==表示分隔符，可以自己定义;动作一般是打印==**p**==和全局替换==**g**==
 
 ```shell
-[root@server ~]# sed -n 's/root/ROOT/p' 1.txt 
-[root@server ~]# sed -n 's/root/ROOT/gp' 1.txt 
-[root@server ~]# sed -n 's/^#//gp' 1.txt 
-[root@server ~]# sed -n 's@/sbin/nologin@itcast@gp' a.txt
+[root@server ~]# sed -n 's/root/ROOT/p' 1.txt   将1.txt中第一行root变为ROOT并打印出来
+[root@server ~]# sed -n 's/root/ROOT/gp' 1.txt  将1.txt中所有的root变为ROOT并打印出来
+[root@server ~]# sed -n 's/^#//gp' 1.txt 				将1.txt注释掉的行替换掉空白
+[root@server ~]# sed -n 's@/sbin/nologin@itcast@gp' a.txt 		
 [root@server ~]# sed -n 's/\/sbin\/nologin/itcast/gp' a.txt
-[root@server ~]# sed -n '10s#/sbin/nologin#itcast#p' a.txt 
-uucp:x:10:14:uucp:/var/spool/uucp:itcast
+[root@server ~]# sed -n '10s#/sbin/nologin#itcast#p' a.txt  		将第10行的sbin替换为nologin#itcast#
 [root@server ~]# sed -n 's@/sbin/nologin@itcastheima@p' 2.txt 
-注意：搜索替换中的分隔符可以自己指定
+[root@server ~]# sed -n 's/^sync/#&/pg' 2.txt 			# 将文件中以sync开头的行注释掉，其中&代表的是检索到的sync，在sync前面添加#
 
 [root@server ~]# sed -n '1,5s/^/#/p' a.txt 		注释掉文件的1-5行内容
 #root:x:0:0:root:/root:/bin/bash
@@ -165,8 +164,8 @@ uucp:x:10:14:uucp:/var/spool/uucp:itcast
 
 | 命令 | 解释                                       | 备注         |
 | ---- | ------------------------------------------ | ------------ |
-| r    | 从另外文件中读取内容                       |              |
-| w    | 内容另存为                                 |              |
+| r    | 从另外文件中读取内容到本文件               |              |
+| w    | 内容另存为其他文件中                       |              |
 | &    | 保存查找串以便在替换串中引用               | 和\\(\\)相同 |
 | =    | 打印行号                                   |              |
 | ！   | 对所选行以外的所有行应用命令，放到行数之后 | '1,5!'       |
@@ -177,10 +176,10 @@ uucp:x:10:14:uucp:/var/spool/uucp:itcast
 ~~~shell
 r	从文件中读取输入行
 w	将所选的行写入文件
-[root@server ~]# sed '3r /etc/hosts' 2.txt 
-[root@server ~]# sed '$r /etc/hosts' 2.txt
-[root@server ~]# sed '/root/w a.txt' 2.txt 
-[root@server ~]# sed '/[0-9]{4}/w a.txt' 2.txt
+[root@server ~]# sed '3r /etc/hosts' 2.txt  把/etc/hosts中内容插入到2.txt第三行
+[root@server ~]# sed '$r /etc/hosts' 2.txt	把/etc/hosts中内容插入到2.txt最后一样
+[root@server ~]# sed '/root/w a.txt' 2.txt 	把2.txt文件中root的行另存为a.txt
+[root@server ~]# sed '/[0-9]{4}/w a.txt' 2.txt 把2.txt中
 [root@server ~]# sed  -r '/([0-9]{1,3}\.){3}[0-9]{1,3}/w b.txt' 2.txt
 
 !	对所选行以外的所有行应用命令，放到行数之后
@@ -244,6 +243,8 @@ ROOT:x:0:0:root:/root:/bin/bash
 ~~~
 
 #### ④ 其他选项
+
+
 
 ```shell
 -e 多项编辑
@@ -338,14 +339,14 @@ p命令 不要再使用-i时使用
 1. 定址用于决定对哪些行进行编辑。地址的形式可以是数字、正则表达式、或二者的结合。
 2. 如果没有指定地址，sed将处理输入文件的所有行。
 
-| 正则          | 说明                                                         | 备注                             |
-| ------------- | ------------------------------------------------------------ | -------------------------------- |
-| /key/         | 查询包含关键字的行                                           | sed -n '/root/p' 1.txt           |
-| /key1/,/key2/ | 匹配包含两个关键字之间的行                                   | sed -n '/\^adm/,/^mysql/p' 1.txt |
-| /key/,x       | 从匹配关键字的行开始到==文件第x行==之间的行（包含关键字所在行） | sed -n '/^ftp/,7p'               |
-| x,/key/       | 从文件的第x行开始到与关键字的匹配行之间的行                  |                                  |
-| x,y!          | 不包含x到y行                                                 |                                  |
-| /key/!        | 不包括关键字的行                                             | sed -n '/bash$/!p' 1.txt         |
+| 正则          | 说明                                                         | 备注                                                         |
+| ------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| /key/         | 查询包含关键字的行                                           | sed -n '/root/p' 1.txt。打印包含root的行                     |
+| /key1/,/key2/ | 匹配包含两个关键字之间的行                                   | sed -n '/\^adm/,/^mysql/p' 1.txt。打印以adm开头到以mysql开头的行 |
+| /key/,x       | 从匹配关键字的行开始到==文件第x行==之间的行（包含关键字所在行） | sed -n '/^ftp/,7p'。打印以ftp开头到底7行的数据               |
+| x,/key/       | 从文件的第x行开始到与关键字的匹配行之间的行                  |                                                              |
+| x,y!          | 不包含x到y行                                                 |                                                              |
+| /key/!        | 不包括关键字的行                                             | sed -n '/bash$/!p' 1.txt。打印不包含bash$的行                |
 
 ##2. 脚本格式
 
