@@ -1,5 +1,5 @@
 ---
-typora-root-url: pictures
++63typora-root-url: pictures
 ---
 [toc]
 #课程目标
@@ -112,7 +112,7 @@ sed -f sed.sh -i filename
 | ==FNR/NR==        | 行号                               |                                  |
 | ==FS==            | 定义间隔符                         | 'BEGIN{FS=":"};{print \$1,$3}' |
 | ==OFS==           | 定义输出字段分隔符，==默认空格==   | 'BEGIN{OFS="\t"};print \$1,$3}' |
-| RS                | 输入记录分割符，默认换行           | 'BEGIN{RS="\t"};{print $0}'      |
+| RS                | 输入记录分割符，一行一行处理，这一行使用RS定义。默认换行 | 'BEGIN{RS="\t"};{print $0}'      |
 | ORS               | 输出记录分割符，默认换行           | 'BEGIN{ORS="\n\n"};{print \$1,$3}' |
 | FILENAME          | 当前输入的文件名                   |                                  |
 
@@ -121,7 +121,7 @@ sed -f sed.sh -i filename
 ```shell
 # awk -F: '{print $1,$(NF-1)}' 1.txt
 # awk -F: '{print $1,$(NF-1),$NF,NF}' 1.txt
-# awk '/root/{print $0}' 1.txt
+# awk '/root/{print $0}' 1.txt   包含root关键字的行进行打印
 # awk '/root/' 1.txt
 # awk -F: '/root/{print $1,$NF}' 1.txt 
 root /bin/bash
@@ -129,7 +129,7 @@ root /bin/bash
 root:x:0:0:root:/root:/bin/bash
 # awk 'NR==1,NR==5' 1.txt 
 # awk 'NR==1,NR==5{print $0}' 1.txt
-# awk 'NR==1,NR==5;/^root/{print $0}' 1.txt 
+# awk 'NR==1,NR==5;/^root/{print $0}' 1.txt   打印1到5行 或者 包含root关键字的行数据
 root:x:0:0:root:/root:/bin/bash
 root:x:0:0:root:/root:/bin/bash
 bin:x:1:1:bin:/bin:/sbin/nologin
@@ -269,12 +269,12 @@ awk -F: 'BEGIN{OFS="\t\t";print"u_name\t\th_dir\t\tshell\n**********************
 
 格式化输出：
 echo		print
-echo -n	printf
+echo -n	printf 
 
 {printf "%-15s %-20s %-20s\n",$1,$(NF-1),$NF}
 ```
 
-###4. awk和正则的综合运用
+## 4. awk和正则的综合运用
 
 | 运算符 | 说明     |
 | ------ | -------- |

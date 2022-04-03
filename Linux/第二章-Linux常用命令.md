@@ -381,7 +381,7 @@ $ rm -rf  /tmp/Japan/longze
 
 ### xargs
 
-xargs 能够将输入数据转化为特定格式的命令行参数
+xargs 将文本格式化输出
 
 `常用参数`
 

@@ -84,6 +84,7 @@ source ~/.bashrc
 # grep -A 5 mail passwd 				 	匹配包含mail关键字及其后5行
 # grep -B 5 mail passwd 				 	匹配包含mail关键字及其前5行
 # grep -C 5 mail passwd 					匹配包含mail关键字及其前后5行
+# grep -e "23/Apr/2020" nowcoder.txt  正则匹配23/Apr/2020
 ```
 
 ##2. ==cut工具==
