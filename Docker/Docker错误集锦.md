@@ -33,3 +33,16 @@
 
 ​		
 
+2. docker镜像删除提示容器未删除
+
+	> unable to remove repository reference "postgres" (must force) - container 270813e52f1f is using its 
+
+
+	```bash
+	docker container ls -a
+	docker image ls
+	docker container rm <container_id>
+	docker image rm <image_id>
+	```
+
+	
