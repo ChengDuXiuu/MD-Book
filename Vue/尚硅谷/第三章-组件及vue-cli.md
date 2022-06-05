@@ -134,4 +134,41 @@
 	</html>
 	```
 
+
+
+
+# 脚手架
+
+官方提供的开发平台，如果没有脚手架，项目中的vue文件浏览器是不被识别的。
+
+
+
+## 基础使用
+
+0. 配置镜像
+
+	```bash
+	npm config set registry https://registry.npm.taobao.org
+	```
+
+1. 安装(全局)
+
+	```vue
+	npm install -g @vue/cli
+	```
+
+2. **切换到你要创建项目的目录**，然后使用命令创建项目
+
+	```vue
+	vue create xxxx
+	```
+
+3. 启动项目
+
+	```vue
+	npm run serve
+	```
+
 	
+
+![image-20220529122639789](images/image-20220529122639789.png)	
