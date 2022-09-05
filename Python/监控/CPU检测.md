@@ -69,14 +69,17 @@ if __name__ == '__main__':
 ```
 
 ```python
---Email.py
 # -*- coding: UTF-8 -*-
 # 选择pyEmail 而不是 smtplib
+import pathlib
 import ssl
 import smtplib
 from Config import Config
-# from email.message import EmailMessage
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
 
 class Email(object):
 
@@ -93,46 +96,49 @@ class Email(object):
         message['Subject'] = subject
 
         try:
-            smtpObj = smtplib.SMTP_SSL(Config.EMAIL_SERVER_ADDRESS.value, 465)  # 启用SSL发信, 端口一般是465
-            smtpObj.login(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_FROM_PASSWORD.value)  # 登录验证
-            smtpObj.sendmail(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_TO_ADDRESS.value, message.as_string())  # 发送
+            server = smtplib.SMTP_SSL(Config.EMAIL_SERVER_ADDRESS.value, Config.EMAIL_SERVER_PORT.value)  # 启用SSL发信, 端口一般是465
+            server.login(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_FROM_PASSWORD.value)  # 登录验证
+            server.sendmail(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_TO_ADDRESS.value, message.as_string())  # 发送
+            server.quit()
             print("mail has been send successfully.")
         except smtplib.SMTPException as e:
-            print(e)
+            print('error:', e)
 
-        # msg['subject'] = subject
-        # msg['From'] = Config.EMAIL_FROM_ADDRESS.value
-        # msg['To'] = Config.EMAIL_TO_ADDRESS.value
-        # msg.set_content(body)
-        #
-        # with smtplib.SMTP_SSL(Config.EMAIL_SERVER_ADDRESS.value, Config.EMAIL_SERVER_PORT.value, context=self.context) as smtp:
-        #     smtp.login(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_FROM_PASSWORD.value)
-        #     smtp.send_message(msg)
-        #     smtp.close()
 
-    def send_email_with_annex(self, subject, body, file_addr, file_type):
-        pass
-        # msg = EmailMessage()
-        # msg['subject'] = subject
-        # msg['From'] = Config.EMAIL_FROM_ADDRESS.value
-        # msg['To'] = Config.EMAIL_TO_ADDRESS.value
-        # msg.set_content(body)
-        # with open(file_addr, 'rb') as f:
-        #     file_data = f.read()
-        #     f.close()
-        #
-        # msg.add_attachment(file_data, maintype=file_type, filename=file_addr)
-        #
-        # with smtplib.SMTP_SSL(Config.EMAIL_SERVER_ADDRESS.value, Config.EMAIL_SERVER_PORT.value, context=self.context) as smtp:
-        #     smtp.login(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_FROM_ADDRESS.value)
-        #     smtp.send_message(msg)
-        #     smtp.close()
+    def send_email_with_app(self, subject, body, file_addr):
+        message = MIMEMultipart()
+        part_text = MIMEText(body)
+        message.attach(part_text)
+
+        imageApart = MIMEApplication(open(file_addr, 'rb').read(), file_addr.split('.')[-1])
+        imageApart.add_header('Content-Disposition', 'attachment', filename=pathlib.Path(file_addr).name)
+        message.attach(imageApart)
+
+        message['Subject'] = subject
+        message['From'] = "{}".format(Config.EMAIL_FROM_ADDRESS.value)
+        message['To'] = ",".join(Config.EMAIL_TO_ADDRESS.value)
+
+        try:
+            smtp = smtplib.SMTP_SSL(Config.EMAIL_SERVER_ADDRESS.value, Config.EMAIL_SERVER_PORT.value)
+            smtp.login(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_FROM_PASSWORD.value)  # 登录验证
+            smtp.sendmail(Config.EMAIL_FROM_ADDRESS.value, Config.EMAIL_TO_ADDRESS.value, message.as_string())  # 发送
+            smtp.quit()
+            print("mail has been send successfully.")
+        except smtplib.SMTPException as e:
+            print('error:', e)
+
 
 
 
 if __name__ == '__main__':
-    email = Email()
-    email.send_email('测试发送邮件标题', '测试发送邮件内容')
+    textEmail = Email()
+    textEmail.send_email('测试发送邮件标题', '测试发送邮件内容')
+    imgEmail = Email()
+    imgEmail.send_email_with_app('测试发送图片标题', '测试发送图片内容', './file/img.jpg')
+    imgEmail = Email()
+    imgEmail.send_email_with_app('测试发送压缩包标题', '测试发送压缩包内容', './file/压缩.zip')
+    imgEmail = Email()
+    imgEmail.send_email_with_app('测试发送pdf标题', '测试发送pdf内容', './file/啊哈.pdf')
 ```
 
 ```python
@@ -163,5 +169,5 @@ while True:
     time.sleep(1)
 ```
 
-
+![image-20220905234827357](images/image-20220905234827357.png)
 
