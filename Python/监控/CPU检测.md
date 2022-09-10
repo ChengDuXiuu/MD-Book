@@ -171,3 +171,34 @@ while True:
 
 ![image-20220905234827357](images/image-20220905234827357.png)
 
+```shell
+#脚本 start.sh
+#! /bin/sh
+current_dir=$(dirname $0)
+root_dir="$(dirname "$current_dir")"
+
+python $root_dir"/main.py"
+```
+
+```shell
+#脚本 stop.sh
+#! /bin/sh
+
+process_bash=`ps aux | grep script/start.sh | grep -v grep | awk '{print $2}'`
+process_python=`ps aux | grep main.py | grep -v grep | awk '{print $2}'`
+
+if [ $process_bash = '' ];then
+    echo '无此进程'
+  else
+    kill -9 $process_bash
+    echo '杀死进程: '$process_bash
+fi
+
+if [ $process_python = '' ];then
+    echo '无此进程'
+  else
+    kill -9 $process_python
+    echo '杀死进程: '$process_python
+fi
+```
+
